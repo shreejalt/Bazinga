@@ -1,28 +1,45 @@
 {% extends "base.html" %}
-{#- The map. explore.js draws it from /data/graph.json; without scripts the list below is the map. -#}
-{% block body_class %}is-explore{% endblock %}
-{% block main %}
-<div class="wrap wrap-wide">
-  <header class="page-head">
-    <h1>Map</h1>
-    <p class="page-sub muted">Every page and how it connects: pages that build on, mention or cite each other sit close together.</p>
-  </header>
-  <div id="explore-root" class="map" data-explore data-graph="/data/graph.json" data-src="/data/graph.json" data-kinds='{{ kinds_labels|default({}, true)|json }}'>
-    {% if not has_asset('js/explore.js') and map_svg %}<div class="map-static">{{ map_svg }}</div>{% endif %}
+{#- The map. explore.js draws /data/map.json and plays each page's /data/view/<id>.json on hover or tap. -#}
+{% block cta %}<a class="cta" href="/">Home</a>{% endblock %}
+{% block bodyclass %}mappage{% endblock %}
+
+{% block content %}
+<section class="sec" id="explore">
+  <h1 class="pagetitle">Explore</h1>
+  <p class="lead-s">Everything on this site, as one map. An item hangs from what it builds on. Hover an item and watch two things happen: first what is nearest to it lights up, ring by ring, each with its distance; then a dot walks the reading order through it, numbering every item on the way. Everything the two walks do not reach fades away until the next hover. Click to open it.{% if features.ask %} Have a question instead? <a href="/ask/">Ask</a>.{% endif %}</p>
+  <div class="finder">
+    <input class="find" id="m-find" type="search" placeholder="search: a title or a word …" aria-label="Search the map">
+    <select id="m-tag" aria-label="Show a tag"><option value="">Any tag</option>{% for group, slugs in groups %}{% set used = slugs|select('in', tag_counts)|list %}{% if used %}<optgroup label="{{ group }}">{% for slug in used %}<option value="{{ slug }}">{{ topics_map[slug].label }} ({{ tag_counts[slug] }})</option>{% endfor %}</optgroup>{% endif %}{% endfor %}</select>
+    <div class="chips" role="group" aria-label="Kind"><button class="chip" data-f="all" aria-pressed="true">All</button>{% for t, label, one in map_kinds %}<button class="chip" data-f="{{ t }}" aria-pressed="false">{{ label }}</button>{% endfor %}</div>
+    <button class="chip" id="m-clear" hidden>Clear</button>
   </div>
-  <section class="map-list" aria-labelledby="all-pages">
-    <h2 id="all-pages" class="section-label">All pages by topic</h2>
-    <div class="map-groups">
-    {% for group, nodes in groups.items() %}
-      <div class="map-group">
-        <h3>{{ group }}</h3>
-        <ul>{% for n in nodes %}<li><a href="{{ n.url }}">{{ n.title }}</a></li>{% endfor %}</ul>
-      </div>
-    {% endfor %}
+  <p class="maphint"><span class="t-touch">Tap an item once to light up its connections, tap it again to open it.</span><span class="t-mouse">Hover an item to light up its connections, click to open it.</span> The map is wider than the screen: swipe it sideways.</p>
+  <div class="tblwrap mapwrap"><svg id="m" role="group" aria-label="Map of every page"></svg></div>
+  <p class="playnote" id="m-play"></p>
+  <p class="pystat" id="m-stat" hidden></p>
+  <div class="legend">{% for t, label, one in map_kinds %}<span><i class="l-{{ t }}"></i>{{ one }}</span>{% endfor %}<span><i class="l-edge"></i>builds on</span><span><i class="l-also"></i>also builds on</span><span><i class="l-tag"></i>placed by a shared tag</span><span><i class="l-d">2</i>links away, nearest first</span><span><i class="l-k">5</i>place in the reading order</span></div>
+  <div id="m-sel">
+    <div class="selhead" id="m-head"><small><span class="t-touch">Tap an item on the map</span><span class="t-mouse">Hover an item on the map</span> and its connections are listed here.</small></div>
+    <div class="split" style="margin-top:8px">
+      <div><div class="sub">Related, nearest first</div><ul class="rel" id="m-related"></ul></div>
+      <div><div class="sub">Reading order through it</div><ol class="path" id="m-path"></ol></div>
     </div>
+  </div>
+  {% if features.series %}
+  <section class="seriesbox" id="series" data-mapview="{{ mapview_url }}">
+    <h2 class="lab">Series, generated from the map</h2>
+    <p class="lead-s">A series is a chain of “builds on” links. The map finds the longest chains; you can also ask for the chain between two items, or everything under one tag in reading order.</p>
+    <div class="finder">
+      <label class="pick">From <select id="s-from"><option value="">—</option>{% for it in items %}<option value="{{ it.id }}">{{ it.short }}</option>{% endfor %}</select></label>
+      <label class="pick">to <select id="s-to"><option value="">—</option>{% for it in items %}<option value="{{ it.id }}">{{ it.short }}</option>{% endfor %}</select></label>
+      <button class="chip" id="s-between">Chain between</button>
+      <label class="pick">or tag <select id="s-tag"><option value="">—</option>{% for group, slugs in groups %}{% set used = slugs|select('in', tag_counts)|list %}{% if used %}<optgroup label="{{ group }}">{% for slug in used %}<option value="{{ slug }}">{{ topics_map[slug].label }}</option>{% endfor %}</optgroup>{% endif %}{% endfor %}</select></label>
+      <button class="chip" id="s-bytag">In reading order</button>
+    </div>
+    <div id="s-out"></div>
+    <p class="pystat" id="s-stat"></p>
   </section>
-</div>
+  {% endif %}
+</section>
 {% endblock %}
-{% block scripts %}
-{% if has_asset('js/explore.js') %}<script src="{{ asset('js/explore.js') }}" defer></script>{% endif %}
-{% endblock %}
+{% block scripts %}<script src="{{ asset('js/explore.js') }}"></script>{% endblock %}

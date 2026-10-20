@@ -191,16 +191,19 @@ class ExampleSite(unittest.TestCase):
             result = build.build(cfg, quiet=True)
             out = cfg.out_dir
             ids = {p.id for p in result.pages}
-            self.assertIn("post:welcome", ids)
-            self.assertIn("post:writing-math", ids)
-            self.assertNotIn("post:notes-on-attention", ids)                   # the example draft
-            welcome = (out / "posts" / "welcome" / "index.html").read_text()
+            self.assertIn("read:welcome", ids)
+            self.assertIn("read:writing-math", ids)
+            self.assertIn("paper:attention-is-all-you-need", ids)
+            self.assertNotIn("read:notes-on-attention", ids)                   # the example draft
+            welcome = (out / "reads" / "welcome" / "index.html").read_text()
             self.assertGreater(welcome.count("<math"), 5)
             self.assertIn('class="callout callout-key"', welcome)
-            self.assertIn('id="references"', welcome)
+            self.assertIn('id="papers"', welcome)
             self.assertNotIn("embed-error", welcome)
             self.assertNotIn("math-error", welcome)
-            for page in ("index.html", "posts/index.html", "topics/index.html", "series/index.html",
+            for page in ("index.html", "reads/index.html", "papers/index.html", "projects/index.html",
+                         "elsewhere/index.html", "cv/index.html", "data/site.js", "data/map.json",
+                         "data/view/read-welcome.json", "figures/_mapview.py", "topics/index.html", "series/index.html",
                          "series/getting-started/index.html", "explore/index.html", "ask/index.html", "404.html",
                          "assets/css/site.css", "assets/css/math.css", "assets/js/site.js", "assets/css/pygments.css"):
                 self.assertTrue((out / page).exists(), page)
@@ -219,13 +222,13 @@ class ExampleSite(unittest.TestCase):
         try:
             copy_example(tmp)
             cfg = config.load(tmp)
-            page = content.load_file(tmp / "content" / "posts" / "notes-on-attention.md", cfg)
+            page = content.load_file(tmp / "content" / "reads" / "notes-on-attention.md", cfg)
             html = build.preview_html(page, cfg)
             self.assertIn("Draft.", html)
-            page.body += "\n\nBroken [[post:nope]].\n"
+            page.body += "\n\nBroken [[read:nope]].\n"
             html = build.preview_html(page, cfg)
             self.assertIn("preview-issues", html)
-            self.assertIn("post:nope", html)
+            self.assertIn("read:nope", html)
             self.assertFalse((tmp / "_site").exists())                          # nothing written
         finally:
             shutil.rmtree(tmp, ignore_errors=True)

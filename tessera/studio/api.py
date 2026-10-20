@@ -691,9 +691,9 @@ class Studio:
         m = re.match(r"^/figures/([a-z][a-z0-9_]*)\.py$", path)
         if m:
             return _inside(cfg.figures_dir, f"{m.group(1)}.py")
-        m = re.match(r"^/data/(passages|graph)\.json$", path)
-        if m:
-            return _inside(cfg.out_dir / "data", f"{m.group(1)}.json")
+        m = re.match(r"^/data/((?:view/)?[a-z0-9][a-z0-9_-]*\.(?:json|js))$", path)
+        if m:   # what the last build generated: search passages, the map, hover cards (site.js), per-page views
+            return _inside(cfg.out_dir / "data", m.group(1))
         return None
 
     def route_page(self, path: str) -> str | None:

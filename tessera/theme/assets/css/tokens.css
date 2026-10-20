@@ -1,111 +1,21 @@
-/* Design tokens: every colour, size and font of the theme as a CSS variable.
-   Everything coloured derives from one --accent (set from site.yml in base.html), mixed with the paper and ink
-   colours, so changing one hex value re-themes the site in both light and dark mode.
-   Names shared with figure.css and wiki.css: --bg --surface --text --text-muted --border --accent --font-ui --font-code. */
-
-:root {
-  /* set in base.html from site.yml; fallbacks keep this file usable on its own */
-  --accent: #3b5bdb;
-  --measure: 720px;
-
-  /* paper and ink (light) */
-  --bg: #fbfaf7;
-  --surface: #f4f2ed;
-  --surface-2: #ece9e2;
-  --raised: #ffffff;
-  --text: #1c1b19;
-  --text-muted: #5d5b55;
-  --text-faint: #8b887f;
-  --border: #e4e0d7;
-  --border-strong: #cfcac0;
-
-  /* derived from the accent */
-  --accent-ink: color-mix(in oklab, var(--accent) 88%, black);           /* links on paper */
-  --accent-soft: color-mix(in oklab, var(--accent) 9%, var(--bg));         /* tinted backgrounds */
-  --accent-line: color-mix(in oklab, var(--accent) 35%, var(--bg));        /* underlines, rules */
-  --accent-strong: var(--accent);
-  --on-accent: #ffffff;
-  --fig-accent-dark: color-mix(in oklab, var(--accent) 70%, white);
-  --mark: color-mix(in oklab, #f5c518 32%, var(--bg));
-
-  /* callouts: note follows the accent; the others are fixed hues tuned for paper */
-  --note: var(--accent);
-  --tip: #1f8a5b;
-  --warning: #b8650a;
-  --key: #7048c8;
-
-  /* type */
-  --font-text: "Source Serif 4", Georgia, serif;
-  --font-ui: "Inter", system-ui, sans-serif;
-  --font-code: "JetBrains Mono", ui-monospace, monospace;
-  --font-math: "STIX Two Math", "Latin Modern Math", "Cambria Math", math;
-  --text-size: 1.1875rem;     /* 19px reading size */
-  --text-leading: 1.7;
-  --ui-size: 0.9375rem;
-  --small: 0.8125rem;
-
-  /* space and shape */
-  --gutter: 16px;
-  --radius: 10px;
-  --radius-sm: 6px;
-  --shadow: 0 1px 2px rgb(20 18 12 / 0.05), 0 4px 18px rgb(20 18 12 / 0.06);
-  --header-h: 60px;
-  --wide: 1000px;             /* figures may break out of the reading column up to this */
-  --page: 1180px;
-
-  color-scheme: light;
+/* The theme's colours and fonts, as CSS variables. site.yml (theme:) overrides any of them: accent -> --blue,
+   accent_dark -> --blue-d, ground, paper, tint, ink, ink_2, ink_3, rule_2, rule_3, ref, alert, and the fonts
+   font_text -> --serif, font_code -> --mono, font_math -> --math. base.html writes those after this file. */
+:root{
+  --blue:#0F52BA; --blue-d:#0B3F91;
+  --ground:#E6DECD; --paper:#FBF7EC; --tint:#F2EBDB; --on-dark:#FBF7EC;
+  --ink:#1D1A15; --ink-2:#4A443A; --ink-3:#655D51;
+  --rule-2:#CBC1AD; --rule-3:#E4DBC9; --ref:#A34A12; --alert:#B8241A;
+  --serif:"STIX Two Text",Georgia,"Times New Roman",serif;
+  --mono:"Courier Prime","Courier New",Courier,monospace;
+  --math:"STIX Two Math","Cambria Math","Latin Modern Math",serif;
+  color-scheme:light;
 }
 
-@media (min-width: 720px) {
-  :root { --gutter: 28px; }
-}
-
-/* Dark: the system preference, unless the reader chose light with the toggle… */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #141517;
-    --surface: #1b1c1f;
-    --surface-2: #232428;
-    --raised: #1f2024;
-    --text: #e9e7e2;
-    --text-muted: #a7a59f;
-    --text-faint: #7b7a75;
-    --border: #2d2e33;
-    --border-strong: #3c3d43;
-    --accent-ink: color-mix(in oklab, var(--accent) 62%, white);
-    --accent-soft: color-mix(in oklab, var(--accent) 16%, var(--bg));
-    --accent-line: color-mix(in oklab, var(--accent) 50%, var(--bg));
-    --accent-strong: color-mix(in oklab, var(--accent) 80%, white);
-    --mark: color-mix(in oklab, #f5c518 26%, var(--bg));
-    --note: color-mix(in oklab, var(--accent) 65%, white);
-    --tip: #4cc08b;
-    --warning: #e8a046;
-    --key: #a98bf0;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 22px rgb(0 0 0 / 0.25);
-    color-scheme: dark;
-  }
-}
-
-/* …or the reader chose dark (or site.yml says theme.mode: dark). */
-:root[data-theme="dark"] {
-  --bg: #141517;
-  --surface: #1b1c1f;
-  --surface-2: #232428;
-  --raised: #1f2024;
-  --text: #e9e7e2;
-  --text-muted: #a7a59f;
-  --text-faint: #7b7a75;
-  --border: #2d2e33;
-  --border-strong: #3c3d43;
-  --accent-ink: color-mix(in oklab, var(--accent) 62%, white);
-  --accent-soft: color-mix(in oklab, var(--accent) 16%, var(--bg));
-  --accent-line: color-mix(in oklab, var(--accent) 50%, var(--bg));
-  --accent-strong: color-mix(in oklab, var(--accent) 80%, white);
-  --mark: color-mix(in oklab, #f5c518 26%, var(--bg));
-  --note: color-mix(in oklab, var(--accent) 65%, white);
-  --tip: #4cc08b;
-  --warning: #e8a046;
-  --key: #a98bf0;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 6px 22px rgb(0 0 0 / 0.25);
-  color-scheme: dark;
+/* The names the figure, maths and code styles use, mapped onto the palette above. */
+:root{
+  --bg:var(--paper); --surface:var(--tint); --surface-2:var(--rule-3); --text:var(--ink); --text-muted:var(--ink-2);
+  --text-faint:var(--ink-3); --border:var(--rule-2); --border-strong:var(--ink); --accent:var(--blue);
+  --accent-soft:var(--tint); --font-text:var(--serif); --font-ui:var(--mono); --font-code:var(--mono);
+  --font-math:var(--math);
 }

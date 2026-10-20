@@ -1,14 +1,23 @@
 {% extends "base.html" %}
-{#- The Ask page. ask.js fills #ask-page; without scripts it explains what to do instead. -#}
-{% block body_class %}is-ask{% endblock %}
-{% block main %}
-<div class="wrap">
-  <header class="page-head">
-    <h1>Ask</h1>
-    <p class="page-sub muted">Ask a question in your own words. Answers come only from the pages of this site, with links to where each part comes from.</p>
-  </header>
-  <div id="ask-page" class="ask-page" data-mode="page" data-passages="/data/passages.json" data-graph="/data/graph.json"{% if suggestions %} data-suggestions='{{ suggestions|json }}'{% endif %}>
-    <noscript><p class="empty">Asking needs JavaScript. You can still browse the <a href="/explore/">map</a> or the <a href="/topics/">topics</a>.</p></noscript>
-  </div>
-</div>
+{#- The Ask page. ask.js answers from the map and the pages' passages; "Written answer" uses /api/ask/ when it is on. -#}
+{% block bodyclass %}askpage{% endblock %}
+
+{% block content %}
+<section class="sec" id="ask">
+  <h1 class="pagetitle">Ask</h1>
+  <p class="lead-s">Ask about anything written here. The answer is a set of pointers: the chain of links between two pages, what to read before or after one, or the sections where the words you used appear — all from the pages themselves, nothing made up. When the pointers are not enough, ask for a written answer: a few sentences put together from the closest passages, each one cited.</p>
+  <form class="askbox" id="ask-form" autocomplete="off" data-passages="/data/passages.json" data-graph="/data/graph.json">
+    <div class="askrow">
+      <input class="find" id="ask-q" type="search" placeholder="a paper, a concept, or what connects two pages …" aria-label="Your question" maxlength="300" autofocus>
+      <button class="chip" type="submit" id="ask-go">Ask</button>
+      <button class="chip" type="button" id="ask-model" hidden title="A few sentences put together from the matching passages">Written answer <span class="left" id="ask-left"></span></button>
+    </div>
+    <div class="chips examples" id="ask-eg">
+      {% for q in examples %}<button type="button" class="chip eg" data-q="{{ q }}">{{ q }}</button>{% endfor %}
+    </div>
+  </form>
+  <div class="answer" id="ask-out" hidden></div>
+  <p class="pystat" id="ask-stat" hidden></p>
+  <noscript><p class="fn">Asking needs JavaScript. You can still browse the <a href="/explore/">map</a> or the <a href="/topics/">topics</a>.</p></noscript>
+</section>
 {% endblock %}

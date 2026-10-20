@@ -12,7 +12,7 @@ Tessera is a template for technical writing. You write Markdown; the build turns
 a numbered reference list, interactive figures and a map of how your pages connect. This post uses every feature
 once. Each section shows **what you type** in a code block, then **what you get** right under it.
 
-Open `content/posts/welcome.md` next to this page to see the whole source.
+Open `content/reads/welcome.md` next to this page to see the whole source.
 
 ## Equations
 
@@ -76,7 +76,7 @@ $$
 
 > [!NOTE]
 > If a formula uses something browsers cannot draw, the build stops and names the line, with a hint such as
-> "`\cancel` is not supported; try colour". [[post:writing-math|The maths guide]] lists what works and the messages
+> "`\cancel` is not supported; try colour". [[read:writing-math|The maths guide]] lists what works and the messages
 > you might see.
 
 ## Figures you can move
@@ -128,10 +128,10 @@ Link another page by its id: the kind and the file name. The build checks that t
 to date, and records the link in the map.
 
 ```markdown
-Next, read [[post:writing-math]], or [[post:writing-math|the guide to equations]].
+Next, read [[read:writing-math]], or [[read:writing-math|the guide to equations]].
 ```
 
-Next, read [[post:writing-math]], or [[post:writing-math|the guide to equations]].
+Next, read [[read:writing-math]], or [[read:writing-math|the guide to equations]].
 
 ## Callouts
 

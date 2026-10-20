@@ -6,7 +6,7 @@ summary: "Two or three sentences that say what the reader will learn. Lists, the
 topics: [writing]
 # description: "Optional: up to 155 characters for search engines (otherwise cut from the summary)."
 # series: {name: "My series", part: 1}
-# builds_on: [post:welcome]
+# builds_on: [read:welcome]
 # cites: [Vaswani17]
 ---
 
@@ -20,7 +20,7 @@ $$
 E = mc^2
 $$ {#eq:energy}
 
-Refer back to it as [eq:energy]. Link another page with [[post:welcome]] and cite a paper with [@Vaswani17].
+Refer back to it as [eq:energy]. Link another page with [[read:welcome]] and cite a paper with [@Vaswani17].
 
 > [!TIP]
 > Run `python -m tessera check` (or open the Studio's checks drawer) to see anything that needs fixing, with line numbers.

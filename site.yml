@@ -1,50 +1,161 @@
-# Tessera site configuration. Everything here is optional: anything you leave out keeps its default
-# (the defaults are listed in docs/DESIGN.md). After editing, `python -m tessera serve` reloads by itself.
+# Site configuration. Everything here is optional: anything you leave out keeps its default (docs/DESIGN.md lists them).
+# `python -m tessera serve` reloads by itself after you save. Replace every "Your Name" / example value with your own;
+# the home page (home:) and the CV (content/cv.yml) are the two places with personal details.
 
 site:
-  name: "Tessera"                       # shown in the header, the browser tab and search results
-  author: "Your Name"                   # used for the footer, the feed and search engines (JSON-LD)
-  tagline: "Notes on things I am learning"
-  description: "A technical blog with real equations, interactive figures and a map of how every idea connects."
+  name: "Your Name"                     # the brand at the top of the rail, the browser tab and search results
+  author: "Your Name"                   # used on every page's header block, the feed and search engines (JSON-LD)
+  tagline: "Notes on the things I build and learn"   # a short line for search engines and the feed
+  description: "Reads, paper explainers and projects in machine learning, with interactive figures and a map of how every page connects."
                                         # ≤155 characters: what search engines show for the home page
   origin: "https://example.com"         # where the site will live, without a trailing slash (canonical links, sitemap)
   language: en
   avatar: ""                            # optional: e.g. static/avatar.png (also the share image and favicon)
-  links:                                # leave a value empty to hide it from the footer
-    github: ""                          # e.g. https://github.com/you
-    x: ""
-    linkedin: ""
-    email: ""                           # e.g. you@example.com
+  links:                                # shown on the home page (in this order) and on the CV; leave empty to hide one
+    github: "https://github.com/your-handle"
+    linkedin: "https://www.linkedin.com/in/your-handle/"
+    medium: "https://medium.com/@your-handle"
     scholar: ""
+    x: ""
+    email: "you@example.com"            # the Contact section's email buttons (never shown as a plain link elsewhere)
 
-# The header menu, in order. href is a path on this site or a full URL.
+# The rail, in order (href is a path on this site or a full URL). On the home page the rail lists the home page's own
+# sections instead (About, Explore, Experience, Education, Contact), followed by the Series, Ask and CV items from here.
 nav:
-  - {label: Writing, href: /posts/}
+  - {label: Home, href: /}
+  - {label: Reads, href: /reads/}
+  - {label: Papers, href: /papers/}
   - {label: Projects, href: /projects/}
-  - {label: Map, href: /explore/}
+  - {label: Series, href: /series/}
+  - {label: Elsewhere, href: /elsewhere/}
+  - {label: Explore, href: /explore/}
   - {label: Ask, href: /ask/}
+  - {label: CV, href: /cv/}
 
 # Each kind is a folder content/<kind>/ and a list page /<kind>/. A page's id is "<singular, lowercase>:<file name>",
-# for example post:welcome for content/posts/welcome.md.
+# e.g. read:welcome for content/reads/welcome.md. `role` picks the layout:
+#   read     a concept explained (memo-style page)       paper    one paper explained; header field explains: [KEY]
+#   project  a project page (overview, write-up, links)  external entries that live on another site (see below)
+# An external kind (external: true) holds attributed entries with no body: header fields external: <address>,
+# author:, publication:. They are listed, placed on the map and open where they were published.
 kinds:
-  posts:    {label: Writing,  singular: Post}
-  projects: {label: Projects, singular: Project}
+  reads:
+    label: Reads
+    singular: Read
+    blurb: "Explanations of a concept, built from several papers rather than one."
+    placeholder: "filter: attention, softmax, gradient ..."
+  papers:
+    label: Papers
+    singular: Paper
+    blurb: "One paper, explained end to end: the idea, every equation, the numbers, and where it sits among the others."
+    placeholder: "filter: transformer, attention ..."
+  projects:
+    label: Projects
+    singular: Project
+    blurb: "Repositories, work and side projects."
+    placeholder: "filter: template, figures ..."
+  elsewhere:
+    label: Elsewhere
+    singular: Article
+    external: true
+    blurb: "Articles that live on other sites, mine and other writers', each listed under its author and placed on the map so it connects to everything else. They open where they were published."
+    placeholder: "filter: transformer, lstm, attention ..."
+    word: articles
 
+# The home page. Every field is optional; a section without its fields is left out.
 home:
-  intro: |
-    This is **Tessera**, a template for technical writing. Posts are Markdown with real equations, citations and
-    interactive figures, and every page is a tile in a map of how the ideas connect. Start with
-    [the welcome post](/posts/welcome/), then replace this paragraph in `site.yml`.
-  show: [latest, series, map]           # the home page sections, in order
+  title: "Your Name — Machine Learning Notes"   # the home page's <title> and link-preview title
+  photo: /static/images/photo.svg       # a square picture, shown round at 230 px (replace the placeholder)
+  role: "Machine Learning Engineer"     # under the photo, first line (also on the CV page)
+  employer: "Example Labs"              # the CV page says "<role> at <employer>"
+  working_at: "Working at Example Labs" # under the photo, second line
+  tagline: "Notes on how learning machines work, one figure at a time."   # the big line at the top of the page
+  statement: ""                         # optional: a bold line under the tagline
+  lead: >-
+    Hi! I build machine learning systems and write down how they work. This site holds plain explainers of the
+    concepts and papers I use, with figures you can drag around, and the projects I have built.
+  # About: paragraphs that may carry inline HTML (<b>, <i>, <a>); printed as written.
+  about:
+    - >-
+      Replace these paragraphs with a few lines about you: what you work on, what you care about, and what a
+      visitor will find here. Keep it short; the <a href="/cv/">CV</a> carries the full record.
+    - >-
+      When an idea finally clicks, I write it down: the concepts live under <a href="/reads/">Reads</a>, the
+      papers under <a href="/papers/">Papers</a>, and the work under <a href="/projects/">Projects</a>.
+    - >-
+      Off the clock: a line about your hobbies. Which one of these is yours?
+  # Optional buttons under About; the page says the matching line back when one is picked.
+  starters_label: "Pick one"
+  starters:
+    - {name: Tea,    mark: "🍵", say: "Tea. A person of patience."}
+    - {name: Coffee, mark: "☕", say: "Coffee. We will get along just fine."}
+    - {name: Water,  mark: "💧", say: "Water. Respectable choice, I guess."}
+  map_text: "Everything I have written or built is on one map, each item below what it builds on. Hover anything to see what is nearest and the reading order through it."
+  # Experience: each role opens to show its points. pages: ids of pages on this site about that work (optional).
+  experience:
+    - period: Jan 2024 – now
+      role: Machine Learning Engineer
+      org: Example Labs
+      place: Remote
+      points:
+        - Built and maintain the training and evaluation pipeline for the team's vision models.
+        - Cut the time from a labelled batch to a deployed model from days to hours.
+        - Write the internal notes that later become the explainers on this site.
+      pages: [project:tessera]
+    - period: Jun 2021 – Dec 2023
+      role: Data Scientist
+      org: Sample Analytics
+      place: City, Country
+      points:
+        - Designed experiments and the dashboards that reported them.
+        - Moved the forecasting models from notebooks into tested, scheduled jobs.
+    - period: Sep 2019 – May 2021
+      role: Research Assistant
+      org: Example University
+      place: City, Country
+      points:
+        - Ran the experiments for a study on small vision models and wrote up the results.
+        - Taught the lab sessions of an introductory machine learning course.
+  # Education: degree and school only (the CV page has the rest).
+  education:
+    - {degree: "MSc, Computer Science", school: "Example University"}
+  courses: "Machine Learning, Computer Vision, Optimization, Probability and Statistics."   # optional, folded away
+  # Contact: a plain invitation, what you work on, your tools, and where else to find you.
+  contact:
+    lead: >-
+      Have a project where machine learning should help but does not yet? I am open to <b>collaborations and
+      consulting</b>. Write a short note and I will get back to you.
+    areas:
+      - {mark: "👁️", name: Computer vision, what: "Detection, tracking and recognition in images and video."}
+      - {mark: "📈", name: Model evaluation, what: "Metrics, error analysis and test sets that say what a model really does."}
+      - {mark: "⚡", name: Deployment, what: "Models made smaller and faster for the hardware they run on."}
+      - {mark: "✍️", name: Technical writing, what: "Explainers and documentation with figures readers can move."}
+    stack:
+      - {area: Machine learning, tools: [PyTorch, NumPy, scikit-learn]}
+      - {area: Data and pipelines, tools: [SQL, Airflow, Docker]}
+      - {area: Languages, tools: [Python, C++, JavaScript]}
+    close: "Send me a short note on what you want to build, with an example or two if you have them."
+    email_button: "Email me about a project"
+    links_text: "Code, career record, and where the articles were first published."
+    elsewhere:                          # more entries for the Elsewhere list at the end of Contact
+      - {label: "Elsewhere on this site", url: /elsewhere/, text: "Articles that live on other sites, listed under their authors."}
+
+# The CV page (/cv/) is content/cv.yml. pdf: an optional downloadable copy (a path under static/ or a full URL).
+cv:
+  pdf: ""
 
 theme:
-  accent: "#3b5bdb"                     # one colour; every other colour is derived from it, in light and dark mode
-  font_text: "Source Serif 4"           # any Google Fonts family names
-  font_ui: "Inter"
-  font_code: "JetBrains Mono"
-  font_math: "STIX Two Math"            # needs a font with a MATH table; STIX Two Math is the safe choice
-  width: 720                            # the reading column, in pixels
-  mode: auto                            # auto (follows the reader's system) | light | dark
+  accent: "#0F52BA"                     # links, the current rail item, read boxes on the map
+  # Optional colours (hex); empty keeps the default paper palette: ground (the page around the sheet), paper (the
+  # sheet), tint, ink, ink_2, ink_3, rule_2, rule_3, ref (citations, the map's rings), alert, accent_dark.
+  ground: ""
+  paper: ""
+  font_text: "STIX Two Text"            # Google Fonts family names
+  font_ui: "Courier Prime"
+  font_code: "Courier Prime"
+  font_math: "STIX Two Math"            # needs a font with a MATH table
+  width: 720
+  mode: light
 
 features: {ask: true, explore: true, series: true, feed: true, llms_txt: true}
 

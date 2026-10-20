@@ -58,7 +58,7 @@ def cleanup(root: Path) -> None:
 def render_text(body: str, cfg=None, others=(), preview=False):
     """Render a body as a published post of a throwaway site; returns (page, Rendered)."""
     cfg = cfg or config.load(REPO)
-    page = content.parse(post(body=body), Path("content/posts/t.md"), cfg)
+    page = content.parse(post(body=body), Path("content/reads/t.md"), cfg)
     refs = {"Vaswani17": {"title": "Attention Is All You Need", "authors": ["A. Vaswani"], "year": 2017,
                           "arxiv": "1706.03762"},
             "Kingma14": {"title": "Adam", "authors": ["D. Kingma", "J. Ba"], "year": 2014}}

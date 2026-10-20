@@ -5,11 +5,11 @@ summary: "A model's last layer gives raw scores; the softmax turns them into pro
 description: "How the softmax turns scores into probabilities, what a temperature does to them, and how entropy measures the spread, with a figure to play with."
 topics: [probability, information-theory, neural-networks]
 series: {name: "Learning, Visually", part: 2}
-builds_on: [post:gradient-descent]
+builds_on: [read:gradient-descent]
 cites: [Hinton15]
 ---
 
-In [[post:gradient-descent|the first part]] the loss was a made-up bowl. In a classifier the loss has a specific
+In [[read:gradient-descent|the first part]] the loss was a made-up bowl. In a classifier the loss has a specific
 shape, and it starts with one small function: the softmax. I use it every day without thinking, so this part is
 my attempt to think about it properly.
 
@@ -29,7 +29,7 @@ exaggerates gaps: a score one point higher gets $e \approx 2.7$ times the weight
 One property is worth knowing by heart. Adding the same constant $c$ to every score changes nothing, because
 $e^{z_i + c} = e^c e^{z_i}$ and the $e^c$ cancels above and below. Only the *differences* between scores matter.
 That is why careful code subtracts the largest score before exponentiating, as the code sample in
-[[post:welcome]] does: the result is the same, and nothing overflows.
+[[read:welcome]] does: the result is the same, and nothing overflows.
 
 ## Temperature
 
@@ -98,5 +98,5 @@ inputs, so gradients flowing back through it are tiny.
 > softmax. Very sharp means confident and hard to train through.
 
 That catch is the reason for a small division you have probably seen in a famous formula. In
-[[post:attention-from-scratch|the next part]] the softmax runs over words instead of classes, and its temperature
+[[read:attention-from-scratch|the next part]] the softmax runs over words instead of classes, and its temperature
 is fixed at $\sqrt{d}$.

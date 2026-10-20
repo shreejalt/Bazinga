@@ -2,7 +2,8 @@
 
     new "Title" [--kind posts]        a new draft from tessera/starters/post.md
     build [--drafts]                  build _site/ (drafts only with --drafts, for private previews)
-    serve [--port 8000]               build, watch, live-reload, /api/ask/ locally
+    serve [--port 8000]               build, watch, live-reload, /api/ask/ locally, and the Studio behind a
+                                      "Write" button (local only; --no-studio leaves it out)
     studio                            the local editor (127.0.0.1 only)
     check [file ...]                  run the checks; exit code 1 when there are errors
     figure new <name> --from slider_plot | figure test [name]
@@ -80,7 +81,8 @@ def cmd_build(args, cfg) -> int:
 
 def cmd_serve(args, cfg) -> int:
     from .serve import serve
-    return serve(cfg, port=args.port, open_browser=args.open, drafts=args.drafts)
+    return serve(cfg, port=args.port, open_browser=args.open, drafts=args.drafts, studio=not args.no_studio,
+                 studio_port=args.studio_port)
 
 
 def cmd_check(args, cfg) -> int:
@@ -190,6 +192,9 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--open", action="store_true", help="open the browser")
     p.add_argument("--drafts", action="store_true", help="also show drafts and scheduled pages (local preview)")
+    p.add_argument("--no-studio", action="store_true", help="do not start the Studio (no Write button)")
+    p.add_argument("--studio-port", type=int, default=None,
+                   help="port of the Studio on 127.0.0.1 (default: the serve port + 1, or a free one)")
     p.set_defaults(fn=cmd_serve)
 
     p = sub.add_parser("check", help="check pages; exit code 1 on errors")

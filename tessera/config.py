@@ -47,12 +47,16 @@ DEFAULTS: dict = {
         "width": 720,
         "mode": "auto",
     },
+    "cv": {"pdf": ""},
     "features": {"ask": True, "explore": True, "series": True, "feed": True, "llms_txt": True},
     "llm": {"base_url": "https://openrouter.ai/api/v1", "model": "", "key_env": "LLM_API_KEY"},
     "ask": {"written_answers": True, "per_visitor": 5, "daily_cap": 300},
     "publish": {"commit": True, "push": True, "command": "", "author": ""},
 }
 
+ROLES = ("read", "paper", "project", "external")
+# Optional theme colours (site.yml theme:), each a CSS variable of the default theme; empty keeps the theme's value.
+THEME_COLOURS = ("accent_dark", "ground", "paper", "tint", "ink", "ink_2", "ink_3", "rule_2", "rule_3", "ref", "alert")
 _HEX = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 _KIND = re.compile(r"^[a-z][a-z0-9-]*$")
 
@@ -181,6 +185,10 @@ def _validate(cfg: dict) -> None:
         site[key] = "" if site.get(key) is None else str(site[key])
     if not isinstance(site.get("links"), dict):
         raise ConfigError("site.links must be a mapping such as {github: 'https://github.com/you'}")
+    if not isinstance(cfg.get("home"), dict):
+        raise ConfigError("home must be a mapping of the home page's fields (see site.yml)")
+    if not isinstance(cfg.get("cv"), dict):
+        cfg["cv"] = {"pdf": str(cfg.get("cv") or "")}
 
     if not isinstance(cfg["nav"], list) or not all(isinstance(n, dict) and "label" in n and "href" in n
                                                    for n in cfg["nav"]):
@@ -195,10 +203,25 @@ def _validate(cfg: dict) -> None:
         spec = kinds[name] = dict(spec or {})
         spec.setdefault("label", name.title())
         spec.setdefault("singular", spec["label"].rstrip("s") or name)
+        spec["external"] = bool(spec.get("external"))
+        # role: how the theme lays the kind out (memo pages, a paper table, project pages, attributed entries)
+        default_role = "external" if spec["external"] else {"papers": "paper", "projects": "project"}.get(name, "read")
+        spec.setdefault("role", default_role)
+        if spec["role"] not in ROLES:
+            raise ConfigError(f"kinds.{name}.role must be one of {', '.join(ROLES)} (got {spec['role']!r})")
+        if spec["external"]:
+            spec["role"] = "external"
+        for key in ("blurb", "placeholder", "word"):
+            spec[key] = str(spec.get(key) or "")
 
     theme = cfg["theme"]
     if not _HEX.match(str(theme.get("accent", ""))):
         raise ConfigError(f"theme.accent must be a hex colour such as '#3b5bdb' (got {theme.get('accent')!r})")
+    for key in THEME_COLOURS:
+        value = str(theme.get(key) or "")
+        if value and not _HEX.match(value):
+            raise ConfigError(f"theme.{key} must be a hex colour such as '#E6DECD' (got {value!r})")
+        theme[key] = value
     if theme.get("mode") not in ("auto", "light", "dark"):
         raise ConfigError("theme.mode must be auto, light or dark")
     try:

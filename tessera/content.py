@@ -58,6 +58,8 @@ class Page:
     builds_on: list = field(default_factory=list)
     cites: list = field(default_factory=list)
     cover: str = ""
+    external: str = ""                              # an entry of an external kind: the address it opens (no body)
+    explains: list = field(default_factory=list)    # a paper write-up: the reference keys it explains
     problems: list = field(default_factory=list)   # [(line, message, hint)] found while parsing the front matter
     meta_lines: dict = field(default_factory=dict)  # front-matter key -> line number in the file
 
@@ -70,6 +72,11 @@ class Page:
     def scheduled(self) -> bool:
         """Published with a future date: it goes live on the first build after that date."""
         return self.status == "published" and self.date is not None and self.date > today()
+
+    @property
+    def local(self) -> bool:
+        """The page has its own page on this site (an external entry opens elsewhere)."""
+        return not self.external
 
     @property
     def state(self) -> str:
@@ -186,6 +193,15 @@ def parse(text: str, path: Path, cfg) -> Page:
     page.cites = _as_list(meta.get("cites"), "cites", lines.get("cites"), problems)
     page.cover = str(meta.get("cover") or "")
     page.series = _series(meta.get("series"), lines.get("series"), problems)
+    page.explains = _as_list(meta.get("explains"), "explains", lines.get("explains"), problems)
+    spec = cfg["kinds"].get(kind) or {}
+    if spec.get("external") or meta.get("external"):
+        page.external = str(meta.get("external") or "").strip()
+        if page.external:
+            page.url = page.external
+        elif spec.get("external"):
+            problems.append((lines.get("external") or 1, "an entry of an external kind needs the address it opens",
+                             "add external: https://… (where the article lives)"))
     if not _SLUG_OK.match(slug):
         problems.append((None, f"the file name {path.name!r} is not a clean URL",
                          "use lowercase letters, digits and dashes, e.g. my-first-post.md"))

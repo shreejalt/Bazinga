@@ -92,7 +92,7 @@ to 1, and the slower the descent, however carefully you choose $\eta$.
 
 > [!NOTE]
 > This is why optimisers such as Adam [@Kingma14] scale the step separately for each parameter. If the steep and
-> flat directions get different step sizes, the stretch matters much less. [[post:writing-math]] writes out Adam's
+> flat directions get different step sizes, the stretch matters much less. [[read:writing-math]] writes out Adam's
 > update rules as an example of aligned equations.
 
 ## What changes in a real model
@@ -105,5 +105,5 @@ training recipes warm up, decay and adapt it.
 Real training also replaces the exact gradient with an average over a small batch of examples, the stochastic
 version. The noise adds some jitter to the path but not a new idea.
 
-In [[post:softmax-and-temperature|the next part]] the loss gets a concrete shape: the cross-entropy of a softmax,
+In [[read:softmax-and-temperature|the next part]] the loss gets a concrete shape: the cross-entropy of a softmax,
 the function that turns a model's raw scores into probabilities.

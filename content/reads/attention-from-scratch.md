@@ -5,11 +5,11 @@ summary: "Scaled dot-product attention is a softmax over similarities: each word
 description: "Scaled dot-product attention built from a dot product and a softmax, and why the scores are divided by √d, with a heatmap you can change."
 topics: [attention, transformers, linear-algebra]
 series: {name: "Learning, Visually", part: 3}
-builds_on: [post:softmax-and-temperature]
+builds_on: [read:softmax-and-temperature]
 cites: [Vaswani17]
 ---
 
-Attention sounds grander than it is. Once you have [[post:softmax-and-temperature|the softmax]], you need one more
+Attention sounds grander than it is. Once you have [[read:softmax-and-temperature|the softmax]], you need one more
 ingredient, the dot product, and one small correction that this part is mostly about.
 
 ## Three roles for every word
@@ -100,7 +100,7 @@ falls behind as $d_k$ grows [@Vaswani17, sec. 3.2.1].
 
 Look again at [eq:attention-rows]. If I shuffle the words, every score moves with its word and each output is the
 same as before, just in the new order. Attention compares *contents* only; it has no idea which word came first. (The formula itself also appears in
-[[post:welcome]], as the example of a labelled equation.) To
+[[read:welcome]], as the example of a labelled equation.) To
 tell "the cat chased a mouse" from "a mouse chased the cat", the Transformer adds a position signal to every word
-before attention runs. That signal is built from sines and cosines, and [[post:fourier-features|the last part]]
+before attention runs. That signal is built from sines and cosines, and [[read:fourier-features|the last part]]
 explains why that is a good idea.

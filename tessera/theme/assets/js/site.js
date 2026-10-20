@@ -1,156 +1,62 @@
-// Small enhancements for every page. Everything works without this file; it only adds:
-//  - the light/dark switch (the choice is remembered in localStorage when the browser allows it),
-//  - "Copy" buttons on code blocks,
-//  - copying a heading's link when its "#" is clicked,
-//  - highlighting the current section in the table of contents.
-(function () {
-  "use strict";
+/* Shared by every page. window.SITE is written by the build into /data/site.js:
+   SITE.nodes  every page, reference and topic, by id: {type, kl (kind label), title, url, desc, kicker, go}
+   SITE.kinds  the label of each type on the map (read, paper, proj, ext, ref, topic) */
+const SITE=window.SITE||{nodes:{},kinds:{}};
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const KIND=Object.assign({read:'Read',paper:'Paper',proj:'Project',ext:'Article',ref:'Reference',topic:'Tag'},SITE.kinds||{});
+const node=id=>SITE.nodes[id];
+const nodeHref=id=>(node(id)||{}).url||'#';
+const kindOf=id=>{const n=node(id);return n?(n.kl||KIND[n.type]||''):'';};
 
-  var root = document.documentElement;
-  var KEY = "tessera-theme";
+/* preview card: any element with data-x="<id>" shows a card on hover or focus */
+document.addEventListener('DOMContentLoaded',function(){
+ const pop=document.createElement('div');pop.className='pop';pop.setAttribute('role','tooltip');document.body.appendChild(pop);
+ function fill(id){const n=node(id);if(!n||n.type==='topic')return false;
+  pop.innerHTML=`<div class="kind${n.type==='ref'?'':' int'}">${esc(n.kicker||'')}</div><div class="ti">${esc(n.title)}</div>${n.desc?`<div>${esc(n.desc)}</div>`:''}<div class="go">${esc(n.go||'')}</div>`;return true;}
+ function show(e){const el=e.target.closest&&e.target.closest('[data-x]');if(!el||!fill(el.dataset.x))return;
+  const r=el.getBoundingClientRect();pop.classList.add('on');
+  const w=pop.offsetWidth,h=pop.offsetHeight;
+  let left=Math.min(window.innerWidth-w-16,Math.max(16,r.left));
+  let top=r.bottom+8;if(top+h>window.innerHeight-8)top=r.top-h-8;
+  if(el.closest('.askpanel')){const pr=el.closest('.askpanel').getBoundingClientRect();left=Math.max(16,pr.left-w-12);top=Math.min(Math.max(8,r.top),window.innerHeight-h-8);}   // beside the floating Ask, never under it
+  top=Math.min(Math.max(8,top),Math.max(8,window.innerHeight-h-8));
+  pop.style.left=(left+scrollX)+'px';pop.style.top=(top+scrollY)+'px';}
+ function hide(e){if(e.target.closest&&e.target.closest('[data-x]'))pop.classList.remove('on');}
+ document.addEventListener('mouseover',show);document.addEventListener('focusin',show);
+ document.addEventListener('mouseout',hide);document.addEventListener('focusout',hide);
+});
 
-  // ------------------------------------------------------------------------------ light / dark
-  function systemDark() {
-    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-  }
-  function currentTheme() {
-    var t = root.getAttribute("data-theme");
-    if (t === "light" || t === "dark") return t;
-    return systemDark() ? "dark" : "light";
-  }
-  function saveTheme(t) {
-    try { localStorage.setItem(KEY, t); } catch (e) { /* private mode or blocked: the choice lasts this page only */ }
-  }
-  function initThemeToggle() {
-    var buttons = document.querySelectorAll(".theme-toggle");
-    function label() {
-      var next = currentTheme() === "dark" ? "light" : "dark";
-      buttons.forEach(function (b) {
-        b.setAttribute("aria-label", "Switch to " + next + " mode");
-        b.setAttribute("title", "Switch to " + next + " mode");
-      });
-    }
-    buttons.forEach(function (b) {
-      b.addEventListener("click", function () {
-        var next = currentTheme() === "dark" ? "light" : "dark";
-        root.setAttribute("data-theme", next);
-        saveTheme(next);
-        label();
-        document.dispatchEvent(new CustomEvent("tessera:theme", { detail: { theme: next } }));
-      });
-    });
-    label();
-  }
+/* the rail highlights the section being read; [data-reveal] elements animate once when they scroll in */
+function spy(){
+ const links=[...document.querySelectorAll('.rail nav a[href^="#"]')];
+ const map=new Map(links.map(a=>[document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1))),a]));
+ if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.removeAttribute('aria-current'));const a=map.get(e.target);if(a)a.setAttribute('aria-current','true');}}),{rootMargin:'-20% 0px -70% 0px'});
+  map.forEach((a,el)=>el&&io.observe(el));
+  const rv=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');rv.unobserve(e.target);}}),{threshold:.3});
+  document.querySelectorAll('[data-reveal]').forEach(el=>rv.observe(el));
+ }else document.querySelectorAll('[data-reveal]').forEach(el=>el.classList.add('on'));
+ document.querySelectorAll('.draw').forEach(p=>{try{p.style.setProperty('--len',p.getTotalLength().toFixed(1));}catch(e){}});
+ if(new URLSearchParams(location.search).has('still'))document.querySelectorAll('[data-reveal]').forEach(el=>el.classList.add('on'));
+}
+document.addEventListener('DOMContentLoaded',spy);
 
-  // ------------------------------------------------------------------------------ copying
-  function copyText(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      return navigator.clipboard.writeText(text);
-    }
-    return new Promise(function (resolve, reject) {
-      var area = document.createElement("textarea");
-      area.value = text;
-      area.setAttribute("readonly", "");
-      area.style.position = "fixed";
-      area.style.opacity = "0";
-      document.body.appendChild(area);
-      area.select();
-      try { document.execCommand("copy") ? resolve() : reject(new Error("copy failed")); }
-      catch (e) { reject(e); }
-      finally { document.body.removeChild(area); }
-    });
-  }
+/* the two lists Explore and Ask fill in (the same lists are rendered at build time on every page) */
+const itemLink=n=>n.type==='topic'?esc(n.title):`<a data-x="${esc(n.id)}" href="${esc(n.url||nodeHref(n.id))}">${esc(n.title)}</a>`;
+function relatedHTML(list){return list.map(r=>`<li><div>${itemLink(r)}</div><div class="why">${esc(r.kl||kindOf(r.id)||KIND[r.type]||'')} · ${esc(r.why)}</div></li>`).join('')||'<li class="why">Nothing connected yet.</li>';}
+function pathHTML(path,cap=6){const tag={before:'Start with',here:'You are here',after:'Then',also:'Also worth reading'};let last='',seenAfter=0,hidden=0;
+ const rows=path.map(p=>{const head=p.role!==last?`<div class="role">${tag[p.role]}</div>`:'';last=p.role;
+  const extra=p.role==='after'&&++seenAfter>cap?(hidden++,' class="more-row"'):'';
+  return `<li class="${p.role}"${extra?' data-more="1"':''}${extra?' hidden':''}>${head}<div>${p.role==='here'?`<b>${esc(p.title)}</b>`:itemLink(p)}</div><div class="why">${esc(p.kl||kindOf(p.id)||KIND[p.type]||'')}</div></li>`}).join('');
+ return rows+(hidden?`<li class="why"><button class="chip" type="button" data-more-btn>Show ${hidden} more</button></li>`:'');}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-more-btn]');if(!b)return;b.closest('ol').querySelectorAll('[data-more]').forEach(l=>l.hidden=false);b.closest('li').remove();});
 
-  function initCopyButtons() {
-    document.querySelectorAll(".code-block").forEach(function (block) {
-      if (block.querySelector(".copy-code")) return;
-      var code = block.querySelector("code");
-      if (!code) return;
-      var button = document.createElement("button");
-      button.type = "button";
-      button.className = "copy-code";
-      button.textContent = "Copy";
-      button.setAttribute("aria-label", "Copy this code");
-      button.addEventListener("click", function () {
-        copyText(code.innerText.replace(/\n$/, "")).then(function () {
-          button.textContent = "Copied";
-          button.classList.add("done");
-        }, function () {
-          button.textContent = "Select and copy";
-        });
-        setTimeout(function () { button.textContent = "Copy"; button.classList.remove("done"); }, 1800);
-      });
-      block.appendChild(button);
-    });
-  }
+/* a tag opens its topic page (/topics/<tag>/); on the map page it filters the map instead */
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('[data-tag]');if(!a)return;
+ const sel=document.getElementById('m-tag');
+ if(sel&&[...sel.options].some(o=>o.value===a.dataset.tag)){e.preventDefault();sel.value=a.dataset.tag;sel.dispatchEvent(new Event('change'));document.getElementById('m').scrollIntoView({behavior:'smooth',block:'start'});}});
 
-  function initHeadingLinks() {
-    document.querySelectorAll(".heading-anchor").forEach(function (a) {
-      a.addEventListener("click", function (ev) {
-        var url = location.href.split("#")[0] + a.getAttribute("href");
-        ev.preventDefault();
-        history.replaceState(null, "", a.getAttribute("href"));
-        var target = document.getElementById(decodeURIComponent(a.getAttribute("href").slice(1)));
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-        copyText(url).then(function () {
-          a.classList.add("copied");
-          setTimeout(function () { a.classList.remove("copied"); }, 1500);
-        }, function () { /* the address bar already shows the link */ });
-      });
-    });
-  }
-
-  // ------------------------------------------------------------------------------ contents
-  function initToc() {
-    var links = Array.prototype.slice.call(document.querySelectorAll(".toc a[href^='#']"));
-    if (!links.length || !("IntersectionObserver" in window)) return;
-    var byId = {};
-    var headings = links.map(function (a) {
-      var id = decodeURIComponent(a.getAttribute("href").slice(1));
-      byId[id] = a;
-      return document.getElementById(id);
-    }).filter(Boolean);
-    var visible = new Set();
-    function update() {
-      var current = null;
-      for (var i = 0; i < headings.length; i++) {
-        if (visible.has(headings[i].id)) { current = headings[i].id; break; }
-      }
-      if (!current) {
-        // Between headings: the last heading above the top of the screen is the current section.
-        headings.forEach(function (h) { if (h.getBoundingClientRect().top < 120) current = h.id; });
-      }
-      links.forEach(function (a) { a.classList.remove("is-active"); a.removeAttribute("aria-current"); });
-      if (current && byId[current]) {
-        byId[current].classList.add("is-active");
-        byId[current].setAttribute("aria-current", "location");
-      }
-    }
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (e.isIntersecting) visible.add(e.target.id); else visible.delete(e.target.id);
-      });
-      update();
-    }, { rootMargin: "-64px 0px -60% 0px" });
-    headings.forEach(function (h) { io.observe(h); });
-
-    // On narrow screens the contents box starts folded, and closes after a jump.
-    var box = document.querySelector(".toc-box");
-    var wide = window.matchMedia("(min-width: 1240px)");
-    function fit() { if (box) box.open = wide.matches; }
-    fit();
-    if (wide.addEventListener) wide.addEventListener("change", fit);
-    links.forEach(function (a) {
-      a.addEventListener("click", function () { if (box && !wide.matches) box.open = false; });
-    });
-  }
-
-  function start() {
-    initThemeToggle();
-    initCopyButtons();
-    initHeadingLinks();
-    initToc();
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
-  else start();
-})();
+/* the "pick one" buttons in the home page's about: say back what the chosen one deserves */
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.starters .btn');if(!b)return;
+ const box=b.closest('.starters');box.querySelectorAll('.btn').forEach(x=>x.setAttribute('aria-pressed',x===b));
+ box.querySelector('.verdict').textContent=b.dataset.say;});

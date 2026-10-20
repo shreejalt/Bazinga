@@ -5,7 +5,7 @@ summary: "How to write maths that renders the same in every browser: the pattern
 description: "How to write equations in Tessera: common LaTeX patterns, what browsers can draw, and the error messages you might see with their fixes."
 topics: [writing, tools]
 series: {name: "Getting started", part: 2}
-builds_on: [post:welcome]
+builds_on: [read:welcome]
 ---
 
 Tessera turns the LaTeX in your posts into MathML when the site is built. Browsers draw MathML themselves, so

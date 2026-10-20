@@ -1,43 +1,116 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import entry %}
-{#- Home: the intro, then the sections listed in site.yml home.show (latest, series, map). -#}
-{% block body_class %}is-home{% endblock %}
-{% block main %}
-<div class="wrap">
-  <section class="hero">
-    <h1 class="hero-title">{{ site.name }}</h1>
-    {% if site.tagline %}<p class="hero-tagline">{{ site.tagline }}</p>{% endif %}
-    {% if intro %}<div class="hero-intro prose">{{ intro }}</div>{% endif %}
-  </section>
+{#- Home: who you are (photo, tagline, lead, about), a pointer to the map, experience (each role opens), education,
+    contact. Every field comes from site.yml `home:`; a section without its fields is left out. -#}
+{% block cta %}
+  {% if features.explore %}<a class="cta" href="/explore/">Explore the map</a>{% endif %}
+  {% if cv_pdf %}<a class="cta" href="{{ cv_pdf }}">Download CV</a>{% else %}<a class="cta" href="/cv/">Read the CV</a>{% endif %}
+{% endblock %}
 
-  {% for part in show %}
-  {% if part == 'latest' and latest %}
-  <section class="home-section" aria-labelledby="latest-title">
-    <div class="section-head"><h2 id="latest-title">Latest</h2>{% for k, spec in kinds.items() %}{% if loop.first %}<a class="more" href="/{{ k }}/">All {{ spec.label|lower }} →</a>{% endif %}{% endfor %}</div>
-    <div class="entries">{% for n in latest %}{{ entry(n, topic, 'h3') }}{% endfor %}</div>
-  </section>
-  {% elif part == 'series' and series_list and features.series %}
-  <section class="home-section" aria-labelledby="series-title">
-    <div class="section-head"><h2 id="series-title">Series</h2><a class="more" href="/series/">All series →</a></div>
-    <div class="series-cards">
-    {% for s in series_list %}
-      <a class="series-card" href="{{ s.url }}">
-        <span class="series-card-count">{{ s.count }} part{{ '' if s.count == 1 else 's' }}</span>
-        <span class="series-card-name">{{ s.name }}</span>
-        <span class="series-card-first">Starts with {{ s.parts[0].title }}</span>
-      </a>
-    {% endfor %}
+{% block content %}
+<section class="sec" id="about">
+  <div class="hero">
+    <div>
+      {% if home.tagline %}<h1 class="tagline"><span class="vh">{{ site.name }}: </span>{{ home.tagline }}</h1>
+      {% else %}<h1>{{ site.name }}</h1>{% endif %}
+      {% if home.statement %}<p class="say">{{ home.statement }}</p>{% endif %}
+      {% if home.lead %}<p class="leadp">{{ home.lead }}</p>{% endif %}
+      {% if intro %}<div class="leadp">{{ intro }}</div>{% endif %}
+      <div class="btnrow">{% for href, label in kind_buttons %}<a class="btn{% if loop.first %} pri{% endif %}" href="{{ href }}">{{ label }}</a>{% endfor %}</div>
+      {% if links_list %}<div class="links">{% for l in links_list %}<a href="{{ l.url }}">{{ l.label }}</a>{% endfor %}</div>{% endif %}
     </div>
-  </section>
-  {% elif part == 'map' and features.explore and map_svg %}
-  <section class="home-section" aria-labelledby="map-title">
-    <div class="section-head"><h2 id="map-title">The map</h2><a class="more" href="/explore/">Open the map →</a></div>
-    <a class="map-card" href="/explore/" aria-label="Open the map of all {{ page_count }} pages">
-      {{ map_svg }}
-      <span class="map-card-text">Every page is a tile; lines show which pages build on, mention or cite each other.</span>
-    </a>
-  </section>
+    {% if home.photo %}
+    <div class="side">
+      <img src="{{ home.photo }}" width="230" height="230" alt="{{ site.name }}">
+      <p class="where">{{ home.role }}{% if home.working_at %}<br>{{ home.working_at }}{% endif %}</p>
+    </div>
+    {% endif %}
+  </div>
+  {% if home.about or home.starters %}
+  <div class="about">
+    {% for para in home.about or [] %}<p>{{ para|safe }}</p>{% endfor %}
+    {% if home.starters %}
+    <div class="starters" role="group" aria-label="{{ home.starters_label or 'Pick one' }}">
+      {% for st in home.starters %}<button type="button" class="btn" data-say="{{ st.say }}">{{ st.mark }} {{ st.name }}</button>{% endfor %}
+      <p class="verdict" aria-live="polite"></p>
+    </div>
+    {% endif %}
+  </div>
   {% endif %}
+</section>
+
+{% if features.explore %}
+<section class="sec" id="map">
+  <h2 class="lab">Explore</h2>
+  <p class="lead-s">{{ home.map_text or "Everything I have written or built is on one map, each item below what it builds on. Hover anything to see what is nearest and the reading order through it." }}</p>
+  <div class="btnrow"><a class="btn pri" href="/explore/">Open the map</a></div>
+</section>
+{% endif %}
+
+{% if experience %}
+<section class="sec" id="experience">
+  <h2 class="lab">Experience</h2>
+  <div class="cv">
+  {% for job in experience %}
+  <details class="role">
+    <summary><span class="when">{{ job.period }}</span><span class="what"><b>{{ job.role }}</b>, {{ job.org }}{% if job.place %}<span class="dim"> · {{ job.place }}</span>{% endif %}</span></summary>
+    <ul>{% for point in job.points or [] %}<li>{{ point }}</li>{% endfor %}</ul>
+    {% if job.page_nodes %}<p class="see">Pages from this role: {% for n in job.page_nodes %}<a data-x="{{ n.id }}" href="{{ n.url }}">{{ n.title }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  </details>
   {% endfor %}
-</div>
+  </div>
+  <p class="fn">Open a role for what I did there. The full CV is the button on the left.</p>
+</section>
+{% endif %}
+
+{% if home.education %}
+<section class="sec" id="education">
+  <h2 class="lab">Education</h2>
+  <div style="max-width:880px">
+    <div class="tblwrap"><table class="ds"><thead><tr><th>Degree</th><th>Institution</th></tr></thead><tbody>
+      {% for e in home.education %}<tr><td style="white-space:normal"><b>{{ e.degree }}</b></td><td style="white-space:normal">{{ e.school }}</td></tr>{% endfor %}
+    </tbody></table></div>
+    {% if home.courses %}<details class="more"><summary>Courses and electives</summary><p>{{ home.courses }}</p></details>{% endif %}
+  </div>
+</section>
+{% endif %}
+
+{% if home.contact %}
+{% set c = home.contact %}
+<section class="sec" id="contact">
+  <h2 class="lab">Contact</h2>
+  {% if c.lead %}<p class="lead-s contact-lead">{{ c.lead|safe }}</p>{% endif %}
+  {% if c.areas %}
+  <h3 class="help">What I work on</h3>
+  <ul class="consult">
+  {% for a in c.areas %}<li><span class="mk" aria-hidden="true">{{ a.mark }}</span><b>{{ a.name }}</b><span>{{ a.what }}</span></li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  {% if c.stack %}
+  <h3 class="help">Tech stack</h3>
+  <dl class="stack">
+  {% for g in c.stack %}<dt>{{ g.area }}</dt><dd>{% for t in g.tools %}<span>{{ t }}</span>{% endfor %}</dd>
+  {% endfor %}
+  </dl>
+  {% endif %}
+  {% if email or c.close %}
+  <div class="reach">
+    <p class="send">{{ c.close }}</p>
+    <div class="ways">
+      {% if email %}<a class="btn pri" href="mailto:{{ email }}?subject=Project%20enquiry">{{ c.email_button or "Email me about a project" }}</a>{% endif %}
+      {% for l in links_list if l.label == "LinkedIn" %}<a class="btn" href="{{ l.url }}">Message on LinkedIn</a>{% endfor %}
+      {% if email %}<p class="addr"><a href="mailto:{{ email }}">{{ email }}</a></p>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+  <h3 class="else">Elsewhere</h3>
+  <dl class="also">
+    {% if links_list %}<dt>{% for l in links_list %}<a href="{{ l.url }}">{{ l.label }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</dt>
+    <dd>{{ c.links_text or "Code, career record, and where the articles were first published." }}</dd>{% endif %}
+    {% for e in c.elsewhere or [] %}<dt><a href="{{ e.url }}">{{ e.label }}</a></dt>
+    <dd>{{ e.text }}</dd>
+    {% endfor %}
+  </dl>
+</section>
+{% endif %}
 {% endblock %}

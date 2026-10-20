@@ -7,12 +7,17 @@
 - Errors in pages do not stop the server: they are printed and shown in the page (a lenient build).
 - ``/api/ask/`` is passed to ``tessera.ask_server.handle`` when that module exists, so the "written answer" can be
   tried locally.
+- The Studio starts with it (on 127.0.0.1, the serve port + 1 when free). Every page served then carries a "Write"
+  button in the rail, and an "Edit this page" button on a page of the site; both go through ``/__tessera/write``,
+  which sends the browser to the Studio with its per-launch token. These buttons are added to the HTML as it is
+  served, at the theme's ``<!-- local-tools -->`` mark: the built files never contain them.
 """
 from __future__ import annotations
 
 import json
 import mimetypes
 import os
+import re
 import sys
 import threading
 import time
@@ -20,11 +25,14 @@ import traceback
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from urllib.parse import parse_qs, quote, unquote, urlsplit
 
 from . import config
 
 RELOAD_PATH = "/__tessera/events"
+WRITE_PATH = "/__tessera/write"
+LOCAL_MARK = b"<!-- local-tools -->"
+_PAGE_ID = re.compile(r"^[a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9-]*$")
 RELOAD_SCRIPT = (
     "<script>/* added by the development server only */(function(){if(!window.EventSource)return;"
     "var s=new EventSource('" + RELOAD_PATH + "');s.addEventListener('reload',function(){location.reload();});"
@@ -40,6 +48,8 @@ class State:
     def __init__(self, cfg, drafts: bool = False):
         self.cfg = cfg
         self.drafts = drafts
+        self.studio = None            # the StudioServer started with serve, if any
+        self.port = 0
         self.version = 0
         self.error = ""
         self.cond = threading.Condition()
@@ -120,6 +130,8 @@ def make_handler(state: State):
                 return self.events()
             if path.rstrip("/") == "/api/ask":
                 return self.ask("GET")
+            if path == WRITE_PATH:
+                return self.write_redirect()
             return self.static(path)
 
         def do_HEAD(self):
@@ -162,7 +174,7 @@ def make_handler(state: State):
             if target.suffix == ".md":
                 ctype = "text/markdown"
             if ctype == "text/html":
-                data = inject_reload(data)
+                data = inject_local(inject_reload(data), state.studio is not None)
             if ctype.startswith("text/") or ctype in ("application/javascript", "application/json", "image/svg+xml"):
                 ctype += "; charset=utf-8"
             self.send_response(status)
@@ -172,6 +184,22 @@ def make_handler(state: State):
             self.end_headers()
             if not head:
                 self.wfile.write(data)
+
+        # ---- the Studio, behind the Write button
+        def write_redirect(self):
+            """Send the browser to the Studio (with its token), opened at a page when ?page=<id> names one."""
+            host = (self.headers.get("Host") or "").lower()
+            allowed = {f"127.0.0.1:{state.port}", f"localhost:{state.port}"}
+            if state.studio is None or host not in allowed or \
+                    (self.headers.get("Sec-Fetch-Site") or "").lower() in ("cross-site", "same-site"):
+                return self.send_error(HTTPStatus.FORBIDDEN, "The Studio opens from this site's own Write button.")
+            page = (parse_qs(urlsplit(self.path).query).get("page") or [""])[0]
+            target = state.studio.url + ("#/edit/" + quote(page, safe=":") if _PAGE_ID.match(page) else "")
+            self.send_response(HTTPStatus.FOUND)
+            self.send_header("Location", target)
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.end_headers()
 
         # ---- live reload
         def events(self):
@@ -257,6 +285,38 @@ def inject_reload(html: bytes) -> bytes:
     return html[:idx] + script + html[idx:] if idx != -1 else html + script
 
 
+def inject_local(html: bytes, studio: bool) -> bytes:
+    """The local writing tools, in the rail where the theme marks them: a Write button and, on a page of the site,
+    Edit this page. Only the development server adds them; built files never contain them."""
+    if not studio or LOCAL_MARK not in html:
+        return html
+    tools = f'<a class="cta write" href="{WRITE_PATH}">Write</a>'
+    m = re.search(rb'<body[^>]*\sdata-page="([^"]+)"', html)
+    if m and _PAGE_ID.match(m.group(1).decode()):
+        tools += f'<a class="cta" href="{WRITE_PATH}?page={m.group(1).decode()}">Edit this page</a>'
+    return html.replace(LOCAL_MARK, tools.encode(), 1)
+
+
+def start_studio(cfg, port: int):
+    """The Studio on 127.0.0.1 in this process (a thread). Returns the server, or None if it cannot start."""
+    try:
+        from .studio.server import StudioServer
+    except ImportError:
+        return None
+    config.set_root(cfg.root)
+    server = None
+    for p in ([port, 0] if port else [0]):
+        try:
+            server = StudioServer(cfg.root, p)
+            break
+        except OSError:
+            continue
+    if server is None:
+        return None
+    threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.3}, daemon=True).start()
+    return server
+
+
 def _dotenv(path: Path) -> dict:
     """KEY=value lines from .env.local (never committed)."""
     out = {}
@@ -270,13 +330,19 @@ def _dotenv(path: Path) -> dict:
 
 
 def serve(cfg=None, port: int = 8000, host: str = "127.0.0.1", watch_files: bool = True, open_browser: bool = False,
-          drafts: bool = False):
-    """Build, then serve until Ctrl+C. With ``drafts`` the preview includes drafts and scheduled pages."""
+          drafts: bool = False, studio: bool = True, studio_port: int | None = None):
+    """Build, then serve until Ctrl+C. With ``drafts`` the preview includes drafts and scheduled pages. With ``studio``
+    (the default, and only when serving on this computer) the Studio starts too and the pages get a Write button."""
     cfg = cfg or config.load()
     state = State(cfg, drafts)
     print(f"Building {cfg['site']['name']} …")
     rebuild(state)
     httpd = DevServer((host, port), make_handler(state))
+    state.port = httpd.server_address[1]
+    if studio and host in ("127.0.0.1", "localhost"):
+        state.studio = start_studio(cfg, studio_port if studio_port is not None else state.port + 1)
+        if state.studio is not None:
+            print(f"  The Studio runs at http://127.0.0.1:{state.studio.port}/ (the Write button opens it)")
     stop = threading.Event()
     if watch_files:
         threading.Thread(target=watch, args=(state, stop), daemon=True).start()
@@ -292,4 +358,7 @@ def serve(cfg=None, port: int = 8000, host: str = "127.0.0.1", watch_files: bool
     finally:
         stop.set()
         httpd.server_close()
+        if state.studio is not None:
+            state.studio.shutdown()
+            state.studio.server_close()
     return 0

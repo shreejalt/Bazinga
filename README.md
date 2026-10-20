@@ -42,15 +42,36 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python -m tessera studio           # opens the Studio in your browser
 ```
 
-Then make it yours:
-1. Edit `site.yml`: your name, origin, links, colours and fonts.
-2. Replace the example posts in `content/posts/`.
+Then make it yours (about ten minutes):
+1. Edit `site.yml`: `site:` (your name, origin, links), `home:` (photo, role, tagline, lead, about, experience,
+   education, contact; every field is commented) and, if you like, `theme:` colours and fonts.
+2. Edit `content/cv.yml` (the CV page, `/cv/`) and replace `static/images/photo.svg` with your picture.
+3. Replace the example pages in `content/reads/`, `content/papers/`, `content/projects/` and `content/elsewhere/`.
 3. Replace `content/LICENSE.md` with the licence you want for your writing.
+
+## The kinds of page
+
+| Folder | Id | What it is |
+|---|---|---|
+| `content/reads/` | `read:<slug>` | a concept explained, in the memo layout (summary, contents, numbered sections, Connections) |
+| `content/papers/` | `paper:<slug>` | one paper explained; `explains: [KEY]` names it in `content/references.yml` |
+| `content/projects/` | `project:<slug>` | a project page; optional `type`, `stack`, `github`, `tagline`, `lead`, `usage`, `limitations` |
+| `content/elsewhere/` | `article:<slug>` | an article that lives on another site: `external: <address>`, `author`, `publication`, no body. Listed, placed on the map, opened where it was published |
+
+The kinds, their labels and list blurbs are in `site.yml` (`kinds:`); `role:` picks each kind's layout. Lists show ten rows
+at a time with a pager and a filter box. `::pagebreak` on its own line adds a page break to a memo page.
+
+## Writing from the site
+
+`python -m tessera serve` also starts the Studio on 127.0.0.1. Every page it serves then has a **Write** button in the
+rail (and **Edit this page** on a page of the site); they open the Studio with its one-time key. The buttons are added
+by the development server as it serves each page: `python -m tessera build` never puts them in `_site/`, and a test
+checks that. `--no-studio` leaves them out.
 
 ## Writing a post
 
 Use the Studio (`python -m tessera studio`), or any editor plus `python -m tessera serve`. A post is one file,
-`content/posts/<slug>.md`:
+`content/reads/<slug>.md`:
 
 ```markdown
 ---
@@ -60,7 +81,7 @@ status: draft                 # draft | published; a future date schedules it
 summary: "Two or three sentences for lists, the map and search."
 topics: [attention, transformers]
 series: {name: "Learning, Visually", part: 3}
-builds_on: [post:softmax-and-temperature]
+builds_on: [read:softmax-and-temperature]
 ---
 
 Attention turns similarities into weights with a softmax [@Vaswani17]:
@@ -72,13 +93,13 @@ $$ {#eq:attention}
 ::figure attention_weights | start: unscaled
 
 > [!TIP]
-> Equation [eq:attention] is the whole idea; the rest is bookkeeping. See [[post:gradient-descent]].
+> Equation [eq:attention] is the whole idea; the rest is bookkeeping. See [[read:gradient-descent]].
 ```
 
 | You write | You get |
 |---|---|
 | `$x^2$`, `$$ … $$` | real math; `aligned`, `\tag`, `{#eq:name}` with `[eq:name]` references |
-| `[[post:slug]]`, `[[post:slug\|text]]` | a link, plus an edge on the map |
+| `[[read:slug]]`, `[[read:slug\|text]]` | a link, plus an edge on the map |
 | `[@Key]`, `[@Key, p. 4]` | a numbered citation and reference list (`python -m tessera cite 1706.03762` adds a paper) |
 | `::figure name` | an interactive figure from `figures/name.py` |
 | `::drawing module.fn \| caption` | a diagram from `drawings/module.py` |
@@ -86,8 +107,8 @@ $$ {#eq:attention}
 | footnotes, tables, fenced code, `==mark==`, images with captions | as you expect |
 
 The example posts are the documentation:
-- `content/posts/welcome.md` shows every feature next to its syntax.
-- `content/posts/writing-math.md` is a guide to writing equations that render everywhere, and to the errors you might see.
+- `content/reads/welcome.md` shows every feature next to its syntax.
+- `content/reads/writing-math.md` is a guide to writing equations that render everywhere, and to the errors you might see.
 
 `python -m tessera check` runs the same checks as the Studio. They cover:
 - math that won't render;
@@ -138,7 +159,7 @@ Every build writes:
 With an LLM configured (in `site.yml`, under `llm:`; the key goes in `.env.local`, never committed), these commands write proposals into `proposals/` for you to review:
 
 ```bash
-python -m tessera wiki ingest content/posts/x.md   # topics, links to add, summary, description, questions
+python -m tessera wiki ingest content/reads/x.md   # topics, links to add, summary, description, questions
 python -m tessera wiki lint                        # orphans, one-way links, thin topics (+ contradictions with --model)
 python -m tessera wiki highlights "Series name"    # 3–4 highlights per part, numbers checked against the page
 ```
@@ -163,7 +184,7 @@ In the Studio, **Publish** runs each step in a dialog with a live log:
 8. Pushes, then runs your optional deploy command.
 
 **Schedule** sets a future date; the post appears on the first build after that date. **Unpublish** turns it back
-into a draft. From a terminal it's `python -m tessera publish -- content/posts/x.md [--dry-run]`.
+into a draft. From a terminal it's `python -m tessera publish -- content/reads/x.md [--dry-run]`.
 
 The Studio is local by design:
 - It listens on 127.0.0.1 only.

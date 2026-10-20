@@ -1,100 +1,84 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import mini %}
-{#- One post or project: header, side contents, body, connections, references, series navigation. -#}
-{% block body_class %}is-page kind-{{ page.kind }}{% endblock %}
-{% block main %}
-<article class="post{% if toc|length > 1 %} has-toc{% endif %}">
+{% import "partials/lists.html" as lists %}
+{#- A read or a paper write-up, in the memo layout: header block, title, series strip, summary, contents with page
+    numbers, the body, Connections, Papers, and the older/newer links. -#}
+{% block bodyclass %}post kind-{{ page.kind }}{% endblock %}
+{% block cta %}<a class="cta" href="{{ kind_list_url }}">All {{ kind_list_label|lower }}</a>{% endblock %}
+{% block tiny %}{{ page.date|full_date }}{% endblock %}
+
+{% block content %}
+<article class="memo">
   {% if page.state != 'published' %}
-  <div class="state-banner state-{{ page.state }}" role="status">
-    {% if page.state == 'draft' %}<strong>Draft.</strong> Only you can see this preview; it is not on the public site.
-    {% else %}<strong>Scheduled.</strong> This page goes live on {{ page.date|date }}.{% endif %}
-  </div>
+  <div class="notice" role="status">{% if page.state == 'draft' %}<b>Draft.</b> Only you can see this preview; it is not on the public site.{% else %}<b>Scheduled.</b> This page goes live on {{ page.date|date }}.{% endif %}</div>
   {% endif %}
   {% if issues %}
-  <details class="preview-issues" open>
+  <details class="notice preview-issues" open>
     <summary>{{ issues|length }} thing{{ '' if issues|length == 1 else 's' }} to fix before publishing</summary>
     <ul>
-    {% for i in issues %}<li class="issue-{{ i.level }}"><span class="issue-line">{% if i.line %}line {{ i.line }}{% endif %}</span> {{ i.message }}{% if i.hint %} <span class="issue-hint">{{ i.hint }}</span>{% endif %}</li>
+    {% for i in issues %}<li class="issue-{{ i.level }}">{% if i.line %}line {{ i.line }}: {% endif %}{{ i.message }}{% if i.hint %} <span class="dim">({{ i.hint }})</span>{% endif %}</li>
     {% endfor %}
     </ul>
   </details>
   {% endif %}
-
-  <header class="post-header">
-    <p class="eyebrow">
-      <a href="{{ kind_list_url }}">{{ kind_list_label }}</a>
-      {% if series_nav %}<span class="dot" aria-hidden="true">·</span><a href="{{ series_nav.url }}">{{ series_nav.name }}</a>, part {{ series_nav.index + 1 }} of {{ series_nav.total }}{% endif %}
-    </p>
-    <h1 class="post-title">{{ page.title }}</h1>
-    {% if page.summary %}<p class="post-dek">{{ page.summary }}</p>{% endif %}
-    <div class="post-meta">
-      {% if page.date %}<time datetime="{{ page.date|isodate }}">{{ page.date|date }}</time><span class="dot" aria-hidden="true">·</span>{% endif %}
-      {% if page.updated %}<span>Updated <time datetime="{{ page.updated|isodate }}">{{ page.updated|date }}</time></span><span class="dot" aria-hidden="true">·</span>{% endif %}
-      <span>{{ reading_minutes }} min read</span>
-      {% if page_topics %}
-      <ul class="chips">{% for t in page_topics %}<li><a class="chip" href="/topics/{{ t.slug }}/">{{ t.label }}</a></li>{% endfor %}</ul>
-      {% endif %}
+  <div class="hdr" style="white-space:normal">
+    <div>
+      <div>{{ kind_list_label }}, {{ site.name }}</div>
+      {% if explains %}<div>Explains: {% for e in explains %}<a href="{{ e.url }}">{{ e.title }}</a> ({{ e.authors }}, {{ e.year }}){% if not loop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+      {% if series_info %}<div>Series: <a href="{{ series_info.url }}">{{ series_info.name }}</a>, part {{ series_info.part }} of {{ series_info.n }}</div>{% endif %}
+      <div>Tags: {% for t in page_topics %}<a href="/topics/{{ t.slug }}/" data-tag="{{ t.slug }}">{{ t.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</div>
+      {% if builds_on %}<div>Builds on: {% for b in builds_on %}<a data-x="{{ b.id }}" href="{{ b.url }}">{{ b.title }}</a>{% if not loop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+      {% if meta.first_published %}<div>First published: {{ meta.first_published }}</div>{% endif %}
+      {% if page.updated %}<div>Updated: {{ page.updated|full_date }}</div>{% endif %}
     </div>
-  </header>
+    <div class="rt"><div><b>{{ author_short }}</b></div><div>{{ page.date|full_date }}</div></div>
+  </div>
 
-  <div class="post-grid">
-    {% if toc|length > 1 %}
-    <nav class="toc" aria-label="On this page">
-      <details class="toc-box" open>
-        <summary>On this page</summary>
-        <ol>
-        {% for item in toc %}<li class="toc-l{{ item.level }}"><a href="#{{ item.id }}">{{ item.text }}</a></li>
-        {% endfor %}
-        </ol>
-      </details>
-    </nav>
+  <h1>{{ page.title }}</h1>
+  {% if series_info %}<ol class="series">{% for s in series_info.parts %}<li{% if s.id == page.id %} class="here"{% endif %}><span class="n">{{ s.part }}</span>{% if s.id == page.id %}<b>{{ s.title }}</b>{% else %}<a data-x="{{ s.id }}" href="{{ s.url }}">{{ s.title }}</a>{% endif %}</li>{% endfor %}</ol>{% endif %}
+
+  <h2 id="summary">Summary</h2>
+  <div class="b"><p>{{ page.summary }}</p></div>
+
+  <h2 id="contents">Table of Contents</h2>
+  <ol class="toc">
+    {% for h in headings %}<li><a href="#{{ h.id }}">{{ h.text }}</a><span class="d"></span>{{ h.page }}</li>{% endfor %}
+    <li><a href="#connections">{{ n_conn }}. Connections</a><span class="d"></span>{{ last_page }}</li>
+    {% if show_papers %}<li><a href="#papers">{{ n_refs }}. Papers</a><span class="d"></span>{{ last_page }}</li>{% endif %}
+  </ol>
+
+  <div class="pagebreak"><span>{{ surname }}</span><span>Informational</span><span>[Page 1]</span></div>
+  <div class="pagetop"><span>{{ author_short }}</span><span>{{ page.date|month_year }}</span></div>
+
+  <div class="body">
+  {{ body }}
+  </div>
+
+  <h2 id="connections">{{ n_conn }}. Connections</h2>
+  <div class="b">
+    {% if figure %}
+    <p>What this page builds on, cites or links to, and what points back at it. A plain box is a “builds on”; “cited” and “linked in the text” are the lighter links. Hover a box for a preview.</p>
+    <div data-reveal>{{ figure }}</div>
     {% endif %}
+    <p style="margin-top:22px"><b>Related</b></p>
+    {{ lists.related(view) }}
+    <p style="margin-top:22px"><b>Go deeper</b></p>
+    {{ lists.path(view) }}
+    <p style="margin-top:22px"><b>Go broader</b></p>
+    {{ lists.broader(wider, meta.short or page.title) }}
+  </div>
 
-    <div class="post-body prose">
-      {{ html }}
-    </div>
+  {% if show_papers %}
+  <h2 id="papers">{{ n_refs }}. Papers</h2>
+  <ul class="refs">
+    {% for r in refs %}<li id="ref-{{ r.key }}"><span>[{{ r.n }}]</span><span>{{ r.authors }}, "{{ r.title }}", {% if r.url %}<a{% if not r.explained %} data-x="ref:{{ r.key }}"{% endif %} href="{{ r.url }}">{{ r.link }}</a>{% else %}{{ r.link }}{% endif %}, {{ r.year }}.{% for e in r.explained %} <a data-x="{{ e.id }}" href="{{ e.url }}">Explained here →</a>{% endfor %}</span></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
 
-    <footer class="post-end">
-      {% if series_nav %}
-      <nav class="series-box" aria-label="Series">
-        <p class="series-box-head"><a href="{{ series_nav.url }}">{{ series_nav.name }}</a> <span class="muted">· part {{ series_nav.index + 1 }} of {{ series_nav.total }}</span></p>
-        <ol class="series-parts">
-        {% for p in series_nav.parts %}<li{% if loop.index0 == series_nav.index %} aria-current="page"{% endif %}>{% if loop.index0 == series_nav.index %}<span>{{ p.title }}</span>{% else %}<a href="{{ p.url }}">{{ p.title }}</a>{% endif %}</li>
-        {% endfor %}
-        </ol>
-        <div class="series-steps">
-          {% if series_nav.prev %}<a class="step prev" href="{{ series_nav.prev.url }}"><span class="step-label">Previous</span><span class="step-title">{{ series_nav.prev.title }}</span></a>{% else %}<span></span>{% endif %}
-          {% if series_nav.next %}<a class="step next" href="{{ series_nav.next.url }}"><span class="step-label">Next</span><span class="step-title">{{ series_nav.next.title }}</span></a>{% endif %}
-        </div>
-      </nav>
-      {% endif %}
-
-      {% if has_connections %}
-      <section class="connections" id="connections" aria-labelledby="connections-title">
-        <h2 id="connections-title">Connections</h2>
-        <div class="connection-groups">
-        {% for key, label, note in [('builds_on', 'Builds on', 'Read these first'), ('read_next', 'Read next', 'Pages that build on this one'), ('backlinks', 'Mentioned in', 'Pages that link here'), ('related', 'Related', 'Shares topics or sources')] %}
-          {% if connections[key] %}
-          <div class="connection-group">
-            <h3>{{ label }} <span class="muted">{{ note }}</span></h3>
-            <div class="mini-list">{% for n in connections[key] %}{{ mini(n) }}{% endfor %}</div>
-          </div>
-          {% endif %}
-        {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-
-      {% if references %}
-      <section class="references" id="references" aria-labelledby="references-title">
-        <h2 id="references-title">References</h2>
-        <ol>
-        {% for r in references %}<li id="ref-{{ r.key }}">{{ r.html|safe }}</li>
-        {% endfor %}
-        </ol>
-      </section>
-      {% endif %}
-    </footer>
+  <div class="pagebreak">
+    <span>{% if prev %}<a data-x="{{ prev.id }}" href="{{ prev.url }}">&lt;- Older</a>{% endif %}</span>
+    <span>[Page {{ last_page }}]</span>
+    <span>{% if next %}<a data-x="{{ next.id }}" href="{{ next.url }}">Newer -&gt;</a>{% endif %}</span>
   </div>
 </article>
 {% endblock %}

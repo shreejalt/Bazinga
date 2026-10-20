@@ -15,7 +15,7 @@ from test_core_support import REPO, post, render_text  # noqa: E402
 def other(slug="other", title="Other Page", status=None, date="2020-01-01"):
     cfg = config.load(REPO)
     fields = {"status": status} if status else {}
-    return content.parse(post(title=title, date=date, **fields), Path(f"content/posts/{slug}.md"), cfg)
+    return content.parse(post(title=title, date=date, **fields), Path(f"content/reads/{slug}.md"), cfg)
 
 
 class Maths(unittest.TestCase):
@@ -71,15 +71,15 @@ class Maths(unittest.TestCase):
 
 class Links(unittest.TestCase):
     def test_wikilinks(self):
-        _, r = render_text("Read [[post:other]] and [[post:other|this one]].", others=[other()])
-        self.assertIn('<a class="xref" href="/posts/other/" data-id="post:other">Other Page</a>', r.html)
+        _, r = render_text("Read [[read:other]] and [[read:other|this one]].", others=[other()])
+        self.assertIn('<a class="xref" href="/reads/other/" data-id="read:other">Other Page</a>', r.html)
         self.assertIn(">this one</a>", r.html)
-        self.assertEqual(r.mentions, ["post:other"])
+        self.assertEqual(r.mentions, ["read:other"])
 
     def test_unknown_link_is_an_error_with_did_you_mean(self):
-        page, r = render_text("x\n[[post:othr]]", others=[other()])
+        page, r = render_text("x\n[[read:othr]]", others=[other()])
         self.assertEqual(r.issues[0].line, page.body_line + 1)
-        self.assertIn("did you mean post:other", r.issues[0].hint)
+        self.assertIn("did you mean read:other", r.issues[0].hint)
 
     def test_citations_are_numbered_in_order(self):
         _, r = render_text("A [@Kingma14], B [@Vaswani17, p. 4], A again [@Kingma14; @Vaswani17].")

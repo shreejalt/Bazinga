@@ -1,25 +1,16 @@
 {% extends "base.html" %}
-{#- Every topic, grouped as in content/topics.yml. -#}
-{% block body_class %}is-topics{% endblock %}
-{% block main %}
-<div class="wrap">
-  <header class="page-head">
-    <h1>Topics</h1>
-    <p class="page-sub muted">Each topic gathers the pages about it and their figures.</p>
-  </header>
-  {% for group, items in groups.items() %}
-  <section class="topic-group" aria-labelledby="g-{{ loop.index }}">
-    <h2 id="g-{{ loop.index }}">{{ group }}</h2>
-    <ul class="topic-grid">
-    {% for t in items %}
-      <li><a class="topic-card{% if not t.count %} is-empty{% endif %}" href="/topics/{{ t.slug }}/">
-        <span class="topic-card-name">{{ t.label }}</span>
-        {% if t.blurb %}<span class="topic-card-blurb">{{ t.blurb }}</span>{% endif %}
-        <span class="topic-card-count">{{ t.count }} page{{ '' if t.count == 1 else 's' }}</span>
-      </a></li>
-    {% endfor %}
-    </ul>
-  </section>
+{#- Every topic, grouped as in content/topics.yml (topics no page uses are left out). -#}
+{% block cta %}<a class="cta" href="/">Home</a><a class="cta" href="/explore/">Explore</a>{% endblock %}
+
+{% block content %}
+<section class="sec" id="top">
+  <h1 class="pagetitle">Topics</h1>
+  <p class="lead-s">One page per concept: the pages about it in the order to read them, and the interactive figures pulled from those pages. The map at <a href="/explore/">Explore</a> shows how they connect.</p>
+  {% for group, slugs in groups if slugs %}
+  <h2 class="lab">{{ group }}</h2>
+  <ul class="rel">
+    {% for slug in slugs %}<li><div><a href="/topics/{{ slug }}/">{{ topics_map[slug].label }}</a></div><div class="why">{{ counts[slug] }} page{{ "" if counts[slug] == 1 else "s" }}{% if nfig[slug] %} · {{ nfig[slug] }} figure{{ "" if nfig[slug] == 1 else "s" }}{% endif %}</div></li>{% endfor %}
+  </ul>
   {% endfor %}
-</div>
+</section>
 {% endblock %}

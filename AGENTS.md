@@ -25,10 +25,10 @@ Generated into the built site (`_site/`): `llms.txt`, `llms-full.txt`, a Markdow
 
 ## Pages and links
 
-- Id: `<singular kind>:<slug>`, e.g. `post:attention`, `project:robot`. URL: `/<kind>/<slug>/`.
+- Id: `<singular kind>:<slug>`, e.g. `read:attention`, `project:robot`. URL: `/<kind>/<slug>/`.
 - Front matter: `title`, `date`, `status` (draft | published), `summary`, optional `description` (≤ 155 characters),
   `topics` (1–4, only slugs from `content/topics.yml`), `series: {name, part}`, `builds_on: [ids]`, `cites: [keys]`.
-- Links between pages: `[[post:attention]]` or `[[post:attention|this post]]` in the body. Citations: `[@KEY]`, with
+- Links between pages: `[[read:attention]]` or `[[read:attention|this post]]` in the body. Citations: `[@KEY]`, with
   `KEY` in `content/references.yml`. Figures: `::figure name`; diagrams: `::drawing module.fn | caption`.
 - The graph has five kinds of edges: builds_on, mentions (`[[…]]`), shared citations, shared topics (weak), series.
   The build refuses unknown ids, topics and citation keys.
@@ -45,8 +45,8 @@ Run everything from the site root with the project's Python (`.venv/bin/python` 
    author asks for a new page.
 
 **Ingest** — connect a new or changed page:
-1. `python -m tessera check content/posts/<slug>.md` — fix every error first.
-2. `python -m tessera wiki ingest post:<slug>` — the model proposes topics, builds_on, `[[links]]` to add (each with
+1. `python -m tessera check content/reads/<slug>.md` — fix every error first.
+2. `python -m tessera wiki ingest read:<slug>` — the model proposes topics, builds_on, `[[links]]` to add (each with
    the exact sentence it belongs in), a summary, a description, three questions the page answers, and a series.
    Everything is checked against the real ids, topics and the page's own text; what fails is listed as dropped.
 3. Read `proposals/ingest-<slug>.md` with the author. Apply only what they accept, by hand, in the page's front
@@ -65,7 +65,7 @@ Run everything from the site root with the project's Python (`.venv/bin/python` 
 `.env.local`, which is git-ignored):
 - `python -m tessera wiki highlights "<series name>"` — 3–4 highlights per part; a line with a number that is not in
   its page is dropped. Accepted lines go to `content/series/<slug>.yml`.
-- `python -m tessera wiki describe post:<slug>` — a description of at most 155 characters in the page's own words.
+- `python -m tessera wiki describe read:<slug>` — a description of at most 155 characters in the page's own words.
 - `python -m tessera wiki equation "<words>"` — LaTeX for an equation described in words.
 - `python -m tessera wiki figure "<description>"` — a draft figure module from the closest starter; test it with
   `python -m tessera figure test <name>` after copying it to `figures/`.

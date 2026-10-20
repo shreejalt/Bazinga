@@ -1,32 +1,41 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import entry %}
-{#- One topic hub: the intro, the pages, and the live figures from those pages. -#}
-{% block body_class %}is-topic{% endblock %}
-{% block main %}
-<div class="wrap">
-  <header class="page-head">
-    <p class="eyebrow"><a href="/topics/">Topics</a>{% if t.group %}<span class="dot" aria-hidden="true">·</span>{{ t.group }}{% endif %}</p>
-    <h1>{{ t.label }}</h1>
-    {% if intro %}<div class="page-intro prose">{{ intro }}</div>{% endif %}
-  </header>
-  {% if items %}
-  <section aria-labelledby="pages-title">
-    <h2 id="pages-title" class="section-label">{{ items|length }} page{{ '' if items|length == 1 else 's' }}</h2>
-    <div class="entries">{% for n in items %}{{ entry(n, topic, 'h3') }}{% endfor %}</div>
-  </section>
-  {% else %}
-  <p class="empty">No pages on this topic yet.</p>
-  {% endif %}
-  {% if figures %}
-  <section class="topic-figures" aria-labelledby="figures-title">
-    <h2 id="figures-title" class="section-label">Figures</h2>
-    {% for f in figures %}
-    <div class="topic-figure prose">
-      {{ f.html }}
-      <p class="figure-from muted">From <a href="{{ f.from.url }}">{{ f.from.title }}</a></p>
-    </div>
+{#- One topic hub: the pages on it in reading order, the live figures those pages use, and the topics that go with it. -#}
+{% block cta %}<a class="cta" href="/topics/">All topics</a><a class="cta" href="/explore/?tag={{ slug }}">On the map</a>{% endblock %}
+
+{% block content %}
+<section class="sec" id="top">
+  <p class="kicker">Topic{% if t.group %} · {{ t.group }}{% endif %}</p>
+  <h1 class="pagetitle">{{ t.label }}</h1>
+  <p class="lead-s">{% if t.blurb %}{{ t.blurb }} {% endif %}Everything on this site about {{ t.label|lower }}, in the order to read it: a page is listed after the pages it builds on.{% if figures %} The figures below are the ones those pages use to explain it; each is live: move a slider and it recomputes.{% endif %}</p>
+</section>
+
+<section class="sec" id="pages">
+  <h2 class="lab">In reading order</h2>
+  <ol class="path">
+    {% for p in parts %}
+    <li><div><span class="n dim" style="font-family:var(--mono);margin-right:10px">{{ loop.index }}</span><a data-x="{{ p.id }}" href="{{ p.url }}">{{ p.title }}</a></div>
+      <div class="why">{{ p.kl }}{% if p.read_first %} · read first: {% for r in p.read_first %}<a data-x="{{ r.id }}" href="{{ r.url }}">{{ r.title }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</div></li>
     {% endfor %}
-  </section>
-  {% endif %}
-</div>
+  </ol>
+</section>
+
+{% if figures %}
+<section class="sec" id="figures">
+  <h2 class="lab">The figures these pages use</h2>
+  <p class="lead-s" style="font-size:16.5px">Pulled from the pages above. Move a slider and the figure recomputes, exactly as on its page.</p>
+  {% for f in figures %}
+  <div class="pulled">
+    <p class="sub">From <a data-x="{{ f.from.id }}" href="{{ f.from.url }}{% if f.anchor %}#{{ f.anchor }}{% endif %}">{{ f.from.title }}</a>{% if f.section %} › {{ f.section }}{% endif %}</p>
+    {{ f.html }}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+{% if near %}
+<section class="sec" id="near">
+  <h2 class="lab">Tags that go with it</h2>
+  <p class="tags">{% for n in near %}<a class="tag" href="/topics/{{ n.slug }}/">{{ n.label }} <span class="dim">{{ n.shared }}</span></a>{% endfor %}</p>
+</section>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% import "partials/lists.html" as lists %}
+{#- A project page. Optional header fields: tagline, lead, from (where it was done), type (e.g. Open-source), stack,
+    github (the repository), usage (shown as a code block), limitations (a list), credit. -#}
+{% block bodyclass %}kind-{{ page.kind }}{% endblock %}
+{% block cta %}
+  {% if meta.github %}<a class="cta" href="{{ meta.github }}">Source on GitHub</a>{% endif %}
+  <a class="cta" href="{{ kind_list_url }}">All {{ kind_list_label|lower }}</a>
+{% endblock %}
+{% block tiny %}{% if meta.type %}{{ meta.type }} project{% else %}Project{% endif %}{% if meta.stack %}<br>{{ meta.stack }}{% endif %}{% endblock %}
+
+{% block content %}
+{% if page.state != 'published' %}
+<div class="notice" role="status">{% if page.state == 'draft' %}<b>Draft.</b> Only you can see this preview; it is not on the public site.{% else %}<b>Scheduled.</b> This page goes live on {{ page.date|date }}.{% endif %}</div>
+{% endif %}
+{% if issues %}
+<details class="notice preview-issues" open>
+  <summary>{{ issues|length }} thing{{ '' if issues|length == 1 else 's' }} to fix before publishing</summary>
+  <ul>{% for i in issues %}<li class="issue-{{ i.level }}">{% if i.line %}line {{ i.line }}: {% endif %}{{ i.message }}{% if i.hint %} <span class="dim">({{ i.hint }})</span>{% endif %}</li>{% endfor %}</ul>
+</details>
+{% endif %}
+<section class="sec" id="overview">
+  <h1 class="name{% if page.title|length > 34 %} long{% endif %}">{{ page.title }}</h1>
+  {% if meta.tagline %}<p class="leadp" style="font-size:26px;color:var(--ink);margin-top:10px">{{ meta.tagline }}</p>{% endif %}
+  {% if meta.lead %}<p class="leadp">{{ meta.lead }}</p>{% elif not meta.from %}<p class="leadp">{{ page.summary }}</p>{% endif %}
+  {% if meta.from %}
+  <div class="facts">
+    <div><div class="k">Type</div><div class="v">{{ meta.type or 'Open-source' }} project</div></div>
+    <div><div class="k">From</div><div class="v">{{ meta.from }}</div></div>
+    <div><div class="k">Headline result</div><div class="v">{{ page.summary }}</div></div>
+    <div><div class="k">Tags</div><div class="v tags">{% for t in page_topics %}<a class="tag" href="/topics/{{ t.slug }}/" data-tag="{{ t.slug }}">{{ t.label }}</a>{% endfor %}</div></div>
+  </div>
+  {% endif %}
+  {% if meta.github %}
+  <div class="btnrow"><a class="btn" href="{{ meta.github }}">Source on GitHub</a></div>
+  {% endif %}
+</section>
+
+{% if meta.usage %}
+<section class="sec" id="usage">
+  <h2 class="lab">Usage</h2>
+  <pre>{{ meta.usage }}</pre>
+</section>
+{% endif %}
+
+{% if has_headings %}
+<div class="prose full">
+{{ body }}
+</div>
+{% else %}
+<section class="sec" id="write-up">
+  <h2 class="lab">Write-up</h2>
+  <div class="prose">
+  {{ body }}
+  </div>
+</section>
+{% endif %}
+
+<section class="sec" id="related">
+  <h2 class="lab">Connected work</h2>
+  <div class="split" style="margin-top:0">
+    <div><div class="sub">Related</div>{{ lists.related(view) }}</div>
+    <div><div class="sub">Go deeper</div>{{ lists.path(view) }}</div>
+  </div>
+  <div class="sub" style="margin-top:26px">Go broader</div>{{ lists.broader(wider, meta.short or page.title) }}
+  {% if meta.credit %}<p class="note" style="margin-top:18px">{{ meta.credit }}</p>{% endif %}
+</section>
+
+{% if meta.limitations %}
+<section class="sec" id="limitations">
+  <h2 class="lab">Limitations</h2>
+  <ul style="max-width:70ch">{% for item in meta.limitations %}<li>{{ item }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+{% endblock %}

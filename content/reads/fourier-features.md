@@ -5,11 +5,11 @@ summary: "Add enough sine waves and you can draw almost any shape, even a square
 description: "Why sums of sines can approximate functions, how Transformers use sinusoids to encode position, and how Fourier features help networks learn fine detail."
 topics: [signals, transformers, neural-networks]
 series: {name: "Learning, Visually", part: 4}
-builds_on: [post:attention-from-scratch]
+builds_on: [read:attention-from-scratch]
 cites: [Vaswani17, Tancik20]
 ---
 
-[[post:attention-from-scratch|The last part]] ended with a gap: attention compares what words *are*, not where they
+[[read:attention-from-scratch|The last part]] ended with a gap: attention compares what words *are*, not where they
 *are*. The fix in the Transformer is a set of sine waves. First I want to show why sines are such a good material to
 build with, using a stubborn shape: a square wave.
 
@@ -101,12 +101,12 @@ $$ {#eq:fourier-features}
 where each entry of the matrix $B$ is drawn at random from a normal distribution with standard deviation $\sigma$
 [@Tancik20, sec. 6.1]. The network then sees a whole list of waves at many frequencies, much like the Transformer's
 position vectors, and fine detail becomes learnable. The scale $\sigma$ is a knob much like the learning rate in
-[[post:gradient-descent|the first part]]: too small and the result is oversmoothed, too large and it is noisy. On
+[[read:gradient-descent|the first part]]: too small and the result is oversmoothed, too large and it is noisy. On
 their natural-image task $\sigma = 10$ worked best [@Tancik20, fig. 10].
 
 > [!KEY] One idea, three places
 > A square wave, a word's position and a pixel's coordinates all become easier to work with once they are written
 > as a list of sines at different frequencies.
 
-That closes the series. If you came here for the website rather than the maths, [[post:welcome]] shows how each of
-these pages was written, and [[post:writing-math]] covers the equations.
+That closes the series. If you came here for the website rather than the maths, [[read:welcome]] shows how each of
+these pages was written, and [[read:writing-math]] covers the equations.

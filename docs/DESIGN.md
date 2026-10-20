@@ -368,3 +368,17 @@ The tests cover:
 - **Netlify:** `netlify.toml` gives the same build; Ask's written answers are off (static only), unless the author adds a Netlify function.
 - **GitHub Pages:** `.github/workflows/pages.yml` builds on push and daily (for scheduled posts) and deploys `_site`. Written answers are off.
 - **Any static host:** upload `_site/`.
+
+## The default theme (rail and paper sheet)
+
+The default theme follows the owner's own site: a rail (brand, sections, buttons, date) on a recycled-paper ground and
+each page as a paper sheet; STIX Two Text and Courier Prime; reads and papers in a memo layout (header block, title,
+series strip, Summary, contents with page numbers, numbered sections, Connections with the links figure, Related / Go
+deeper / Go broader, Papers, older/newer). Kinds carry a `role` (read, paper, project, external). The home page, the CV
+(`content/cv.yml`), lists (ten rows a page, filter), series, topics with live figures, Explore and Ask follow it too.
+`tessera/mapview.py` (standard library) computes the map layout, every page's view (related, reading order, the hover
+motion), the links figure and the series finder; the build writes `/data/site.js`, `/data/map.json`,
+`/data/mapdata.json`, `/data/series.json` and `/data/view/<id>.json`, and ships the module as `/figures/_mapview.py`
+for the Explore page's "chain between" and "in reading order". There is no dark mode. `tessera serve` starts the Studio
+and adds a Write button (and Edit this page) at the theme's `<!-- local-tools -->` mark as it serves; builds never
+contain them.

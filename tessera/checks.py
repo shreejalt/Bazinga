@@ -66,6 +66,18 @@ def check_front_matter(page, site) -> list[Issue]:
                             f"{DESCRIPTION_MAX}", "shorten it, or remove it to use the summary", "description"))
     issues += _check_topics(page, site, level)
     issues += _check_builds_on(page, site)
+    for key in page.explains:
+        if site.references and key not in site.references:
+            hint = _did_you_mean(key, site.references) or "add the paper to content/references.yml first"
+            issues.append(Issue("error", page.line_of("explains"), f"explains: unknown reference key {key!r}", hint,
+                                "explains-unknown"))
+    if page.external and not str(page.external).startswith(("http://", "https://")):
+        issues.append(Issue("error", page.line_of("external"), f"external: {page.external!r} is not a web address",
+                            "write the full address, e.g. external: https://medium.com/…", "external"))
+    if page.external and page.body.strip():
+        issues.append(Issue("warning", page.line_of("external") or 1, "an external entry has text below its header",
+                            "external entries open elsewhere and have no page here; the text is not shown",
+                            "external-body"))
     if page.series is not None and page.series.get("part", 0) < 1:
         issues.append(Issue("error", page.line_of("series"), "the series part must be 1 or more",
                             'write series: {name: "…", part: 1}', "series"))

@@ -4,18 +4,21 @@ date: 2026-10-19
 summary: "An open-source template for technical writing: Markdown posts with real equations, citations and interactive figures, a map of how every page connects, topic and series pages, and an Ask box that answers from the site's own text. This page describes what it does and how it is built."
 description: "What Tessera does and how it is built: Markdown to static pages, equations as MathML, figures in Python, a site graph, and Ask from the site's own text."
 topics: [tools, writing, visualization]
-builds_on: [post:welcome]
+short: "Tessera"
+type: Open-source
+stack: "Python · Markdown · MathML"
+builds_on: [read:welcome]
 ---
 
 Tessera is the template this site is made with. I wanted a place for technical writing where an equation is real
 text, a figure can be moved, and every page knows which other pages it leans on. This page is the plain description
-of how it does that. For the syntax itself, start with [[post:welcome]].
+of how it does that. For the syntax itself, start with [[read:welcome]].
 
 ## What you write
 
-A page is one Markdown file in `content/posts/` or `content/projects/`, with a short header: title, date, summary,
+A page is one Markdown file in `content/reads/` or `content/projects/`, with a short header: title, date, summary,
 one to four topics from `content/topics.yml`, and optionally a series, the pages it builds on, and citations. In the
-text, `[[post:name]]` links another page, `[@Key]` cites a paper from `content/references.yml`, `::figure name` places
+text, `[[read:name]]` links another page, `[@Key]` cites a paper from `content/references.yml`, `::figure name` places
 an interactive figure and `::drawing module.function` a diagram. That is enough to produce everything below.
 
 ## How it is built
@@ -26,12 +29,12 @@ static site to `_site/`, which any static host can serve.
 ::drawing pipeline.overview | From a Markdown file to the live site.
 
 - **Equations** are converted from LaTeX to MathML at build time, so browsers draw them without a script. Commands
-  that browsers cannot draw are caught with the line number and a hint, as [[post:writing-math]] explains.
+  that browsers cannot draw are caught with the line number and a hint, as [[read:writing-math]] explains.
 - **Figures** are Python files in `figures/`. Each one declares its controls and a `compute()` function that returns
   a description of the plot; a renderer that uses only the standard library turns that into SVG. The build runs it
   once at the default settings, so the page shows a finished figure even without scripts. When a reader moves a
   control, the browser loads a Python runtime compiled for the web in a background worker and runs the *same* file and the same
-  renderer again. The heatmap in [[post:attention-from-scratch]] is one of these.
+  renderer again. The heatmap in [[read:attention-from-scratch]] is one of these.
 - **Diagrams** are Python functions in `drawings/` that return SVG, drawn once at build time.
 - **Checks** run on every page: unknown topics, links to pages that do not exist, citation keys that are not in the
   library, maths that would not render, missing summaries. A production build stops on any error.
@@ -43,7 +46,7 @@ mentions, consecutive parts of a series, shared citations and shared topics, eac
 graph the build computes each page's backlinks and related pages, a hub page per topic with the figures of its
 pages, a page per series with its parts in order, and a fixed layout for the map at `/explore/`. Hovering a node
 there lights up the pages one, two and three steps away. The series on this site,
-[[post:gradient-descent|Learning, Visually]], is held together by exactly these links.
+[[read:gradient-descent|Learning, Visually]], is held together by exactly these links.
 
 ## Ask
 

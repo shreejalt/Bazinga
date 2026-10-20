@@ -45,9 +45,9 @@ FONT_PRECONNECT = ["https://fonts.googleapis.com", "https://fonts.gstatic.com"]
 
 # Axes requested per role. One stylesheet per family, so a family without one of these weights cannot break the rest.
 _FONT_AXES = {
-    "font_text": "ital,wght@0,400;0,600;1,400",
-    "font_ui": "wght@400;500;600",
-    "font_code": "wght@400;500",
+    "font_text": "ital,wght@0,400;0,700;1,400",
+    "font_ui": "wght@400;700",
+    "font_code": "ital,wght@0,400;0,700;1,400",
     "font_math": "",
 }
 
@@ -61,12 +61,14 @@ def font_url(family: str, axes: str = "") -> str:
 def font_urls(theme: dict) -> list[str]:
     """Stylesheet URLs for the fonts named in ``site.yml`` (empty names are skipped; duplicates once)."""
     urls: list[str] = []
-    for role, axes in _FONT_AXES.items():
+    seen: set = set()
+    # the code font first, so a family used for both code and the interface is requested once, with its italics
+    for role in ("font_text", "font_code", "font_ui", "font_math"):
         family = str(theme.get(role) or "").strip()
-        if family and family.lower() not in ("system-ui", "serif", "sans-serif", "monospace", "math"):
-            url = font_url(family, axes)
-            if url not in urls:
-                urls.append(url)
+        if family and family.lower() not in ("system-ui", "serif", "sans-serif", "monospace", "math") \
+                and family.lower() not in seen:
+            seen.add(family.lower())
+            urls.append(font_url(family, _FONT_AXES[role]))
     return urls
 
 

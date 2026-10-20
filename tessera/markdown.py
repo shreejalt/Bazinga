@@ -74,7 +74,8 @@ def _by_id(pages) -> dict:
 # --------------------------------------------------------------------------------------------------- the pre-pass
 _FENCE_OPEN = re.compile(r"^(?P<prefix>[ \t]*(?:>[ \t]?)*)(?P<fence>`{3,}|~{3,})[ \t]*(?P<info>[^`]*)$")
 _DISPLAY_OPEN = re.compile(r"^(?P<prefix>[ \t]*(?:>[ \t]?)*)\$\$(?P<rest>.*)$")
-_DIRECTIVE = re.compile(r"^(?P<prefix>[ \t]*(?:>[ \t]?)*)::(?P<kind>figure|drawing)\b[ \t]*(?P<arg>.*)$")
+_DIRECTIVE = re.compile(r"^(?P<prefix>[ \t]*(?:>[ \t]?)*)::(?P<kind>figure|drawing|pagebreak)\b[ \t]*(?P<arg>.*)$")
+PAGEBREAK = '<div class="pagebreak-slot"></div>'   # ::pagebreak; the theme turns it into a memo-style page break
 _EQ_LABEL = re.compile(r"^\s*\{#(eq:[A-Za-z0-9_.:-]+)\}\s*$")
 _WIKILINK = re.compile(r"\[\[([^\[\]|]+?)(?:\|([^\[\]]+))?\]\]")
 _CITE = re.compile(r"\[(@[^\[\]]+)\](?!\()")
@@ -251,6 +252,9 @@ class _Renderer:
 
     def _directive(self, i, m, out) -> None:
         kind, arg = m.group("kind"), m.group("arg").strip()
+        if kind == "pagebreak":
+            self._emit_block(out, m.group("prefix"), self.token(PAGEBREAK, "", True))
+            return
         name, _, opts = (p.strip() for p in arg.partition("|"))
         if not name:
             self.issue("error", i, f"::{kind} needs a name", f"write ::{kind} name", f"{kind}-name")

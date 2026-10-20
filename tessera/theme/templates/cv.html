@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{#- The CV page, from content/cv.yml. -#}
+{% block cta %}{% if cv_pdf %}<a class="cta" href="{{ cv_pdf }}">Download the PDF</a>{% endif %}<a class="cta" href="/">Home</a>{% endblock %}
+{% block bodyclass %}cvpage{% endblock %}
+
+{% block content %}
+<section class="sec" id="top">
+  <p class="kicker">Curriculum vitae</p>
+  <h1 class="pagetitle">{{ author }}</h1>
+  <p class="lead-s">{% if home.role %}{{ home.role }}{% if home.employer %} at {{ home.employer }}{% endif %}. {% endif %}{% if cv.contact.email %}{{ cv.contact.email }} · {% endif %}{% for l in cv.contact.links or [] %}<a href="{{ l.url }}">{{ l.label }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+  <div class="facts" style="margin-top:18px;max-width:640px">
+    <div><div class="k">Experience</div><div class="v">{{ cv.experience|length }} role{{ '' if cv.experience|length == 1 else 's' }}</div></div>
+    {% if cv.patents %}<div><div class="k">Patents</div><div class="v">{{ cv.patents|length }}</div></div>{% endif %}
+    {% if cv.achievements %}<div><div class="k">Awards</div><div class="v">{{ cv.achievements|length }}</div></div>{% endif %}
+    {% if not cv.patents and not cv.achievements %}<div><div class="k">Education</div><div class="v">{{ cv.education|length }}</div></div>{% endif %}
+  </div>
+  <p class="fn">The tags and the pages under a role are this site's: a tag opens the topic, a page the write-up of that work.</p>
+</section>
+
+<section class="sec" id="experience">
+  <h2 class="lab">Experience</h2>
+  <ol class="jobs">
+  {% for j in cv.experience %}
+    <li class="jobrow">
+      <div class="when"><div>{{ j.period }}</div><div class="dim">{{ j.place }}</div></div>
+      <div class="what">
+        <h3>{{ j.role }} <span class="org">· {{ j.org }}</span></h3>
+        <ul>{% for p in j.points or [] %}<li>{{ p }}</li>{% endfor %}</ul>
+        {% if j.used %}<p class="used"><span class="k">Used</span> {{ j.used|join(" · ") }}</p>{% endif %}
+        {% if j.tags or j.pages or j.link %}<p class="tags">
+          {% for t in j.tags %}<a class="tag" href="/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}
+          {% for pid in j.pages %}{% set n = node(pid) %}<a class="tag page" data-x="{{ pid }}" href="{{ n.url }}">↳ {{ n.title }}</a>{% endfor %}
+          {% if j.link %}<a class="tag page" href="{{ j.link.url }}">↳ {{ j.link.label }}</a>{% endif %}
+        </p>{% endif %}
+      </div>
+    </li>
+  {% endfor %}
+  </ol>
+</section>
+
+<div class="split">
+<section class="sec" id="patents">
+  {% if cv.patents %}
+  <h2 class="lab">Patents</h2>
+  <ul class="rel">{% for p in cv.patents %}<li><div><a href="{{ p.url }}">{{ p.number }}</a></div><div>{{ p.title }}</div><div class="why">{{ p.note }}</div></li>{% endfor %}</ul>
+  {% endif %}
+  <h2 class="lab"{% if cv.patents %} style="margin-top:26px"{% endif %}>Education</h2>
+  <ul class="rel">{% for e in cv.education %}<li><div><b>{{ e.degree }}</b></div><div>{{ e.school }}{% if e.place %}<span class="dim"> · {{ e.place }}</span>{% endif %}</div><div class="why">{{ e.period }}</div></li>{% endfor %}</ul>
+</section>
+{% if cv.achievements %}
+<section class="sec" id="achievements">
+  <h2 class="lab">Achievements</h2>
+  <ul class="rel">{% for a in cv.achievements %}<li><div><b>{{ a.what }}</b>{% if a.when %}<span class="dim"> · {{ a.when }}</span>{% endif %}</div>{% if a.detail %}<div class="why">{{ a.detail }}</div>{% endif %}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+</div>
+
+{% if cv.skills %}
+<section class="sec" id="skills">
+  <h2 class="lab">Skills</h2>
+  <dl class="skills">
+    {% for s in cv.skills %}<div class="skill"><dt>{{ s.area }}</dt><dd>{% for it in (s["items"] or "").split(", ") %}<span class="pill">{{ it }}</span>{% endfor %}</dd></div>{% endfor %}
+  </dl>
+</section>
+{% endif %}
+
+{% if cv.open_source or repos %}
+<section class="sec" id="open-source">
+  <h2 class="lab">Open source</h2>
+  {% if cv.open_source %}
+  <ul class="rel">{% for o in cv.open_source %}{% set n = node(o.page) if o.page else none %}<li><div>{% if n %}<a data-x="{{ o.page }}" href="{{ n.url }}">{{ n.title }}</a>{% else %}{{ o.text }}{% endif %}</div><div class="why">{{ o.text }}{% if n and n.github %} · <a href="{{ n.github }}">GitHub ↗</a>{% endif %}</div></li>{% endfor %}</ul>
+  {% endif %}
+  {% if repos %}
+  <h2 class="lab" style="margin-top:26px">More on GitHub</h2>
+  <ul class="rel">{% for p in repos %}<li><div><a data-x="{{ p.id }}" href="{{ p.url }}">{{ p.title }}</a>{% if p.project_type %}<span class="dim"> · {{ p.project_type }}</span>{% endif %}</div><div class="why">{{ p.summary }} · <a href="{{ p.github }}">GitHub ↗</a></div></li>{% endfor %}</ul>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

@@ -1,502 +1,131 @@
-// The map at /explore/: every public page as a node, placed by the build (data/graph.json).
-// Hover, focus or tap a node: its neighbours light up nearest first, ring by ring, then everything
-// the rings did not reach fades. Click (or a second tap on phones) opens the page.
-//
-// Markup: <div id="explore-root" data-graph="/data/graph.json" data-kinds='{"posts":"Writing"}'></div>
-// Everything else is built here. Works with mouse, touch and keyboard.
-(function () {
-  "use strict";
+/* The map. The build lays it out (/data/map.json) and works out, for every page, what a hover shows and how the map
+   plays it (/data/view/<id>.json): the rings nearest first, then the walk through the reading order. This file draws
+   and plays them; clicking a page opens it. The series box finds chains in the map (/data/series.json at build time;
+   "chain between" and "in reading order" are computed in the browser by the same code the build uses). */
+(function(){
+const q=s=>document.querySelector(s);
+const M={hover:null,shown:null,filter:'all',q:'',tag:'',nodes:{},edges:{},layout:null,views:{},topics:{}};
+const V=(window.TesseraConfig&&window.TesseraConfig.version)||'';
+const stat=q('#m-stat');
+const topicsOf=id=>M.topics[id]||[];
+const label=id=>(SITE.nodes[id]||{}).kl||KIND[(M.nodes[id]||{}).type]||'';
 
-  const SVGNS = "http://www.w3.org/2000/svg";
-  const RING_MS = 170;
-  const LABEL_FONT = 12.5;
+// the map: boxes as on the read pages, every curve already a path string computed at build time
+function draw(L){
+ M.layout=L;M.nodes={};M.edges={};L.nodes.forEach(n=>M.nodes[n.id]=n);
+ let s='';
+ ['also','tag','builds'].forEach(kind=>L.edges.forEach(e=>{if(e.kind!==kind)return;M.edges[e.a+'>'+e.b]=e;
+  s+=`<path class="e ${e.kind}" data-a="${esc(e.a)}" data-b="${esc(e.b)}" d="${e.d}"/>`;}));
+ s+='<g id="fx-lines"></g>';
+ L.nodes.forEach(n=>{const cx=n.x+n.w/2,two=n.lines.length>1,ty=two?n.y+28:n.y+34,sn=SITE.nodes[n.id]||{title:n.label,url:'#'};
+  s+=`<a class="n t-${n.type}" data-id="${esc(n.id)}" href="${esc(sn.url)}" aria-label="${esc(label(n.id)+': '+sn.title)}">
+  <rect class="rip" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}"/><rect class="p" x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}"/>
+  <text class="kd" x="${cx}" y="${n.y+14}" text-anchor="middle">${esc(label(n.id).toUpperCase())}</text>
+  <text class="tt" x="${cx}" y="${ty}" text-anchor="middle">${n.lines.map((l,i)=>`<tspan x="${cx}"${i?' dy="13"':''}>${esc(l)}</tspan>`).join('')}</text>
+  <g class="k"><circle cx="${n.x}" cy="${n.y}" r="8.5"/><text x="${n.x}" y="${n.y+3.4}" text-anchor="middle"></text></g>
+  <g class="d"><circle cx="${n.x+n.w}" cy="${n.y}" r="8.5"/><text x="${n.x+n.w}" y="${n.y+3.4}" text-anchor="middle"></text></g></a>`;});
+ s+='<g id="fx-top"></g>';
+ const svg=q('#m');svg.setAttribute('viewBox',`0 0 ${L.width} ${L.height}`);svg.setAttribute('width',L.width);svg.setAttribute('height',L.height);svg.innerHTML=s;
+ // when the map is wider than the screen, start with the top root in view instead of the left edge
+ const wrap=svg.closest('.mapwrap');if(wrap&&L.nodes.length&&wrap.scrollWidth>wrap.clientWidth+1&&!wrap.dataset.scrolled){wrap.dataset.scrolled=1;
+  const top=L.nodes.reduce((a,n)=>n.y<a.y?n:a,L.nodes[0]),k=svg.getBoundingClientRect().width/L.width;
+  wrap.scrollLeft=Math.max(0,(top.x+top.w/2)*k-wrap.clientWidth/2);}}
 
-  function el(tag, attrs, parent) {
-    const e = document.createElement(tag);
-    for (const k in attrs || {}) {
-      if (k === "text") e.textContent = attrs[k];
-      else if (k === "class") e.className = attrs[k];
-      else e.setAttribute(k, attrs[k]);
-    }
-    if (parent) parent.appendChild(e);
-    return e;
-  }
-  function sv(tag, attrs, parent) {
-    const e = document.createElementNS(SVGNS, tag);
-    for (const k in attrs || {}) {
-      if (k === "text") e.textContent = attrs[k];
-      else e.setAttribute(k, attrs[k]);
-    }
-    if (parent) parent.appendChild(e);
-    return e;
-  }
-  function fold(s) {
-    return String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  }
+// filters and the hovered page; the two walks themselves are played by play()
+function paint(){
+ const svg=q('#m'),filtering=!!(M.q||M.tag);
+ svg.querySelectorAll('.n').forEach(g=>{const id=g.dataset.id,n=M.nodes[id],t=((SITE.nodes[id]||{}).title||'').toLowerCase();
+  g.classList.toggle('off',M.filter!=='all'&&n.type!==M.filter);
+  g.classList.toggle('sel',id===M.shown);
+  g.classList.toggle('hit',!M.shown&&filtering&&((!M.q||n.label.toLowerCase().includes(M.q)||t.includes(M.q))&&(!M.tag||topicsOf(id).includes(M.tag))));});
+ const off=id=>M.filter!=='all'&&M.nodes[id]&&M.nodes[id].type!==M.filter;
+ svg.querySelectorAll('.e').forEach(e=>e.classList.toggle('off',off(e.dataset.a)||off(e.dataset.b)));
+ q('#m-clear').hidden=!filtering;}
 
-  // ---------------------------------------------------------------------------------------- start
-  function init(root) {
-    if (root.dataset.ready) return;
-    root.dataset.ready = "1";
-    const url = root.dataset.graph || "/data/graph.json";
-    let kindLabels = {};
-    try { kindLabels = JSON.parse(root.dataset.kinds || "{}"); } catch (e) { kindLabels = {}; }
-    root.classList.add("xmap");
-    const status = el("p", { class: "xmap-status", role: "status", text: "Loading the map…" }, root);
-    fetch(url)
-      .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then((g) => { status.remove(); build(root, g, kindLabels); })
-      .catch(() => { status.textContent = "The map could not be loaded. Every page is still listed in the menu."; });
-  }
+/* The two walks, played on the map from the schedule the build computed:
+   the wave, nearest first, pops each page at its distance × step and draws the lines it crossed in rust;
+   the walk, reading order, sends one dot along the lines, numbering each page as it arrives, in blue. */
+const byId=id=>document.querySelector(`#m .n[data-id="${CSS.escape(id)}"]`);
+const reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+function clearPlay(){const svg=q('#m');q('#fx-lines')&&(q('#fx-lines').innerHTML='');q('#fx-top')&&(q('#fx-top').innerHTML='');svg.classList.remove('playing');
+ svg.querySelectorAll('.e.far').forEach(e=>e.classList.remove('far'));
+ document.querySelectorAll('#m .n').forEach(g=>{g.classList.remove('w','num','far');g.style.removeProperty('--t');g.style.removeProperty('--k');g.querySelector('.d text').textContent='';g.querySelector('.k text').textContent='';});}
+function play(m){clearPlay();if(!m)return;const svg=q('#m'),still=reduced();let s='';
+ const keep=new Set(m.wave.nodes.map(w=>w.id).concat(m.walk.stamps.map(st=>st.id)));if(M.shown)keep.add(M.shown);
+ document.querySelectorAll('#m .n').forEach(g=>g.classList.toggle('far',!keep.has(g.dataset.id)));
+ svg.querySelectorAll('.e').forEach(e=>e.classList.toggle('far',!keep.has(e.dataset.a)||!keep.has(e.dataset.b)));
+ svg.classList.add('playing');
+ m.wave.nodes.forEach(w=>{const g=byId(w.id);if(!g)return;g.classList.add('w');g.style.setProperty('--t',(still?0:w.t)+'ms');if(w.d)g.querySelector('.d text').textContent=w.d;});
+ m.wave.edges.forEach(e=>{const E=M.edges[e.a+'>'+e.b];if(!E)return;
+  s+=`<path class="wv" d="${e.src===e.a?E.d:E.rd}" style="--t0:${still?0:e.t0}ms;--dur:${still?0:e.t1-e.t0}ms"/>`;});
+ m.walk.steps.forEach(st=>{if(!st.first)return;const E=M.edges[st.a+'>'+st.b];if(!E)return;
+  s+=`<path class="wk" d="${st.down?E.d:E.rd}" style="--t0:${still?0:st.t0}ms;--dur:${still?0:st.t1-st.t0}ms"/>`;});
+ const lines=q('#fx-lines');lines.innerHTML=s;lines.style.setProperty('--s',(still?0:m.walk.start)+'ms');
+ lines.querySelectorAll('path').forEach(p=>p.style.setProperty('--len',p.getTotalLength().toFixed(1)));
+ m.walk.stamps.forEach(st=>{const g=byId(st.id);if(!g)return;g.classList.add('num');g.style.setProperty('--k',(still?0:st.t)+'ms');g.querySelector('.k text').textContent=st.n;});
+ if(m.walk.path.length>1&&!still&&m.walk.length>0&&'offsetPath' in document.documentElement.style){
+  const d=m.walk.path.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(''),S=m.walk.start,T=Math.max(1,m.walk.duration-S),len=m.walk.length;
+  q('#fx-top').innerHTML='<circle class="dot" r="6"/>';const dot=q('#fx-top .dot');dot.style.offsetPath=`path("${d}")`;
+  const kf=[{offsetDistance:'0%',offset:0}];
+  m.walk.steps.forEach(st=>{kf.push({offsetDistance:(st.s0/len*100).toFixed(3)+'%',offset:Math.min(1,Math.max(0,(st.t0-S)/T))});kf.push({offsetDistance:(st.s1/len*100).toFixed(3)+'%',offset:Math.min(1,Math.max(0,(st.t1-S)/T))});});
+  kf.push({offsetDistance:'100%',offset:1});
+  for(let i=1;i<kf.length;i++)if(kf[i].offset<kf[i-1].offset)kf[i].offset=kf[i-1].offset;
+  try{dot.animate(kf,{duration:T,delay:S,fill:'both',easing:'linear'});
+   dot.animate([{opacity:0},{opacity:0,offset:Math.max(0,(S-300)/(m.walk.duration+600))},{opacity:1,offset:S/(m.walk.duration+600)},{opacity:1,offset:.97},{opacity:0}],{duration:m.walk.duration+600,fill:'forwards'});}catch(e){}}
+ const w=m.wave.nodes.length-1,k=m.walk.stamps.length,sec=ms=>(ms/1000).toFixed(1).replace(/\.0$/,'');
+ q('#m-play').textContent=`First, nearest first: ${w} item${w===1?'':'s'} within ${m.wave.reach} links, one ring every ${sec(m.wave.step)} s. Then the reading order: ${k} item${k===1?'':'s'}, walked in ${sec(m.walk.duration-m.walk.start)} s.`;}
 
-  function build(root, g, kindLabels) {
-    const nodes = g.nodes || [];
-    if (!nodes.length) {
-      el("p", { class: "xmap-status", text: "Nothing is published yet." }, root);
-      return;
-    }
-    const byId = new Map(nodes.map((n) => [n.id, n]));
-    const kinds = [...new Set(nodes.map((n) => n.kind))];
-    const kindIndex = new Map(kinds.map((k, i) => [k, i % 6]));
-    const topicLabels = g.topics || {};
-    const rings = g.rings || {};
-    const edges = (g.edges || []).filter((e) => byId.has(e.source) && byId.has(e.target));
-    const adj = new Map(nodes.map((n) => [n.id, new Set()]));       // builds on, mentions, series
-    const citeAdj = new Map(nodes.map((n) => [n.id, new Set()]));   // same sources
-    edges.forEach((e) => {
-      const m = e.type === "cites" ? citeAdj : e.type === "topic" ? null : adj;
-      if (m) { m.get(e.source).add(e.target); m.get(e.target).add(e.source); }
-    });
+async function viewOf(id){
+ if(M.views[id])return M.views[id];
+ const r=await fetch('/data/view/'+id.replace(':','-')+'.json'+(V?'?v='+V:''));
+ return (M.views[id]=await r.json());}
+let timer=null;
+function show(id){M.shown=id;const n=SITE.nodes[id]||{title:id};
+ q('#m-head').innerHTML=`<a href="${esc(nodeHref(id))}">${esc(n.title)}</a><small>${esc(label(id))} · ${matchMedia('(hover: none)').matches?'tap again to open':'click to open'}</small>`;
+ viewOf(id).then(v=>{if(M.shown!==id)return;q('#m-related').innerHTML=relatedHTML(v.related);q('#m-path').innerHTML=pathHTML(v.path);paint();play(v.motion);document.documentElement.dataset.sel=id;})
+  .catch(()=>{stat.hidden=false;stat.textContent='The connections of this item could not be loaded.';});
+ paint();}
+function hover(id){clearTimeout(timer);timer=setTimeout(()=>show(id),90);}      // a short pause so sweeping across the map does not flicker
 
-    // --- toolbar: search + topic chips
-    const bar = el("div", { class: "xmap-bar" }, root);
-    const searchWrap = el("div", { class: "xmap-search" }, bar);
-    const sid = "xmap-q-" + Math.random().toString(36).slice(2, 7);
-    el("label", { for: sid, class: "xmap-sr", text: "Find a page on the map" }, searchWrap);
-    const search = el("input", { id: sid, type: "search", placeholder: "Find a page…", autocomplete: "off", spellcheck: "false" }, searchWrap);
-    const counts = {};
-    nodes.forEach((n) => (n.topics || []).forEach((t) => { counts[t] = (counts[t] || 0) + 1; }));
-    const topicList = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
-    const chips = el("div", { class: "xmap-chips", role: "group", "aria-label": "Show one topic" }, bar);
-    let activeTopic = "";
-    const chipEls = [];
-    function chip(slug, label) {
-      const b = el("button", { type: "button", class: "xmap-chip", "aria-pressed": slug === "" ? "true" : "false", text: label }, chips);
-      b.addEventListener("click", () => {
-        activeTopic = activeTopic === slug ? "" : slug;
-        chipEls.forEach((c) => c.b.setAttribute("aria-pressed", c.slug === activeTopic ? "true" : "false"));
-        applyFilter();
-      });
-      chipEls.push({ b, slug });
-    }
-    chip("", "All");
-    topicList.forEach((t) => chip(t, topicLabels[t] || t));
+const svg=q('#m');
+svg.addEventListener('pointerover',e=>{const g=e.target.closest('.n');if(g&&e.pointerType!=='touch')hover(g.dataset.id);});
+svg.addEventListener('pointerleave',()=>clearTimeout(timer));
+svg.addEventListener('focusin',e=>{const g=e.target.closest('.n');if(g)hover(g.dataset.id);});
+let lastPointer='mouse';
+svg.addEventListener('pointerdown',e=>{lastPointer=e.pointerType;});
+svg.addEventListener('click',e=>{const g=e.target.closest('.n');if(!g)return;
+ const touch=(e.pointerType||lastPointer)==='touch';
+ if(touch&&M.shown!==g.dataset.id){e.preventDefault();show(g.dataset.id);}});   // on touch: the first tap shows, the second opens
+q('#m-clear').onclick=()=>{M.q='';M.tag='';q('#m-find').value='';q('#m-tag').value='';paint();};
+q('#m-find').oninput=e=>{M.q=e.target.value.trim().toLowerCase();M.shown=null;clearPlay();paint();};
+q('#m-tag').onchange=e=>{M.tag=e.target.value;M.shown=null;clearPlay();paint();};
+document.querySelectorAll('.chip[data-f]').forEach(c=>c.onclick=()=>{M.filter=c.dataset.f;document.querySelectorAll('.chip[data-f]').forEach(x=>x.setAttribute('aria-pressed',x===c));paint();});
 
-    // --- stage + info
-    const layout = el("div", { class: "xmap-layout" }, root);
-    const stage = el("div", { class: "xmap-stage" }, layout);
-    const svg = sv("svg", { class: "xmap-svg", role: "group", "aria-label": "Map of the site: " + nodes.length + " pages" }, stage);
-    const gEdges = sv("g", { class: "xmap-edges" }, svg);
-    const gPulse = sv("g", { class: "xmap-pulses" }, svg);
-    const gNodes = sv("g", { class: "xmap-nodes" }, svg);
-    const gLabels = sv("g", { class: "xmap-labels", "aria-hidden": "true" }, svg);
-    const zoom = el("div", { class: "xmap-zoom" }, stage);
-    const zin = el("button", { type: "button", "aria-label": "Zoom in", text: "+" }, zoom);
-    const zout = el("button", { type: "button", "aria-label": "Zoom out", text: "−" }, zoom);
-    const zreset = el("button", { type: "button", "aria-label": "Fit the whole map", text: "Fit" }, zoom);
-    const hint = el("p", { class: "xmap-hint", text: "" }, stage);
+const wanted=new URLSearchParams(location.search).get('tag');
+Promise.all([fetch('/data/map.json').then(r=>r.json()),fetch('/data/mapdata.json').then(r=>r.json())]).then(([L,D])=>{
+ (D.items||[]).forEach(it=>{M.topics[it.id]=it.topics||[];});
+ draw(L);
+ if(wanted&&SITE.nodes['topic:'+wanted]){M.tag=wanted;q('#m-tag').value=wanted;paint();}
+}).catch(()=>{stat.hidden=false;stat.textContent='The map could not be loaded here.';});
 
-    const info = el("aside", { class: "xmap-info", "aria-live": "polite" }, layout);
-    const legend = el("div", { class: "xmap-legend" }, root);
-    kinds.forEach((k) => {
-      const item = el("span", { class: "xmap-legend-item" }, legend);
-      el("span", { class: "xmap-dot k" + kindIndex.get(k) }, item);
-      item.appendChild(document.createTextNode(kindLabels[k] || (k.charAt(0).toUpperCase() + k.slice(1))));
-    });
-    const legEdge = el("span", { class: "xmap-legend-item" }, legend);
-    el("span", { class: "xmap-line" }, legEdge);
-    legEdge.appendChild(document.createTextNode("builds on or links to"));
-    const legCite = el("span", { class: "xmap-legend-item" }, legend);
-    el("span", { class: "xmap-line is-cite" }, legCite);
-    legCite.appendChild(document.createTextNode("same sources"));
-    if (edges.some((e) => e.type === "series")) {
-      const legSeries = el("span", { class: "xmap-legend-item" }, legend);
-      el("span", { class: "xmap-line is-series" }, legSeries);
-      legSeries.appendChild(document.createTextNode("next in a series"));
-    }
-
-    const touch = window.matchMedia && window.matchMedia("(hover: none)").matches;
-    hint.textContent = touch ? "Tap a page for its links; tap again to open it." : "";
-    hint.hidden = !touch;
-
-    // --- elements
-    const maxDeg = Math.max(1, ...nodes.map((n) => n.degree || 0));
-    const R = (n) => 4.5 + 7 * Math.sqrt((n.degree || 0) / maxDeg);
-    // shared-topic edges shape the layout but are not drawn: too many, too little meaning
-    const edgeEls = edges.filter((e) => e.type !== "topic").map((e) => {
-      const line = sv("line", { class: "xmap-edge t-" + e.type }, gEdges);
-      return { e, line };
-    });
-    const nodeEls = new Map();
-    nodes.forEach((n) => {
-      const a = sv("a", { href: n.url, class: "xmap-node k" + kindIndex.get(n.kind), "aria-label": n.title + (n.summary ? ". " + n.summary : "") }, gNodes);
-      a.setAttribute("tabindex", "0");
-      sv("title", { text: n.title }, a);
-      const hit = sv("circle", { class: "xmap-hit", r: Math.max(R(n) + 8, 16) }, a);
-      const c = sv("circle", { class: "xmap-circle", r: R(n) }, a);
-      const label = sv("text", { class: "xmap-label", text: n.title }, gLabels);
-      nodeEls.set(n.id, { n, a, c, hit, label, r: R(n), sx: 0, sy: 0, w: 0 });
-    });
-
-    // --- view transform (world = unit square)
-    let W = 0, H = 0, base = { ax: 1, ay: 1, ox: 0, oy: 0 }, view = { k: 1, x: 0, y: 0 };
-    function fit() {
-      const rect = stage.getBoundingClientRect();
-      W = Math.max(280, rect.width);
-      H = Math.max(300, rect.height);
-      svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-      svg.setAttribute("width", W);
-      svg.setAttribute("height", H);
-      const xs = nodes.map((n) => n.x), ys = nodes.map((n) => n.y);
-      const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
-      const pad = W < 520 ? 28 : 56;
-      const sx = (W - 2 * pad) / Math.max(0.05, maxx - minx);
-      const sy = (H - 2 * pad) / Math.max(0.05, maxy - miny);
-      // fill the stage, but never stretch one axis more than 1.6 times the other
-      const s = Math.min(sx, sy);
-      const ax = Math.min(sx, s * 1.6), ay = Math.min(sy, s * 1.6);
-      base = { ax, ay, ox: (W - ax * (maxx + minx)) / 2, oy: (H - ay * (maxy + miny)) / 2 };
-    }
-    function toScreen(n) {
-      return [(base.ox + base.ax * n.x) * view.k + view.x, (base.oy + base.ay * n.y) * view.k + view.y];
-    }
-
-    function render() {
-      nodeEls.forEach((o) => {
-        const p = toScreen(o.n);
-        o.sx = p[0]; o.sy = p[1];
-        o.c.setAttribute("cx", p[0]); o.c.setAttribute("cy", p[1]);
-        o.hit.setAttribute("cx", p[0]); o.hit.setAttribute("cy", p[1]);
-      });
-      edgeEls.forEach(({ e, line }) => {
-        const a = nodeEls.get(e.source), b = nodeEls.get(e.target);
-        line.setAttribute("x1", a.sx); line.setAttribute("y1", a.sy);
-        line.setAttribute("x2", b.sx); line.setAttribute("y2", b.sy);
-      });
-      placeLabels();
-    }
-
-    // Labels: biggest nodes first; try right, left, above, below; skip any that would overlap.
-    function placeLabels() {
-      const boxes = [];
-      nodeEls.forEach((o) => boxes.push([o.sx - o.r, o.sy - o.r, o.sx + o.r, o.sy + o.r, o.n.id]));
-      const zr = zoom.getBoundingClientRect(), sr = svg.getBoundingClientRect();
-      if (zr.width) boxes.push([zr.left - sr.left - 4, zr.top - sr.top - 4, zr.right - sr.left + 4, zr.bottom - sr.top + 4, ""]);
-      if (!hint.hidden) {
-        const hr = hint.getBoundingClientRect();
-        if (hr.width) boxes.push([hr.left - sr.left, hr.top - sr.top, hr.right - sr.left, hr.bottom - sr.top, ""]);
-      }
-      const focusSet = currentLit;
-      const rank = (o) => (o.n.id === currentId ? 2 : focusSet && focusSet.has(o.n.id) ? 1 : 0);
-      const order = [...nodeEls.values()].sort((a, b) => rank(b) - rank(a) || (b.n.degree || 0) - (a.n.degree || 0) || a.n.title.localeCompare(b.n.title));
-      const placed = [];
-      order.forEach((o) => {
-        const text = o.n.title.length > 34 ? o.n.title.slice(0, 32).trimEnd() + "…" : o.n.title;
-        if (o.label.textContent !== text) { o.label.textContent = text; o.w = 0; }
-        const important = !!(focusSet && focusSet.has(o.n.id));
-        if (o.label.classList.contains("is-key") !== important) { o.label.classList.toggle("is-key", important); o.w = 0; }
-        if (!o.w) {
-          let m = 0;
-          try { m = o.label.getComputedTextLength(); } catch (e) { m = 0; }
-          o.w = m > 0 ? m + 2 : text.length * LABEL_FONT * 0.6;
-        }
-        const w = o.w, h = LABEL_FONT + 3, gap = o.r + 4;
-        const tries = [
-          [o.sx + gap, o.sy - h / 2, "start"],
-          [o.sx - gap - w, o.sy - h / 2, "end"],
-          [o.sx - w / 2, o.sy - gap - h, "middle"],
-          [o.sx - w / 2, o.sy + gap, "middle"],
-        ];
-        let ok = null;
-        for (const t of tries) {
-          const box = [t[0], t[1], t[0] + w, t[1] + h];
-          if (box[0] < 2 || box[2] > W - 2 || box[1] < 2 || box[3] > H - 2) continue;
-          const hitsNode = boxes.some((b) => b[4] !== o.n.id && b[0] < box[2] && b[2] > box[0] && b[1] < box[3] && b[3] > box[1]);
-          const hitsLabel = placed.some((b) => b[0] < box[2] + 3 && b[2] + 3 > box[0] && b[1] < box[3] && b[3] > box[1]);
-          if (!hitsNode && !hitsLabel) { ok = [t, box]; break; }
-        }
-        if (ok) {
-          placed.push(ok[1]);
-          const [t] = ok;
-          const x = t[2] === "start" ? t[0] : t[2] === "end" ? t[0] + w : t[0] + w / 2;
-          o.label.setAttribute("x", x);
-          o.label.setAttribute("y", t[1] + h - 4);
-          o.label.setAttribute("text-anchor", t[2]);
-          o.label.classList.remove("is-hidden");
-        } else {
-          o.label.classList.add("is-hidden");
-        }
-      });
-    }
-
-    // --- focus: rings nearest first, then fade what they did not reach
-    let currentId = null, currentLit = null, timers = [];
-    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
-    function focusNode(id, opts) {
-      if (id === currentId) return;
-      clearTimers();
-      currentId = id;
-      svg.classList.remove("is-faded");
-      gPulse.textContent = "";
-      nodeEls.forEach((o) => { o.a.classList.remove("is-lit", "is-focus"); o.a.style.removeProperty("--d"); });
-      edgeEls.forEach(({ line }) => { line.classList.remove("is-lit"); line.style.removeProperty("--d"); });
-      if (!id) {
-        currentLit = null;
-        svg.classList.remove("has-focus");
-        showInfo(null);
-        placeLabels();
-        return;
-      }
-      const o = nodeEls.get(id);
-      const levels = [[id]].concat(rings[id] || []);
-      const depth = new Map();
-      levels.forEach((ids, d) => ids.forEach((x) => depth.set(x, d)));
-      currentLit = new Set(depth.keys());
-      svg.classList.add("has-focus");
-      o.a.classList.add("is-focus");
-      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const step = reduce ? 0 : RING_MS;
-      depth.forEach((d, x) => {
-        const ne = nodeEls.get(x);
-        if (!ne) return;
-        ne.a.style.setProperty("--d", d * step + "ms");
-        ne.a.classList.add("is-lit");
-      });
-      edgeEls.forEach(({ e, line }) => {
-        if (e.type === "topic" || e.type === "cites") return;
-        const da = depth.get(e.source), db = depth.get(e.target);
-        if (da === undefined || db === undefined || Math.abs(da - db) !== 1) return;
-        line.style.setProperty("--d", Math.max(da, db) * step - step / 2 + "ms");
-        line.classList.add("is-lit");
-      });
-      if (!reduce) {
-        for (let d = 1; d < levels.length; d++) {
-          const maxR = Math.max(...levels[d].map((x) => {
-            const ne = nodeEls.get(x);
-            return ne ? Math.hypot(ne.sx - o.sx, ne.sy - o.sy) : 0;
-          }));
-          const ring = sv("circle", { class: "xmap-pulse", cx: o.sx, cy: o.sy, r: 4 }, gPulse);
-          ring.style.setProperty("--d", (d - 1) * step + "ms");
-          ring.style.setProperty("--to", String(Math.max(1, maxR / 4)));
-        }
-      }
-      timers.push(setTimeout(() => svg.classList.add("is-faded"), levels.length * step + 60));
-      showInfo(o.n, depth);
-      placeLabels();
-      if (opts && opts.center) centreOn(o);
-    }
-
-    function showInfo(n, depth) {
-      info.textContent = "";
-      if (!n) {
-        el("p", { class: "xmap-info-lead", text: nodes.length + " pages, " + edges.filter((e) => e.type !== "topic" && e.type !== "cites").length + " links between them." }, info);
-        el("p", { class: "xmap-info-muted", text: touch ? "Tap a page to start." : "Point at a page, or use Tab to walk through them." }, info);
-        return;
-      }
-      el("p", { class: "xmap-info-kind", text: kindLabels[n.kind] || n.kind }, info);
-      const h = el("h2", { class: "xmap-info-title" }, info);
-      el("a", { href: n.url, text: n.title }, h);
-      if (n.summary) el("p", { class: "xmap-info-summary", text: n.summary }, info);
-      if ((n.topics || []).length) {
-        const t = el("p", { class: "xmap-info-topics" }, info);
-        n.topics.forEach((s) => el("span", { class: "xmap-tag", text: topicLabels[s] || s }, t));
-      }
-      const listOf = (set) => [...(set || [])].map((x) => byId.get(x)).filter(Boolean).sort((a, b) => a.title.localeCompare(b.title));
-      const near = listOf(adj.get(n.id));
-      const same = listOf(citeAdj.get(n.id)).filter((m) => !adj.get(n.id).has(m.id));
-      function group(title, items, max) {
-        if (!items.length) return;
-        el("p", { class: "xmap-info-sub", text: title }, info);
-        const ul = el("ul", { class: "xmap-info-list" }, info);
-        items.slice(0, max).forEach((m) => {
-          const li = el("li", {}, ul);
-          const a = el("a", { href: m.url, text: m.title }, li);
-          a.addEventListener("mouseenter", () => nodeEls.get(m.id).a.classList.add("is-peek"));
-          a.addEventListener("mouseleave", () => nodeEls.get(m.id).a.classList.remove("is-peek"));
-        });
-        if (items.length > max) el("p", { class: "xmap-info-muted", text: "and " + (items.length - max) + " more" }, info);
-      }
-      group("Linked with", near, 8);
-      group("Same sources", same, 4);
-      if (!near.length && !same.length) el("p", { class: "xmap-info-muted", text: "Not linked to other pages yet." }, info);
-      const reached = depth ? depth.size - 1 : 0;
-      if (reached > near.length) el("p", { class: "xmap-info-muted", text: reached + " pages within " + (Math.max(...depth.values())) + " steps." }, info);
-      el("a", { class: "xmap-open", href: n.url, text: "Open the page →" }, info);
-    }
-
-    // --- filtering
-    function applyFilter() {
-      const q = fold(search.value.trim());
-      let first = null;
-      nodeEls.forEach((o) => {
-        const inTopic = !activeTopic || (o.n.topics || []).includes(activeTopic);
-        const hay = fold(o.n.title + " " + (o.n.summary || "") + " " + (o.n.topics || []).join(" "));
-        const match = !q || q.split(/\s+/).every((w) => hay.includes(w));
-        const on = inTopic && match;
-        o.a.classList.toggle("is-out", !on);
-        o.label.classList.toggle("is-out", !on);
-        if (on && q && !first) first = o;
-      });
-      edgeEls.forEach(({ e, line }) => {
-        const out = nodeEls.get(e.source).a.classList.contains("is-out") || nodeEls.get(e.target).a.classList.contains("is-out");
-        line.classList.toggle("is-out", out);
-      });
-      return first;
-    }
-    search.addEventListener("input", applyFilter);
-    search.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter") {
-        ev.preventDefault();
-        const first = applyFilter();
-        if (first) { focusNode(first.n.id, { center: true }); first.a.focus({ preventScroll: true }); }
-      } else if (ev.key === "Escape") {
-        search.value = "";
-        applyFilter();
-      }
-    });
-
-    // --- pointer: hover on desktop, tap-tap on touch, drag to pan, wheel/pinch to zoom
-    const pointers = new Map();
-    let drag = null, moved = false, pinch = null;
-    nodeEls.forEach((o) => {
-      o.a.addEventListener("pointerenter", (ev) => { if (ev.pointerType === "mouse" && !drag) focusNode(o.n.id); });
-      o.a.addEventListener("focus", () => focusNode(o.n.id));
-      o.a.addEventListener("click", (ev) => {
-        if (moved) { ev.preventDefault(); return; }
-        if (lastPointerType !== "mouse" && tapped !== o.n.id) {
-          // first tap shows the connections; a second tap on the same page opens it
-          ev.preventDefault();
-          tapped = o.n.id;
-          focusNode(o.n.id);
-        }
-      });
-      o.a.addEventListener("keydown", (ev) => {
-        if (ev.key === "Escape") { focusNode(null); o.a.blur(); }
-        if (ev.key.startsWith("Arrow")) { ev.preventDefault(); stepFocus(o, ev.key); }
-      });
-    });
-    let lastPointerType = "mouse";
-    let tapped = null;
-    svg.addEventListener("pointerleave", (ev) => { if (ev.pointerType === "mouse" && !drag) focusNode(null); });
-
-    function stepFocus(o, key) {
-      const dir = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[key];
-      let best = null, bestScore = Infinity;
-      nodeEls.forEach((p) => {
-        if (p === o || p.a.classList.contains("is-out")) return;
-        const dx = p.sx - o.sx, dy = p.sy - o.sy;
-        const along = dx * dir[0] + dy * dir[1];
-        if (along <= 1) return;
-        const across = Math.abs(dx * dir[1] - dy * dir[0]);
-        const score = along + across * 2.5;
-        if (score < bestScore) { bestScore = score; best = p; }
-      });
-      if (best) best.a.focus();
-    }
-
-    stage.addEventListener("pointerdown", (ev) => {
-      lastPointerType = ev.pointerType;
-      pointers.set(ev.pointerId, [ev.clientX, ev.clientY]);
-      moved = false;
-      if (pointers.size === 1) drag = { x: ev.clientX, y: ev.clientY, vx: view.x, vy: view.y };
-      if (pointers.size === 2) {
-        const [a, b] = [...pointers.values()];
-        pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), k: view.k, cx: (a[0] + b[0]) / 2, cy: (a[1] + b[1]) / 2, vx: view.x, vy: view.y };
-        drag = null;
-      }
-    });
-    stage.addEventListener("pointermove", (ev) => {
-      if (!pointers.has(ev.pointerId)) return;
-      pointers.set(ev.pointerId, [ev.clientX, ev.clientY]);
-      if (pinch && pointers.size === 2) {
-        const [a, b] = [...pointers.values()];
-        const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
-        const rect = svg.getBoundingClientRect();
-        zoomAt(pinch.cx - rect.left, pinch.cy - rect.top, (pinch.k * d) / pinch.d, pinch);
-        moved = true;
-      } else if (drag) {
-        const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
-        if (!moved && Math.hypot(dx, dy) < 6) return;
-        if (!moved) { stage.setPointerCapture(ev.pointerId); stage.classList.add("is-dragging"); }
-        moved = true;
-        view.x = drag.vx + dx;
-        view.y = drag.vy + dy;
-        render();
-      }
-    });
-    function endPointer(ev) {
-      pointers.delete(ev.pointerId);
-      if (pointers.size < 2) pinch = null;
-      if (pointers.size === 0) {
-        drag = null;
-        stage.classList.remove("is-dragging");
-        setTimeout(() => { moved = false; }, 0);
-      }
-    }
-    stage.addEventListener("pointerup", endPointer);
-    stage.addEventListener("pointercancel", endPointer);
-    stage.addEventListener("click", (ev) => {
-      if (!moved && ev.target === svg) { tapped = null; focusNode(null); }
-    });
-    stage.addEventListener("wheel", (ev) => {
-      ev.preventDefault();
-      const rect = svg.getBoundingClientRect();
-      const factor = Math.exp(-ev.deltaY * (ev.ctrlKey ? 0.01 : 0.0018));
-      zoomAt(ev.clientX - rect.left, ev.clientY - rect.top, view.k * factor);
-    }, { passive: false });
-
-    function zoomAt(px, py, k, from) {
-      const f = from ? { k: from.k, x: from.vx, y: from.vy } : { k: view.k, x: view.x, y: view.y };
-      k = Math.max(0.6, Math.min(6, k));
-      const wx = (px - f.x) / f.k;
-      const wy = (py - f.y) / f.k;
-      view.k = k;
-      view.x = px - wx * k;
-      view.y = py - wy * k;
-      render();
-    }
-    function zoomBy(f) { zoomAt(W / 2, H / 2, view.k * f); }
-    function centreOn(o) {
-      const p = toScreen(o.n);
-      if (p[0] > 40 && p[0] < W - 40 && p[1] > 40 && p[1] < H - 40) return;
-      view.x += W / 2 - p[0];
-      view.y += H / 2 - p[1];
-      render();
-    }
-    zin.addEventListener("click", () => zoomBy(1.35));
-    zout.addEventListener("click", () => zoomBy(1 / 1.35));
-    zreset.addEventListener("click", () => { view = { k: 1, x: 0, y: 0 }; render(); });
-
-    // --- size
-    let raf = 0;
-    function resize() {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => { fit(); render(); });
-    }
-    if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
-    else window.addEventListener("resize", resize);
-    fit();
-    render();
-    showInfo(null);
-
-    // deep link: /explore/#post:attention focuses that page
-    const hash = decodeURIComponent(location.hash.slice(1));
-    if (hash && nodeEls.has(hash)) focusNode(hash, { center: true });
-  }
-
-  function start() {
-    document.querySelectorAll("#explore-root, [data-explore]").forEach(init);
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
-  else start();
+/* ---- series found in the map ---- */
+const box=q('#series');if(!box)return;
+const sOut=q('#s-out'),sStat=q('#s-stat'),mod=box.dataset.mapview||'/figures/_mapview.py';
+function seriesHTML(list,heading){
+ if(!list||!list.length)return `<p class="why">${esc(heading)}: nothing found.</p>`;
+ return list.map(s=>`<div class="gen" data-ids="${esc(s.ids.join(' '))}"><div class="sub">${esc(s.name)} · ${s.length} parts${s.declared===false?' · found on the map, not yet declared':s.declared?' · declared':''}</div>
+  <ol class="series">${s.parts.map(p=>`<li><span class="n">${p.part}</span><a href="${esc(nodeHref(p.id))}">${esc(p.title)}</a><span class="dim"> · ${esc(label(p.id)||KIND[p.type]||'')}</span>${p.read_first&&p.read_first.length?`<span class="dim"> · read first: ${p.read_first.map(r=>`<a href="${esc(nodeHref(r.id))}">${esc(r.title)}</a>`).join(', ')}</span>`:''}</li>`).join('')}</ol>
+  ${s.declared?'':`<details class="src"><summary>Make it official: the header lines</summary><pre>${esc(s.yaml)}</pre></details>`}</div>`).join('');}
+function showChain(ids){M.shown=null;paint();const set=new Set(ids);
+ svg.querySelectorAll('.n').forEach(g=>g.classList.toggle('hit',set.has(g.dataset.id)));}
+sOut.addEventListener('pointerover',e=>{const g=e.target.closest('.gen');if(g&&e.pointerType!=='touch')showChain(g.dataset.ids.split(' '));});
+async function runSeries(fn,args,heading){sStat.textContent='Finding the chains …';
+ try{const py=window.Tessera&&window.Tessera.py;if(!py)throw new Error('not ready');
+  const r=await py.call(mod,fn,Object.assign({data:{$json:'/data/mapdata.json'}},args));
+  const list=Array.isArray(r)?r:(r?[r]:[]);sOut.innerHTML=seriesHTML(list,heading);
+  sStat.textContent=`${heading}: ${list.length} series.`;sStat.classList.add('live');}
+ catch(e){sStat.textContent='Still getting ready; try again in a moment.';}}
+q('#s-between').onclick=()=>{const a=q('#s-from').value,b=q('#s-to').value;if(a&&b)runSeries('series_between',{start:a,end:b},'Chain between');};
+q('#s-bytag').onclick=()=>{const t=q('#s-tag').value;if(t)runSeries('series_for_tag',{tag:t},'In reading order');};
+fetch('/data/series.json').then(r=>r.json()).then(list=>{sOut.innerHTML=seriesHTML(list,'Found on the map');sStat.textContent=`Found on the map: ${list.length} series.`;sStat.classList.add('live');}).catch(()=>{});
 })();
