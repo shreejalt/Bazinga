@@ -1,0 +1,87 @@
+/* Diagrams: the ```diagram blocks in posts and the shapes, arrows and frames that drawings/*.py draw.
+   Every colour comes from the theme (tokens.css through the --fig-* names in site.css), so a diagram looks like the
+   page around it: paper, ink hairlines, the one blue accent, the rust of references for data, Courier labels.
+   Strokes keep their width at any scale (vector-effect), so a diagram shrunk to a phone stays crisp. */
+
+.dg{
+  --dg-paper:var(--fig-surface,var(--paper,#FBF7EC)); --dg-panel:var(--fig-panel,var(--tint,#F2EBDB));
+  --dg-ink:var(--fig-ink,var(--ink,#1D1A15)); --dg-ink-2:var(--fig-ink-2,var(--ink-2,#4A443A));
+  --dg-ink-3:var(--fig-ink-3,var(--ink-3,#655D51)); --dg-rule:var(--fig-rule,var(--rule-2,#CBC1AD));
+  --dg-accent:var(--fig-c1,var(--blue,#0F52BA)); --dg-data:var(--fig-c2,var(--ref,#A34A12));
+  --dg-on:var(--on-dark,#FBF7EC);
+  font-family:var(--fig-font,var(--mono,"Courier Prime","Courier New",monospace));
+}
+.dg text{font-family:inherit;fill:var(--dg-ink)}
+
+/* shapes */
+.dg .dg-node{fill:var(--dg-paper);stroke:var(--dg-ink);stroke-width:1;vector-effect:non-scaling-stroke}
+.dg .dg-t{font-weight:700;fill:var(--dg-ink)}
+.dg .dg-ts{fill:var(--dg-ink-2)}
+.dg .dg-node.s-accent{stroke:var(--dg-accent);stroke-width:1.75}
+.dg .dg-n.s-accent .dg-t{fill:var(--dg-accent)}
+.dg .dg-node.s-emphasis{fill:var(--dg-accent);stroke:var(--dg-accent)}
+.dg .dg-n.s-emphasis .dg-t,.dg .dg-n.s-emphasis .dg-ts{fill:var(--dg-on)}
+.dg .dg-node.s-muted{fill:var(--dg-panel);stroke:var(--dg-rule);stroke-dasharray:4 3}
+.dg .dg-n.s-muted .dg-t{fill:var(--dg-ink-3);font-weight:400}
+.dg .dg-n.s-muted .dg-ts{fill:var(--dg-ink-3)}
+.dg .dg-node.s-data{stroke:var(--dg-data);fill:color-mix(in srgb,var(--dg-data) 7%,var(--dg-paper))}
+.dg .dg-n.s-data .dg-t{fill:var(--dg-data)}
+.dg .dg-lid{fill:none}
+
+/* arrows and their labels */
+.dg .dg-edge{fill:none;stroke:var(--dg-ink);stroke-width:1.15;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.dg .dg-edge.s-dashed{stroke-dasharray:5 4;stroke-linecap:butt}
+.dg .dg-edge.s-thick{stroke-width:2.4}
+.dg .dg-edge.s-accent{stroke:var(--dg-accent)}
+.dg .dg-edge.s-muted{stroke:var(--dg-ink-3)}
+.dg .dg-tip{fill:var(--dg-ink)}
+.dg .dg-tip.s-accent{fill:var(--dg-accent)}
+.dg .dg-tip.s-muted{fill:var(--dg-ink-3)}
+.dg .dg-halo{fill:var(--dg-paper)}
+.dg .dg-elabel text{fill:var(--dg-ink-2)}
+
+/* groups */
+.dg .dg-frame{fill:var(--dg-panel);stroke:var(--dg-rule);stroke-width:1;vector-effect:non-scaling-stroke}
+.dg .dg-frame.d1{fill:var(--dg-paper)}
+.dg .dg-frame.s-accent{stroke:var(--dg-accent)}
+.dg .dg-frame.s-muted{stroke-dasharray:4 3}
+.dg .dg-frame-title{fill:var(--dg-ink-2);font-weight:700;letter-spacing:.09em}
+.dg .dg-frame-title.s-accent{fill:var(--dg-accent)}
+.dg .dg-frame-title.s-data{fill:var(--dg-data)}
+
+/* notes */
+.dg .dg-anno{fill:var(--dg-ink-2);font-style:italic}
+.dg .dg-anno.s-free{fill:var(--dg-ink-3)}
+
+/* timelines and trees */
+.dg .dg-edge.s-axis{stroke:var(--dg-ink);stroke-width:1.25}
+.dg .dg-edge.s-stem{stroke:var(--dg-rule)}
+.dg .dg-edge.s-tree{stroke:var(--dg-ink-3)}
+.dg .dg-node.s-tick{fill:var(--dg-paper);stroke:var(--dg-ink);stroke-width:1.5}
+.dg .dg-node.s-tick.s-accent,.dg .dg-node.s-tick.s-emphasis{fill:var(--dg-accent);stroke:var(--dg-accent)}
+.dg .dg-node.s-tick.s-data{fill:var(--dg-data);stroke:var(--dg-data)}
+.dg .dg-node.s-tick.s-muted{stroke:var(--dg-rule);stroke-dasharray:none}
+.dg .dg-anno.s-date{font-style:normal;font-weight:700;fill:var(--dg-ink-2)}
+.dg .dg-anno.s-date.s-accent,.dg .dg-anno.s-date.s-emphasis{fill:var(--dg-accent)}
+.dg .dg-anno.s-event{font-style:normal;font-weight:700;fill:var(--dg-ink)}
+.dg .dg-anno.s-event.s-accent,.dg .dg-anno.s-event.s-emphasis{fill:var(--dg-accent)}
+.dg .dg-anno.s-event.s-data{fill:var(--dg-data)}
+.dg .dg-anno.s-event.s-muted{fill:var(--dg-ink-3);font-weight:400}
+.dg .dg-anno.s-detail{font-style:normal;fill:var(--dg-ink-2)}
+
+/* the older kit (box, arrow, group in drawings/*.py): the same hairlines and type */
+.dg .dg-box,.dg .dg-arrow,.dg .dg-group{vector-effect:non-scaling-stroke}
+.dg .dg-box{stroke-width:1}
+.dg .dg-arrow{stroke-width:1.15}
+
+/* the frame on the page: a diagram keeps its own size and only ever shrinks to fit */
+.drawing .drawing-fit svg{width:auto;max-width:100%;height:auto;margin:0 auto}
+.diagram .drawing-svg.drawing-fit svg{min-width:0}
+figure.diagram .drawing-svg{padding:20px 16px}
+.diagram .drawing-svg.dg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.diagram .drawing-svg.dg-scroll svg{min-width:calc(var(--dg-w,400px) * .8)}
+.dg-scroll:focus-visible{outline:2px solid var(--blue,#0F52BA);outline-offset:2px}
+@media (max-width:600px){
+  .memo .body > figure.diagram{margin-left:0}
+  figure.diagram .drawing-svg{padding:14px 8px}
+}

@@ -166,6 +166,7 @@
 .fig-plot .s-contour { --c: var(--fig-axis); }
 
 .fig-plot .line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.fig-plot .stem { fill: none; stroke: var(--c); stroke-width: 1.5; stroke-linecap: round; opacity: .75; }
 .fig-plot .line.s-thick { stroke-width: 2.75; }
 .fig-plot .line.s-thin, .fig-plot .line.s-faint, .fig-plot .line.s-contour { stroke-width: 1.25; }
 .fig-plot .line.s-dashed { stroke-dasharray: 6 5; }

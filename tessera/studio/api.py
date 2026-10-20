@@ -369,19 +369,43 @@ class Studio:
         return {"available": True, "body_line": body_line, "issues": out}
 
     def math(self, data) -> dict:
-        tex = str(data.get("tex") or "")
-        if len(tex) > 20000:
+        """One formula (``tex``, ``display``) or many (``items: [{tex, display}]``, for the editor's hover and lint).
+
+        Each result is ``{mathml, tag, label}`` or ``{error, hint, line, column, index, length}``; display formulas
+        may carry \\tag and \\label, as in a page."""
+        items = data.get("items")
+        if items is not None:
+            if not isinstance(items, list) or len(items) > 400:
+                raise Refused(413, "Too many equations at once.")
+            if sum(len(str((i or {}).get("tex") or "")) for i in items) > 200000:
+                raise Refused(413, "Those equations are too long.")
+        elif len(str(data.get("tex") or "")) > 20000:
             raise Refused(413, "That equation is too long.")
         try:
             mathml = engine.module("mathml")
         except engine.Unavailable as exc:
             return {"available": False, "error": str(exc)}
-        try:
-            out = mathml.to_mathml(tex, bool(data.get("display", True)))
-            return {"available": True, "mathml": out}
-        except Exception as exc:  # noqa: BLE001 - MathError or a converter bug: both are shown, not raised
-            return {"available": True, "error": getattr(exc, "message", None) or str(exc),
-                    "hint": getattr(exc, "hint", ""), "offset": getattr(exc, "offset", None)}
+
+        def one(tex, display) -> dict:
+            try:
+                if hasattr(mathml, "check"):
+                    res = mathml.check(tex, display)
+                    if res["ok"]:
+                        return {"mathml": res["mathml"], "tag": res.get("tag"), "label": res.get("label")}
+                    e = res["error"]
+                    return {"error": e["message"], "hint": e["hint"], "offset": e["line"], "line": e["line"],
+                            "column": e["column"], "index": e["index"], "length": e["length"]}
+                return {"mathml": mathml.to_mathml(tex, display)}
+            except Exception as exc:  # noqa: BLE001 - MathError or a converter bug: both are shown, not raised
+                return {"error": getattr(exc, "message", None) or str(exc), "hint": getattr(exc, "hint", ""),
+                        "offset": getattr(exc, "offset", None), "line": getattr(exc, "offset", None),
+                        "column": getattr(exc, "column", None), "index": getattr(exc, "index", None),
+                        "length": getattr(exc, "length", 1)}
+
+        if items is not None:
+            return {"available": True, "results": [one(str((i or {}).get("tex") or ""), bool((i or {}).get("display")))
+                                                   for i in items]}
+        return {"available": True, **one(str(data.get("tex") or ""), bool(data.get("display", True)))}
 
     # --- figures and drawings --------------------------------------------------------------------------------------
     def figures_run(self, data) -> dict:
@@ -650,7 +674,7 @@ class Studio:
             inner = ('<div class="frame-error"><strong>This could not be drawn.</strong><pre>'
                      + _html.escape(str(detail)[-3000:]) + "</pre></div>")
         css = "".join(f'<link rel="stylesheet" href="/assets/css/{n}">' for n in
-                      ("tokens.css", "site.css", "math.css", "figure.css") if (ENGINE_DIR / "theme/assets/css" / n).exists()
+                      ("tokens.css", "site.css", "math.css", "figure.css", "diagram.css") if (ENGINE_DIR / "theme/assets/css" / n).exists()
                       or (self.root / "theme/assets/css" / n).exists())
         js = '<script src="/assets/js/figure.js" defer></script>' if kind == "figure" else ""
         return 200, ("<!doctype html><html lang=en" + (f' data-theme="{theme}"' if theme else "") + "><head>"
@@ -804,3 +828,11 @@ def guess_type(path: Path) -> str:
 
 
 _ = IMAGE_TYPES  # imported for callers that list the allowed types
+
+# The figure panel (gallery, figure builder, checking unsaved code) lives in figpanel.py.
+from . import figpanel as _figpanel  # noqa: E402
+_figpanel.install(Studio)
+
+# The diagram panel (text diagrams drawn as you type) lives in diagrampanel.py.
+from . import diagrampanel as _diagrampanel  # noqa: E402
+_diagrampanel.install(Studio)

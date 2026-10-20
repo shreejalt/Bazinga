@@ -8,3 +8,5 @@ summary: "Four ways of extending recurrent networks, among them attentional inte
 topics: [attention, neural-networks]
 builds_on: [article:understanding-lstm-networks]
 ---
+
+

@@ -55,7 +55,8 @@ IMPORTMAP = {"imports": {
     "@marijn/find-cluster-break": "https://esm.sh/@marijn/find-cluster-break@1.0.4",
 }}
 FONTS_CSS = ("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500"
-             "&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap")
+             "&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400"
+             "&family=STIX+Two+Math&display=swap")
 
 
 def importmap() -> dict:
@@ -119,6 +120,14 @@ ROUTES_POST = {
     "/api/topics/add": "topic_add", "/api/upload": "upload", "/api/llm/describe": "llm_describe",
     "/api/llm/equation": "llm_equation", "/api/llm/ingest": "llm_ingest", "/api/publish/prepare": "publish_prepare",
 }
+# The figure panel (figpanel.py): gallery, figure builder, checking code before it is saved.
+ROUTES_GET.update({"/api/figures/gallery": "figures_gallery", "/api/figures/open": "figure_open",
+                   "/api/builder/info": "builder_info"})
+ROUTES_POST.update({"/api/builder/preview": "builder_preview", "/api/builder/save": "builder_save",
+                    "/api/figures/check": "figure_check", "/api/figures/save-code": "figure_save_code"})
+# The diagram panel (diagrampanel.py): text diagrams drawn as you type, and the examples gallery.
+ROUTES_GET.update({"/api/diagram/examples": "diagram_examples"})
+ROUTES_POST.update({"/api/diagram/render": "diagram_render"})
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -286,6 +295,10 @@ class Handler(BaseHTTPRequestHandler):
         if m:
             status, html = studio.preview_get(m.group(1))
             return self.send(status, html, "text/html; charset=utf-8", frame)
+        m = re.fullmatch(r"/frame/draft/([a-z][a-z0-9_]*)", path)
+        if m:
+            status, html = studio.draft_frame(m.group(1), q)
+            return self.send(status, html, "text/html; charset=utf-8", frame)
         m = re.fullmatch(r"/frame/(figure|drawing)/([A-Za-z0-9_.]+)", path)
         if m:
             status, html = studio.frame(m.group(1), m.group(2), q)
@@ -294,6 +307,9 @@ class Handler(BaseHTTPRequestHandler):
         if pid:
             status, html = studio.preview_get(pid)
             return self.send(status, html, "text/html; charset=utf-8", frame)
+        draft = studio.draft_file(path)
+        if draft is not None:
+            return self.send(200, draft.read_bytes(), guess_type(draft))
         gen = studio.generated_asset(path)
         if gen is not None:
             return self.send(200, gen[0], gen[1])

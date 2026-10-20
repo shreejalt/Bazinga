@@ -1,0 +1,287 @@
+# LaTeX people write in ML and maths blogs, and what Tessera must do with each.
+#
+#   tex:     the formula as written (YAML single quotes: backslashes are literal, '' is a quote)
+#   display: true for $$ … $$ (default false: inline $ … $)
+#   expect:  ok (renders as valid MathML Core) or error (a MathError with a hint)
+#   has:     strings the MathML (without its LaTeX annotation) must contain
+#   lacks:   strings it must not contain
+#   error:   words the error message must contain;  hint: words the hint must contain
+#   at:      [line, column] of the error inside the formula (0-based)
+#
+# tests/test_core_math_corpus.py runs every item; scratchpad pages render them all in Chrome and WebKit.
+
+# ---------------------------------------------------------------- fractions and roots
+- {id: frac, tex: '\frac{a}{b}', has: ['<mfrac>']}
+- {id: frac-nested, tex: '\frac{1}{1 + \frac{1}{x}}', display: true, has: ['<mfrac>']}
+- {id: frac-digits, tex: '\frac12', has: ['<mfrac><mn>1</mn><mn>2</mn></mfrac>']}
+- {id: dfrac, tex: 'y = \dfrac{a}{b}', has: ['displaystyle="true"']}
+- {id: tfrac, tex: '\tfrac{1}{2} x^2', display: true, has: ['displaystyle="false"']}
+- {id: cfrac, tex: 'x = a_0 + \cfrac{1}{a_1 + \cfrac{1}{a_2}}', display: true, has: ['<mfrac>']}
+- {id: over, tex: '{a \over b}', has: ['<mfrac>']}
+- {id: sqrt, tex: '\sqrt{x^2 + y^2}', has: ['<msqrt>']}
+- {id: sqrt-n, tex: '\sqrt[3]{x}', has: ['<mroot>']}
+- {id: sqrt-n-letter, tex: '\sqrt[n]{1 + x}', has: ['<mroot>']}
+- {id: binom, tex: '\binom{n}{k} = \frac{n!}{k!(n-k)!}', display: true, has: ['linethickness="0"']}
+- {id: choose, tex: '{n \choose k}', has: ['linethickness="0"']}
+- {id: dbinom, tex: '\dbinom{n}{2}', has: ['linethickness="0"']}
+
+# ---------------------------------------------------------------- big operators and limits
+- {id: sum-inline, tex: '\sum_{i=1}^{n} x_i', has: ['<munderover>', 'movablelimits="true"']}
+- {id: sum-display, tex: '\sum_{i=1}^{n} x_i', display: true, has: ['<munderover>']}
+- {id: sum-limits, tex: '\sum\limits_{i} x_i', has: ['<munder>']}
+- {id: sum-nolimits, tex: '\sum\nolimits_{i} x_i', display: true, has: ['<msub>']}
+- {id: prod, tex: '\prod_{t=1}^{T} p(x_t \mid x_{<t})', display: true, has: ['<munderover>', '∣']}
+- {id: int, tex: '\int_0^1 f(x)\,\mathrm{d}x', display: true, has: ['<msubsup>', '<mtext>d</mtext>']}
+- {id: int-limits, tex: '\int\limits_a^b f', display: true, has: ['<munderover>']}
+- {id: iint, tex: '\iint_{D} f(x, y)\, dx\, dy', display: true, has: ['∬']}
+- {id: oint, tex: '\oint_C \mathbf{F} \cdot d\mathbf{r}', display: true, has: ['∮']}
+- {id: lim, tex: '\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = e', display: true, has: ['<munder>', '>lim</mo>']}
+- {id: lim-inline, tex: '\lim_{x \to 0} \frac{\sin x}{x} = 1', has: ['movablelimits="true"']}
+- {id: limsup, tex: '\limsup_{n\to\infty} a_n', display: true, has: ['<munder>']}
+- {id: max, tex: '\max_{\theta} \; \mathcal{L}(\theta)', display: true, has: ['<munder>', '>max</mo>']}
+- {id: min-sub, tex: '\min_{x \in \mathcal{X}} f(x)', display: true, has: ['<munder>']}
+- {id: sup, tex: '\sup_{x} |f(x)|', display: true, has: ['<munder>']}
+- {id: argmax, tex: '\hat{y} = \argmax_{y \in \mathcal{Y}} p(y \mid x)', display: true, has: ['<munder>', '>argmax</mo>']}
+- {id: argmin, tex: '\theta^* = \argmin_\theta \mathcal{L}(\theta)', display: true, has: ['>argmin</mo>']}
+- {id: argmax-opname, tex: '\operatorname*{arg\,max}_{a} Q(s, a)', display: true, has: ['>argmax</mo>', '<munder>']}
+- {id: argmax-inline, tex: '\arg\max_x f(x)', has: ['>arg</mo>']}
+- {id: bigcup, tex: '\bigcup_{i=1}^{\infty} A_i', display: true, has: ['<munderover>', '⋃']}
+- {id: bigoplus, tex: '\bigoplus_{k} V_k', display: true, has: ['<munder>']}
+- {id: substack, tex: '\sum_{\substack{i < j \\ i \ne j}} a_{ij}', display: true, has: ['<mtable>']}
+- {id: expectation, tex: '\mathbb{E}_{x \sim p}\left[ f(x) \right]', has: ['𝔼', '∼']}
+- {id: mathbb-E-sub, tex: '\mathbb{E}_{q_\phi(z \mid x)}[\log p_\theta(x \mid z)]', display: true, has: ['𝔼']}
+
+# ---------------------------------------------------------------- matrices
+- {id: pmatrix, tex: '\begin{pmatrix} a & b \\ c & d \end{pmatrix}', display: true, has: ['<mtable>', '<mo stretchy="true" lspace="0" rspace="0">(</mo>']}
+- {id: bmatrix, tex: '\begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}', display: true, has: ['<mo stretchy="true" lspace="0" rspace="0">[</mo>']}
+- {id: vmatrix, tex: '\det A = \begin{vmatrix} a & b \\ c & d \end{vmatrix} = ad - bc', display: true, has: ['rspace="0" stretchy="true">|</mo>']}
+- {id: Vmatrix, tex: '\begin{Vmatrix} x \\ y \end{Vmatrix}', display: true, has: ['‖']}
+- {id: Bmatrix, tex: '\begin{Bmatrix} a & b \end{Bmatrix}', display: true, has: ['<mo stretchy="true" lspace="0" rspace="0">{</mo>']}
+- {id: matrix, tex: '\begin{matrix} a & b \\ c & d \end{matrix}', display: true, has: ['<mtable>'], lacks: ['displaystyle']}
+- {id: matrix-inline, tex: 'A = \begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix}', has: ['<mtable>']}
+- {id: matrix-dots, tex: '\begin{pmatrix} a_{11} & \cdots & a_{1n} \\ \vdots & \ddots & \vdots \\ a_{m1} & \cdots & a_{mn} \end{pmatrix}', display: true, has: ['⋯', '⋮', '⋱']}
+- {id: column-vector, tex: '\mathbf{x} = \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix}', display: true, has: ['𝐱']}
+- {id: smallmatrix, tex: '\left(\begin{smallmatrix} a & b \\ c & d \end{smallmatrix}\right)', has: ['scriptlevel="1"']}
+- {id: matrix-star, tex: '\begin{pmatrix*}[r] -1 & 2 \\ 3 & -4 \end{pmatrix*}', display: true, has: ['text-align:right']}
+- {id: array-cc, tex: '\begin{array}{cc} a & b \\ c & d \end{array}', display: true, has: ['<mtable']}
+- {id: array-rule, tex: '\left[\begin{array}{cc|c} 1 & 2 & 3 \\ 4 & 5 & 6 \end{array}\right]', display: true, has: ['border-right']}
+- {id: array-hline, tex: '\begin{array}{c|c} x & y \\ \hline 0 & 1 \end{array}', display: true, has: ['border-bottom']}
+- {id: left-matrix, tex: '\left[ \begin{matrix} 1 \\ 2 \end{matrix} \right]', display: true, has: ['stretchy="true"']}
+
+# ---------------------------------------------------------------- cases and several lines
+- {id: cases, tex: '|x| = \begin{cases} x & \text{if } x \ge 0 \\ -x & \text{otherwise} \end{cases}', display: true, has: ['padding-left:1em', '<mtext>if\u00a0</mtext>']}
+- {id: cases-relu, tex: '\operatorname{ReLU}(x) = \begin{cases} x, & x > 0 \\ 0, & x \le 0 \end{cases}', display: true, has: ['>ReLU</mo>']}
+- {id: cases-inline, tex: 'f(x) = \begin{cases} 1 & x > 0 \\ 0 & \text{else} \end{cases}', has: ['<mtable>']}
+- {id: dcases, tex: '\begin{dcases} \frac{1}{2} & x = 0 \\ 1 & x > 0 \end{dcases}', display: true, has: ['<mfrac>']}
+- {id: rcases, tex: '\begin{rcases} a & b \\ c & d \end{rcases} \Rightarrow e', display: true, has: ['<mtable>']}
+- {id: aligned, tex: '\begin{aligned} a &= b + c \\ &= d \end{aligned}', display: true, has: ['displaystyle="true"', 'text-align:right'], lacks: ['&amp;']}
+- {id: align, tex: '\begin{align} f(x) &= (x+1)^2 \\ &= x^2 + 2x + 1 \end{align}', display: true, has: ['<mtr>']}
+- {id: align-star, tex: '\begin{align*} \nabla_\theta J &= \mathbb{E}[\nabla_\theta \log \pi_\theta(a \mid s) Q(s,a)] \end{align*}', display: true, has: ['<mtable']}
+- {id: align-two-pairs, tex: '\begin{aligned} x &= 1 & y &= 2 \\ z &= 3 & w &= 4 \end{aligned}', display: true, has: ['padding-left:1em']}
+- {id: alignat, tex: '\begin{alignat}{2} a &= b &\quad c &= d \end{alignat}', display: true, has: ['<mtable']}
+- {id: gather, tex: '\begin{gather} a = b \\ c = d \end{gather}', display: true, has: ['<mtable']}
+- {id: gathered, tex: '\left\{ \begin{gathered} x + y = 1 \\ x - y = 0 \end{gathered} \right.', display: true, has: ['<mtable']}
+- {id: split, tex: '\begin{split} L &= \sum_i \ell_i \\ &\approx \frac{1}{N} \sum_i \ell_i \end{split}', display: true, has: ['<mtable']}
+- {id: multline, tex: '\begin{multline} a + b + c + d \\ + e + f + g \end{multline}', display: true, has: ['<mtable', 'width="2em"']}
+- {id: equation-env, tex: '\begin{equation} E = mc^2 \end{equation}', display: true, has: ['<msup>']}
+- {id: rows-without-env, tex: 'a = b \\ c = d', display: true, has: ['<mtable']}
+- {id: rows-amp-without-env, tex: 'a &= b \\ c &= d', display: true, has: ['text-align:right']}
+- {id: row-spacing, tex: '\begin{aligned} a &= b \\[4pt] c &= d \end{aligned}', display: true, lacks: ['4pt']}
+- {id: nonumber, tex: '\begin{align} a &= b \nonumber \\ c &= d \end{align}', display: true, lacks: ['nonumber']}
+- {id: notag, tex: 'a = b \notag', display: true, lacks: ['notag']}
+- {id: adam, tex: "\\begin{aligned}\nm_t &= \\beta_1 m_{t-1} + (1 - \\beta_1)\\, g_t \\\\\nv_t &= \\beta_2 v_{t-1} + (1 - \\beta_2)\\, g_t^2 \\\\\n\\theta_t &= \\theta_{t-1} - \\alpha\\, \\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\epsilon}\n\\end{aligned}", display: true, has: ['<mtable']}
+
+# ---------------------------------------------------------------- brackets
+- {id: left-right, tex: '\left( \frac{a}{b} \right)', has: ['stretchy="true"']}
+- {id: left-brace, tex: '\left\{ x \in \mathbb{R} : x > 0 \right\}', has: ['<mo stretchy="true" fence="true" form="prefix">{</mo>']}
+- {id: left-dot, tex: '\left. \frac{df}{dx} \right|_{x=0}', has: ['<msub>']}
+- {id: middle, tex: '\left( a \middle| b \right)', has: ['stretchy="true"']}
+- {id: norm, tex: '\lVert \mathbf{x} \rVert_2', has: ['‖']}
+- {id: norm-left, tex: '\left\lVert W x \right\rVert^2', has: ['‖']}
+- {id: norm-bars, tex: '\|x\|_2^2', has: ['‖']}
+- {id: abs, tex: '\lvert x \rvert', has: ['<mo lspace="0" rspace="0">|</mo>']}
+- {id: abs-plain, tex: '|x - y|', has: ['lspace="0"']}
+- {id: angle, tex: '\langle q, k \rangle', has: ['<mo>⟨</mo>', '<mo>⟩</mo>']}
+- {id: angle-left, tex: '\left\langle \frac{a}{b}, c \right\rangle', has: ['⟨']}
+- {id: floor-ceil, tex: '\lfloor x \rfloor + \lceil y \rceil', has: ['<mo>⌊</mo>', '<mo>⌈</mo>']}
+- {id: set-builder, tex: '\{ x \mid x > 0 \}', has: ['∣']}
+- {id: big-paren, tex: '\Big( \sum_i x_i \Big)^2', has: ['minsize="1.623em"']}
+- {id: big-angle, tex: '\bigl\langle x, y \bigr\rangle', has: ['⟨'], lacks: ['\langle']}
+- {id: big-brace, tex: '\big\{ a \big\}', has: ['minsize'], lacks: ['\{']}
+- {id: half-open, tex: 'x \in [0, 1)', has: ['<mo stretchy="false">[</mo>']}
+- {id: conditional, tex: 'p(y \mid x)', has: ['∣']}
+- {id: conditional-bar, tex: 'p(y|x)', has: ['lspace="0" rspace="0">|</mo>'], lacks: ['stretchy="true"']}
+
+# ---------------------------------------------------------------- fonts and styles
+- {id: mathbb, tex: '\mathbb{R}^{n \times d}', has: ['ℝ']}
+- {id: mathbb-one, tex: '\mathbb{1}[y = k]', has: ['𝟙']}
+- {id: mathds, tex: '\mathds{1}_{x > 0}', has: ['𝟙']}
+- {id: mathcal, tex: '\mathcal{L}(\theta)', has: ['ℒ']}
+- {id: mathcal-N, tex: 'x \sim \mathcal{N}(\mu, \sigma^2)', has: ['𝒩', '∼']}
+- {id: mathscr, tex: '\mathscr{F}', has: ['ℱ']}
+- {id: mathfrak, tex: '\mathfrak{g}', has: ['𝔤']}
+- {id: mathrm-word, tex: '\mathrm{ReLU}(x)', has: ['<mi>ReLU</mi>']}
+- {id: mathrm-d, tex: '\frac{\mathrm{d}y}{\mathrm{d}x}', has: ['<mtext>d</mtext>']}
+- {id: mathbf, tex: '\mathbf{W}\mathbf{x} + \mathbf{b}', has: ['𝐖', '𝐱', '𝐛'], lacks: ['mathvariant']}
+- {id: mathbf-digit, tex: '\mathbf{0}', has: ['𝟎']}
+- {id: boldsymbol, tex: '\boldsymbol{\theta}', has: ['𝜽'], lacks: ['mathvariant']}
+- {id: boldsymbol-latin, tex: '\boldsymbol{x}', has: ['𝒙'], lacks: ['mathvariant']}
+- {id: bm, tex: '\bm{\mu} + \bm{\Sigma}', has: ['𝝁', '𝜮']}
+- {id: mathbf-greek, tex: '\mathbf{\Sigma}', has: ['𝚺']}
+- {id: mathit, tex: '\mathit{diff}', has: ['<mi>𝑑𝑖𝑓𝑓</mi>']}
+- {id: mathsf, tex: '\mathsf{T}', has: ['𝖳']}
+- {id: mathtt, tex: '\mathtt{x}', has: ['𝚡']}
+- {id: operatorname, tex: '\operatorname{softmax}(z)_i', has: ['>softmax</mo>']}
+- {id: operatorname-tr, tex: '\operatorname{tr}(A^\top B)', has: ['>tr</mo>', '⊤']}
+- {id: operatorname-spaced, tex: '\operatorname{Var}[X] = \mathbb{E}[X^2] - \mathbb{E}[X]^2', has: ['>Var</mo>']}
+- {id: text-spaces, tex: '\text{if } x > 0 \text{ and } y < 1', has: ['<mtext>if\u00a0</mtext>', '<mtext>\u00a0and\u00a0</mtext>']}
+- {id: textbf, tex: '\textbf{loss} = 0', has: ['font-weight:bold']}
+- {id: textit, tex: '\textit{note}', has: ['font-style:italic']}
+- {id: mbox, tex: 'x \mbox{ for all } y', has: ['<mtext>']}
+- {id: color, tex: '\color{red}{x} + y', has: ['color:red'], lacks: ['mathcolor']}
+- {id: color-switch, tex: '{\color{blue} a + b} = c', has: ['color:blue']}
+- {id: textcolor, tex: '\textcolor{#e03131}{\theta}', has: ['color:#e03131']}
+- {id: boxed, tex: '\boxed{E = mc^2}', display: true, has: ['border:'], lacks: ['menclose']}
+- {id: cancel, tex: '\frac{\cancel{a} b}{\cancel{a} c}', has: ['linear-gradient'], lacks: ['menclose']}
+- {id: bcancel, tex: '\bcancel{x}', has: ['linear-gradient'], lacks: ['menclose']}
+- {id: xcancel, tex: '\xcancel{x}', has: ['linear-gradient'], lacks: ['menclose']}
+- {id: size, tex: '\large x', has: ['font-size:1.2em'], lacks: ['mathsize']}
+- {id: displaystyle, tex: '\displaystyle \sum_{i=1}^n i', has: ['displaystyle="true"']}
+
+# ---------------------------------------------------------------- accents, over and under
+- {id: hat, tex: '\hat{y}', has: ['<mover accent="true">']}
+- {id: hat-bold, tex: '\hat{\mathbf{x}}', has: ['𝐱']}
+- {id: tilde, tex: '\tilde{x}', has: ['<mover']}
+- {id: bar, tex: '\bar{x} = \frac{1}{n}\sum_i x_i', has: ['<mover', 'ˉ']}
+- {id: bar-wide, tex: '\bar{xy}', has: ['border-top']}
+- {id: vec, tex: '\vec{v}', has: ['<mover', '→']}
+- {id: dot, tex: '\dot{x} = f(x)', has: ['<mover']}
+- {id: ddot, tex: '\ddot{q}', has: ['<mover']}
+- {id: widehat, tex: '\widehat{xy}', has: ['<mover']}
+- {id: widetilde, tex: '\widetilde{abc}', has: ['<mover']}
+- {id: overline, tex: '\overline{AB}', has: ['border-top'], lacks: ['―']}
+- {id: underline, tex: '\underline{x}', has: ['border-bottom']}
+- {id: overset, tex: 'a \overset{\text{def}}{=} b', has: ['<mover>']}
+- {id: underset, tex: '\underset{x \to 0}{\lim} f', has: ['<munder>']}
+- {id: stackrel, tex: 'a \stackrel{?}{=} b', has: ['<mover>']}
+- {id: overbrace, tex: '\overbrace{1 + 2 + \cdots + n}^{n \text{ terms}}', display: true, has: ['⏞', 'stretchy="true"']}
+- {id: underbrace, tex: '\underbrace{x_1 + \cdots + x_n}_{n}', display: true, has: ['⏟']}
+- {id: xrightarrow, tex: 'A \xrightarrow{f} B', has: ['<mover>', '⟶'], lacks: ['+0.833em']}
+- {id: xrightarrow-below, tex: 'A \xrightarrow[g]{f} B', has: ['<munder>', '<mover>']}
+- {id: xleftarrow, tex: 'A \xleftarrow{f} B', has: ['⟵']}
+- {id: prime, tex: "f'(x) + f''(x)", has: ['′', '″']}
+- {id: prime-cmd, tex: 'f^{\prime}(x)', has: ['′']}
+
+# ---------------------------------------------------------------- symbols, spacing, relations
+- {id: spaces, tex: 'a \quad b \qquad c \, d \: e \; f \! g', has: ['width="1em"', 'width="2em"', 'width="-0.1667em"']}
+- {id: space-backslash, tex: 'a\ b', has: ['<mtext>']}
+- {id: mspace-mu, tex: 'a \mkern3mu b', has: ['width="0.1667em"']}
+- {id: top, tex: 'W^\top x', has: ['<mi>⊤</mi>']}
+- {id: intercal, tex: 'A^\intercal', has: ['⊤']}
+- {id: transpose-T, tex: 'X^T X', has: ['<mi>T</mi>']}
+- {id: nabla, tex: '\nabla_\theta \mathcal{L}', has: ['<mi>∇</mi>']}
+- {id: partial, tex: '\frac{\partial L}{\partial w_{ij}}', has: ['<mi>∂</mi>']}
+- {id: infty, tex: '\sum_{n=0}^{\infty} \frac{x^n}{n!}', has: ['<mi>∞</mi>']}
+- {id: dots, tex: 'x_1, \ldots, x_n', has: ['…']}
+- {id: cdots, tex: 'x_1 + \cdots + x_n', has: ['⋯']}
+- {id: relations, tex: 'a \le b \ge c \ne d \approx e \equiv f \propto g \sim h', has: ['<mo>≤</mo>', '<mo>≈</mo>', '<mo>∝</mo>', '∼']}
+- {id: sets, tex: 'A \subseteq B \cup C \cap D \setminus E', has: ['<mo>⊆</mo>', '<mo>∪</mo>']}
+- {id: in, tex: 'x \in X, y \notin Y', has: ['<mo>∈</mo>', '∉']}
+- {id: not-equal, tex: 'a \not= b', has: ['≠']}
+- {id: arrows, tex: 'f: X \to Y, x \mapsto y, A \Rightarrow B, C \iff D', has: ['<mo>→</mo>', '<mo>↦</mo>', '<mo>⟺</mo>']}
+- {id: implies, tex: 'p \implies q', has: ['<mo>⟹</mo>']}
+- {id: logic, tex: '\forall x \, \exists y : \neg (p \land q) \lor r', has: ['<mo>∀</mo>', '<mo>¬</mo>']}
+- {id: colon, tex: 'f\colon X \to Y', has: ['<mo lspace="0" rspace="0.1667em">:</mo>']}
+- {id: coloneqq, tex: 'x \coloneqq 1', has: ['≔']}
+- {id: triangleq, tex: 'f(x) \triangleq x^2', has: ['≜']}
+- {id: pm, tex: 'x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}', display: true, has: ['<mo>±</mo>']}
+- {id: times-cdot, tex: 'a \times b \cdot c \div d', has: ['<mo>×</mo>', '<mo>⋅</mo>']}
+- {id: odot-otimes, tex: 'h \odot g \otimes k \oplus m', has: ['<mo>⊙</mo>', '<mo>⊗</mo>']}
+- {id: circ, tex: '(f \circ g)(x)', has: ['<mo>∘</mo>']}
+- {id: perp, tex: 'u \perp v', has: ['⟂']}
+- {id: parallel, tex: 'D_{\mathrm{KL}}(p \parallel q)', has: ['∥']}
+- {id: emptyset, tex: 'A \cap B = \emptyset', has: ['<mi>∅</mi>']}
+- {id: ell-hbar, tex: '\ell_2, \hbar', has: ['ℓ', 'ℏ']}
+- {id: pmod, tex: 'a \equiv b \pmod{n}', has: ['mod']}
+- {id: bmod, tex: 'a \bmod n', has: ['>mod</mo>']}
+- {id: percent, tex: '50\%', has: ['%']}
+- {id: escaped, tex: '\$5 + \# 3 + \{a\} + \_', has: ['$', '#']}
+- {id: functions, tex: '\sin^2 x + \cos^2 x = 1', has: ['>sin</mo>']}
+- {id: log, tex: 'y_i \log p_i', has: ['>log</mo>']}
+- {id: exp, tex: '\exp(z)', has: ['rspace="0">exp</mo>']}
+- {id: det-tr, tex: '\det(A) \ne 0', has: ['>det</mo>']}
+- {id: comment, tex: "a + b % the sum\n+ c", display: true, lacks: ['the sum']}
+
+# ---------------------------------------------------------------- unicode input
+- {id: unicode-greek, tex: 'α + β = γ', has: ['<mi>α</mi>']}
+- {id: unicode-relations, tex: 'x ≤ y ≥ z ≠ w', has: ['<mo>≤</mo>', '<mo>≥</mo>', '<mo>≠</mo>']}
+- {id: unicode-arrow, tex: 'x → ∞', has: ['<mo>→</mo>', '<mi>∞</mi>']}
+- {id: unicode-mixed, tex: '∑_{i} θ_i x_i ∈ ℝ', has: ['∑', 'ℝ']}
+- {id: unicode-dot, tex: 'a · b', has: ['<mo>⋅</mo>']}
+- {id: unicode-nbsp, tex: "a\u00a0+\u00a0b", has: ['<mo>+</mo>']}
+
+# ---------------------------------------------------------------- the ML equations in the Studio's templates
+- {id: softmax, tex: '\operatorname{softmax}(\mathbf{z})_i = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}', display: true, has: ['>softmax</mo>']}
+- {id: cross-entropy, tex: '\mathcal{L}_{\mathrm{CE}} = -\sum_{k=1}^{K} y_k \log \hat{y}_k', display: true, has: ['ℒ']}
+- {id: attention, tex: '\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\left( \frac{Q K^\top}{\sqrt{d_k}} \right) V', display: true, has: ['>Attention</mo>']}
+- {id: sgd, tex: '\theta_{t+1} = \theta_t - \eta \, \nabla_\theta \mathcal{L}(\theta_t)', display: true, has: ['∇']}
+- {id: kl, tex: 'D_{\mathrm{KL}}(P \parallel Q) = \sum_{x} P(x) \log \frac{P(x)}{Q(x)}', display: true, has: ['∥']}
+- {id: bayes, tex: 'P(A \mid B) = \frac{P(B \mid A)\, P(A)}{P(B)}', display: true, has: ['∣']}
+- {id: normal, tex: 'p(x) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(x - \mu)^2}{2\sigma^2} \right)', display: true, has: ['<msqrt>']}
+- {id: variance, tex: '\operatorname{Var}[X] = \mathbb{E}\left[ (X - \mathbb{E}[X])^2 \right]', display: true, has: ['>Var</mo>']}
+- {id: mse, tex: '\mathrm{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2', display: true, has: ['<mi>MSE</mi>']}
+- {id: sigmoid, tex: '\sigma(x) = \frac{1}{1 + e^{-x}}', display: true, has: ['<mfrac>']}
+- {id: layernorm, tex: '\operatorname{LN}(\mathbf{x}) = \boldsymbol{\gamma} \odot \frac{\mathbf{x} - \mu}{\sqrt{\sigma^2 + \epsilon}} + \boldsymbol{\beta}', display: true, has: ['𝜸', '𝜷']}
+- {id: convolution, tex: '(f * g)(t) = \int_{-\infty}^{\infty} f(\tau)\, g(t - \tau)\, \mathrm{d}\tau', display: true, has: ['∫']}
+- {id: chain-rule, tex: '\frac{\partial L}{\partial x} = \frac{\partial L}{\partial y} \frac{\partial y}{\partial x}', display: true, has: ['∂']}
+- {id: matmul, tex: 'C_{ij} = \sum_{k=1}^{n} A_{ik} B_{kj}', display: true, has: ['<munderover>']}
+- {id: l2, tex: '\lVert \mathbf{x} \rVert_2 = \sqrt{\sum_{i=1}^{d} x_i^2}', display: true, has: ['‖']}
+- {id: entropy, tex: 'H(X) = -\sum_{x \in \mathcal{X}} p(x) \log p(x)', display: true, has: ['𝒳']}
+- {id: logistic, tex: 'P(y = 1 \mid \mathbf{x}) = \sigma(\mathbf{w}^\top \mathbf{x} + b)', display: true, has: ['⊤']}
+- {id: elbo, tex: '\log p(x) \ge \mathbb{E}_{q(z \mid x)}\left[ \log p(x \mid z) \right] - D_{\mathrm{KL}}\left( q(z \mid x) \parallel p(z) \right)', display: true, has: ['≥']}
+
+# ---------------------------------------------------------------- mistakes, with the message and the fix
+- {id: err-brace-open, tex: '\frac{a}{b', expect: error, error: 'never closed', hint: '}', at: [0, 8]}
+- {id: err-brace-extra, tex: 'a + b}', expect: error, error: 'no { before it', at: [0, 5]}
+- {id: err-left-no-right, tex: '\left( \frac{a}{b}', expect: error, error: 'no matching \right', hint: '\right)', at: [0, 0]}
+- {id: err-right-no-left, tex: 'x \right)', expect: error, error: 'no matching \left', at: [0, 2]}
+- {id: err-amp-inline, tex: 'a &= b', expect: error, error: '& lines up rows', hint: 'aligned'}
+- {id: err-linebreak-inline, tex: 'a = b \\ c = d', expect: error, error: 'line break', hint: 'aligned', at: [0, 6]}
+- {id: err-begin-no-end, tex: '\begin{pmatrix} a & b', display: true, expect: error, error: 'has no \end{pmatrix}', hint: '\end{pmatrix}'}
+- {id: err-end-mismatch, tex: '\begin{pmatrix} a \end{bmatrix}', display: true, expect: error, error: 'closes \begin{pmatrix}', hint: '\end{pmatrix}'}
+- {id: err-end-alone, tex: 'a \end{aligned}', display: true, expect: error, error: 'no \begin{aligned}'}
+- {id: err-unknown-env, tex: '\begin{eqnarry} a \end{eqnarry}', display: true, expect: error, error: 'not available', hint: 'eqnarray'}
+- {id: err-typo, tex: '\alpah + \beta', expect: error, error: '\alpah', hint: '\alpha', at: [0, 0]}
+- {id: err-typo-frac, tex: '\farc{a}{b}', expect: error, hint: '\frac'}
+- {id: err-softmax, tex: '\softmax(z)', expect: error, hint: '\operatorname{softmax}'}
+- {id: err-R, tex: 'x \in \R^n', expect: error, hint: '\mathbb{R}', at: [0, 6]}
+- {id: err-norm-macro, tex: '\norm{x}', expect: error, hint: '\lVert'}
+- {id: err-x10, tex: 'x^10', expect: error, error: 'only the 1', hint: '^{10}', at: [0, 1]}
+- {id: err-sub12, tex: 'a_12', expect: error, error: 'only the 1', hint: '_{12}'}
+- {id: err-double-sup, tex: 'x^2^3', expect: error, error: 'two superscripts', hint: 'x^{a^b}', at: [0, 3]}
+- {id: err-double-sub, tex: 'x_i_j', expect: error, error: 'two subscripts', at: [0, 3]}
+- {id: err-script-empty, tex: 'x^', expect: error, error: 'nothing after it', at: [0, 1]}
+- {id: err-frac-one, tex: '\frac{a}', expect: error, error: 'two parts', hint: '\frac{top}{bottom}'}
+- {id: err-sqrt-empty, tex: '\sqrt', expect: error, error: 'something to act on', hint: '\sqrt{x}'}
+- {id: err-dollar, tex: 'a $ b', expect: error, error: 'end it early', hint: '\$', at: [0, 2]}
+- {id: err-hash, tex: 'x # y', expect: error, hint: '\#'}
+- {id: err-text-math, tex: '\text{if $x > 0$}', expect: error, error: 'inside \text', hint: '\text{if }', at: [0, 9]}
+- {id: err-text-command, tex: '\text{for all \alpha}', expect: error, error: '\alpha inside \text', at: [0, 14]}
+- {id: err-eqref, tex: 'see \eqref{eq:a}', expect: error, hint: '[eq:name]'}
+- {id: err-tag-inline, tex: 'x \tag{1}', expect: error, error: 'displayed', hint: '$$'}
+- {id: err-label-inline, tex: 'x \label{eq:a}', expect: error, error: 'displayed'}
+- {id: err-newcommand, tex: '\newcommand{\R}{\mathbb{R}} \R', display: true, expect: error, hint: 'full form'}
+- {id: err-def, tex: '\def\x{y}', expect: error, hint: 'full form'}
+- {id: err-declare, tex: '\DeclareMathOperator{\tr}{tr}', display: true, expect: error, hint: '\operatorname{tr}'}
+- {id: err-ce, tex: '\ce{H2O}', expect: error, hint: '\mathrm{H_2O}'}
+- {id: err-si, tex: '\SI{3}{\metre}', expect: error, hint: '\text{m/s}'}
+- {id: err-pdv, tex: '\pdv{f}{x}', expect: error, hint: '\partial'}
+- {id: err-intertext, tex: '\begin{aligned} a &= b \intertext{so} c &= d \end{aligned}', display: true, expect: error, hint: 'sentence'}
+- {id: err-accent-prime, tex: "f\\'(x)", expect: error, error: 'not a prime', hint: "f'(x)"}
+- {id: err-middle, tex: 'a \middle| b', expect: error, error: '\middle', hint: '\mid'}
+- {id: err-left-nothing, tex: '\left x \right)', expect: error, error: 'needs a bracket'}
+- {id: err-color, tex: '\color{not a colour!}{x}', expect: error, error: 'colour', hint: 'red'}
+- {id: err-empty, tex: '   ', expect: error, error: 'empty'}
+- {id: err-multiline-position, tex: "a &= b \\\\\nc &= \\nosuch", display: true, expect: error, error: '\nosuch', at: [1, 5]}
+- {id: err-href, tex: '\href{https://x.org}{x}', expect: error, hint: 'links'}
+- {id: err-limits-alone, tex: '\limits_i', expect: error, error: '\limits'}

@@ -17,6 +17,55 @@
 | `drawings/pipeline.py` | `overview(narrow=0)`: write → check → build → publish, with a stacked phone layout. |
 | `tests/test_fig_*.py` | 58 tests: plot kinds, determinism, escaping, narrow layout, errors, contract messages, HTML, assets, CLI hooks, every figure, every starter copied, drawings, `node --check`. |
 
+## Figure authoring (second round, 2026-10-20)
+
+**The figure builder** (`tessera/figbuilder.py`, standard library only): a form ("spec", JSON) becomes an ordinary,
+commented figure file.
+- Six types: `function`, `shapes`, `bars`, `heatmap`, `distribution` (normal, uniform, exponential, binomial, Poisson),
+  `data` (pasted CSV as lines, dots or bars, optional least-squares line and a toggle for it, optional curves on top).
+  Shared sections: controls (slider/toggle/steps), values (named expressions), readouts, presets, note.
+- Expressions are parsed with `ast` against a whitelist (numbers, declared names, `+ - * / ^ %`, comparisons, `and`/`or`,
+  whitelisted maths functions; aggregates such as `max(y)`, `area(y)`, `at(y, 2)` only on lists). Friendly syntax:
+  `^`, implicit multiplication (`2x`, `2pi r`, `(a)(b)`), `π`, `−`, `²`. Never `eval`: the checked tree is unparsed into
+  the file (`where(c, a, b)` becomes an if/else, `ln` becomes `log`, an int base of `**` becomes a float so `9^9^9`
+  overflows at once). Messages carry `path`, `col`, `end` ("unknown name 'freqq' — did you mean 'freq'?").
+- Labels, titles and notes take `{expr}` / `{expr:.2f}`.
+- Generated files import only `math` and never `tessera`. Their last line is `# tessera-builder: {"v","hash","spec"}`;
+  `read_spec()` returns the spec and `edited` (the hash of everything above no longer matches).
+- API: `validate`, `generate` (raises `SpecError`), `read_spec`, `default_spec(type)`, `describe()`, `parse_expr`.
+
+**figures.py additions:** `test_report(name)` (the same states as `test_figure`, as plain checks with the slowest time
+and the failing line), `made_with(source)` (`builder` / `edited` / `code`), `line_of(text)`, `cli_list`,
+`cli_preview` (writes `.studio/figure-preview/<name>.html` with the files it needs; interactive when served),
+`cli_new(name, "builder" | "builder:<type>")`. Starters added: `scatter_fit`, `distribution`, `matrix_transform`,
+`step_through`. CLI: `figure new|test|preview|list`.
+
+**plot.py additions:** series `sizes` and `labels` for `points` (and the new `stems` style), panel `grid`
+(`True`/`"x"`/`"y"`, also in scenes without axes) and `origin` (lines through zero). `text_width` now never estimates
+narrower than a monospaced face (0.6 em), because the default theme sets figure text in Courier Prime; labels were
+being clipped at the right edge.
+
+**Studio figure panel** (`static/panels/figure.js`, `figbuilder.js`, `figure.css`; server side in
+`tessera/studio/figpanel.py`, installed onto `Studio`, and `figworker.py`, whose ops are added to the worker): gallery with
+live thumbnails, a page per figure (preview, open at a preset, place in the text), New figure → form / example /
+describe, the builder (form beside a live preview with the test in plain words; problems marked in the field), and a
+code view (CodeMirror, live check on a 0.9 s pause, failing line marked, Go to line). Unsaved work is tested in
+`.studio/drafts/` and shown by `/frame/draft/<name>`, whose figure loads `/_draft/figures/<name>.py`.
+Routes: GET `/api/figures/gallery`, `/api/figures/open`, `/api/builder/info`; POST `/api/builder/preview`,
+`/api/builder/save`, `/api/figures/check`, `/api/figures/save-code`.
+
+**Shared files touched (surgically):** `server.py` (route table update, the draft frame and draft files),
+`api.py` (two lines at the end install the panel), `worker.py` (two lines add the panel's ops), `cm.js`
+(`codeEditor` takes `extensions`), `editor.js` (Figure… opens `panels/figure.js`; drawings still use `panels/figures.js`),
+`cli.py` (figure actions), `tests/test_core_theme.py` (the reads list counts the built reads instead of a fixed 6: the
+two new guides made it 8).
+
+**For core:** `content/reads/welcome.md` says "A figure is a small Python file" and "Diagrams are Python too" in visible
+text, which the owner's rule forbids; suggest "a small code file". The guide `content/reads/making-figures.md` shows
+terminal commands as `figure test …` after saying "the command you build the site with", to avoid the word.
+
+**Tests:** `test_fig_builder.py` (25), `test_fig_authoring.py` (17), `test_fig_studio.py` (9).
+
 ## For core (please act on these)
 
 1. **requirements.txt: add `numpy`.** The example `figures/fourier_series.py` declares `REQUIRES = ["numpy"]`, and the build imports it. I installed numpy 2.5.4 into `.venv`. Without numpy, `test_fig_figures` fails on that figure with a clear message.

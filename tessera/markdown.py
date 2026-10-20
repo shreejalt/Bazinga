@@ -31,7 +31,7 @@ from pygments.util import ClassNotFound
 
 from .checks import Issue
 from .content import slugify
-from .mathml import MathError, split_tag_label, to_mathml
+from .mathml import MathError, looks_like_money, split_tag_label, to_mathml
 
 
 # ----------------------------------------------------------------------------------------------------- data types
@@ -115,6 +115,16 @@ class _Renderer:
     def issue(self, level, i, message, hint="", code=""):
         self.issues.append(Issue(level, self.line(i) if i is not None else None, message, hint, code))
 
+    def math_issue(self, i: int, exc: MathError, column0: int, line_width: int = 0) -> None:
+        """A maths error at its place in the file: line ``i`` (+ the line inside the formula) and a 1-based column.
+
+        ``column0`` is where the formula starts on its first line; ``line_width`` is the prefix of later lines (a
+        blockquote's ``> ``)."""
+        col = exc.column if exc.column is not None else 0
+        col += column0 if not exc.offset else line_width
+        self.issues.append(Issue("error", self.line(i + (exc.offset or 0)), f"maths: {exc.message}", exc.hint, "math",
+                                 column=col + 1, length=exc.length))
+
     def token(self, html: str, plain: str = "", block: bool = False) -> str:
         tok = _TOKEN.format(len(self.tokens))
         self.tokens[tok], self.plain[tok] = html, plain
@@ -169,8 +179,31 @@ class _Renderer:
         if j >= len(lines):
             self.issue("warning", i, "this code block is never closed", f"add a line with {fence} after the code",
                        "code-unclosed")
+        if lang.lower() == "diagram":
+            html, plain = self._diagram("\n".join(body), info.split()[1:], i)
+            self._emit_block(out, prefix, self.token(html, plain, True))
+            return j + 1
         self._emit_block(out, prefix, self.token(self._code_html("\n".join(body), lang, i), "\n".join(body), True))
         return j + 1
+
+    def _diagram(self, src: str, words: list, i: int) -> tuple:
+        """A ```diagram block (```diagram timeline / tree picks the kind): drawn here, at build time."""
+        try:
+            from . import diagram_text
+        except ImportError:
+            self.issue("warning", i, "this diagram is not shown: the diagram engine is not installed",
+                       "this build has no tessera/diagram_text.py", "diagram-engine")
+            return _embed_error("Diagram", "diagram", "The diagram engine is not available in this build."), ""
+        try:
+            html = diagram_text.render_html(src, kind=words[0] if words else None)
+            return html, diagram_text.summary(diagram_text.parse(src, words[0] if words else None))
+        except diagram_text.DiagramError as exc:
+            line = i + exc.line if exc.line else i
+            self.issue("error", line, f"diagram: {exc.message}", exc.hint, "diagram")
+            where = f" Line {exc.line} of the diagram: " if exc.line else " "
+            return (f'<div class="embed-error" role="note"><strong>This diagram could not be drawn.</strong>'
+                    f"{htmllib.escape(where + exc.message)}{htmllib.escape(' (' + exc.hint + ')') if exc.hint else ''}"
+                    f"</div>"), ""
 
     def _code_html(self, code: str, lang: str, i: int) -> str:
         lexer = None
@@ -215,10 +248,11 @@ class _Renderer:
             else:
                 self.issue("warning", j, f"text after the closing $$ is ignored: {after!r}",
                            "only {#eq:name} may follow $$; put other text on the next line", "math-trailing")
-        self._emit_block(out, prefix, self.token(self._display_html(tex, label, i), f"$$ {tex.strip()} $$", True))
+        html = self._display_html(tex, label, i, len(prefix) + 2, len(prefix))
+        self._emit_block(out, prefix, self.token(html, f"$$ {tex.strip()} $$", True))
         return j + 1
 
-    def _display_html(self, tex: str, label: str | None, i: int) -> str:
+    def _display_html(self, tex: str, label: str | None, i: int, column0: int = 2, line_width: int = 0) -> str:
         tex, tag, inner_label = split_tag_label(tex)
         label = label or inner_label
         if label and not label.startswith("eq:"):
@@ -237,7 +271,7 @@ class _Renderer:
         try:
             math = to_mathml(tex, display=True)
         except MathError as exc:
-            self.issue("error", i + exc.offset, f"maths: {exc.message}", exc.hint, "math")
+            self.math_issue(i, exc, column0, line_width)
             math = self._math_error_html(tex, exc, display=True)
         ident = f' id="{htmllib.escape(label)}"' if label else ""
         num = f'<span class="eq-number">({htmllib.escape(number)})</span>' if number else ""
@@ -351,14 +385,21 @@ class _Renderer:
                 j += 1
                 continue
             break
-        tex = line[start:j].replace("\\$", "\\$")
+        tex = line[start:j]
+        if dollars == 1 and (looks_like_money(tex) or (re.match(r"\s*\d", tex) and re.search(r"(?<!\\)\$", tex))):
+            # "it costs $5 and you get $x$": a dollar amount, not the start of maths
+            self.issues.append(Issue("warning", self.line(i), "this $ looks like money, so it is shown as a dollar sign, "
+                                     "not as the start of maths", "write \\$5 for a dollar amount next to maths", "math-money",
+                                     column=pos + 1, length=1))
+            out.append("&#36;")
+            return pos + 1
         if dollars == 2:
             self.issue("warning", i, "display maths ($$) in the middle of a line is shown inline",
                        "put $$ … $$ on its own lines for a displayed equation", "math-inline-display")
         try:
             html = to_mathml(tex, display=False)
         except MathError as exc:
-            self.issue("error", i, f"maths: {exc.message}", exc.hint, "math")
+            self.math_issue(i, exc, start)
             html = self._math_error_html(tex, exc, display=False)
         out.append(self.token(html, tex))
         return j + dollars

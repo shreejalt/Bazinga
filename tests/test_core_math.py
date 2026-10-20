@@ -49,11 +49,12 @@ class Preprocess(unittest.TestCase):
         self.assertIn("\U0001d73d", body(r"\boldsymbol{\theta}"))     # bold italic theta
         self.assertIn("\U0001d6ba", body(r"\mathbf{\Sigma}"))         # bold Sigma
 
-    def test_big_delimiters_dropped(self):
-        for cmd in (r"\big(", r"\Big[", r"\bigg\{", r"\Bigg(", r"\bigl(", r"\bigr)", r"\Bigm|", r"\big\|"):
-            out, _ = preprocess(cmd + " x")
-            self.assertNotIn("big", out.lower(), cmd)
-        self.assertNotIn("minsize", body(r"\bigl( x \bigr)"))
+    def test_big_delimiters_keep_their_size_without_leaking(self):
+        for cmd in (r"\big(", r"\Big[", r"\bigg\{", r"\Bigg(", r"\bigl(", r"\bigr)", r"\Bigm|", r"\big\|",
+                    r"\bigl\langle", r"\Bigr\rVert"):
+            html = body(cmd + " x")
+            self.assertIn("minsize", html, cmd)
+            self.assertNotIn("\\", html, cmd)
 
     def test_text_keeps_spaces(self):
         html = body(r"\text{ if } x")
@@ -94,7 +95,10 @@ class Postprocess(unittest.TestCase):
 
     def test_limits_under_operators_in_display(self):
         self.assertIn("<munder>", body(r"\max_x f", True))
-        self.assertIn("<msub>", body(r"\max_x f", False))
+        # inline: the same element, and movablelimits puts the limit beside the operator in text style
+        self.assertIn('<mo movablelimits="true">max</mo>', body(r"\max_x f", False).replace(' lspace="0"', "")
+                      .replace(' rspace="0.1667em"', ""))
+        self.assertIn("<munderover>", body(r"\sum_{i=1}^n x_i", True))
         self.assertIn("<munder>", body(r"\argmax_x f", True))
 
     def test_display_arrays_use_display_style_but_matrices_do_not(self):
@@ -118,12 +122,15 @@ class Rejections(unittest.TestCase):
         self.assertIn(r"\operatorname{foo}", exc.hint)
         self.assertIn(r"\operatorname{softmax}", self.assertRejects(r"\softmax(x)", r"\softmax").hint)
 
-    def test_menclose_commands(self):
+    def test_boxes_and_strikes_are_css_not_menclose(self):
         for cmd in (r"\cancel{x}", r"\boxed{x}", r"\bcancel{x}", r"\xcancel{x}", r"\fbox{x}"):
-            self.assertRejects(cmd, "browsers")
+            html = body(cmd)
+            self.assertNotIn("menclose", html, cmd)
+            self.assertIn('style="', html, cmd)
 
     def test_linebreak_outside_array(self):
-        self.assertRejects(r"a \\ b", "line break")
+        self.assertRejects(r"a \\ b", "line break", display=False)
+        self.assertIn("<mtable", body(r"a \\ b", True))          # display rows are wrapped for you
 
     def test_eqref_inside_maths(self):
         exc = self.assertRejects(r"\eqref{eq:a}", r"\eqref")
@@ -133,7 +140,7 @@ class Rejections(unittest.TestCase):
         self.assertRejects(r"\tag{1} x", "display", display=False)
 
     def test_unbalanced_braces_and_empty(self):
-        self.assertRejects("{x", "braces")
+        self.assertRejects("{x", "never closed")
         self.assertRejects("  ", "empty")
 
     def test_error_offset_is_the_line_inside_the_formula(self):

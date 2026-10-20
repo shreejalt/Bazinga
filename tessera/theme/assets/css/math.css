@@ -1,7 +1,10 @@
 /* Maths (MathML from the build). Browsers draw it natively; this file picks a math font and handles the layout.
    STIX Two Math comes from Google Fonts (base.html); Latin Modern / Cambria Math / the system math font follow. */
 
-math { font-family: var(--font-math); font-size: 1.04em; math-style: normal; }
+math { font-family: var(--font-math); font-size: 1.04em; }
+/* Inline maths is in text style, as in TeX: limits beside \sum and \lim, smaller fractions. */
+math[display="block"] { math-style: normal; }
+math[display="inline"] { math-style: compact; }
 math[display="inline"] { font-size: 1.02em; }
 .prose math { line-height: normal; }
 

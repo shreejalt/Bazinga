@@ -304,7 +304,7 @@ const baseTheme = EditorView.theme({
   "&.cm-focused": { outline: "none" },
 });
 
-export function markdownEditor(parent, doc, { onChange, completions, keys = [], onPaste, onDrop }) {
+export function markdownEditor(parent, doc, { onChange, completions, keys = [], onPaste, onDrop, extensions = [] }) {
   const wrap = new Compartment();
   const view = new EditorView({
     parent,
@@ -317,6 +317,7 @@ export function markdownEditor(parent, doc, { onChange, completions, keys = [], 
         markdown({ base: markdownLanguage, addKeymap: true }),
         syntaxHighlighting(prose),
         richText,
+        ...extensions,
         autocompletion({ override: [completions], icons: false, activateOnTyping: true, closeOnBlur: true,
           optionClass: (c) => c.type === "slash" ? "cm-slash-option" : "" }),
         placeholder("Start writing. Type / at the start of a line for equations, figures, citations and more."),
@@ -335,7 +336,7 @@ export function markdownEditor(parent, doc, { onChange, completions, keys = [], 
   return view;
 }
 
-export async function codeEditor(parent, doc, { onChange, keys = [], language = "python" } = {}) {
+export async function codeEditor(parent, doc, { onChange, keys = [], language = "python", extensions = [] } = {}) {
   let lang = [];
   if (language === "python") {
     try { const mod = await import("@codemirror/lang-python"); lang = [mod.python()]; }
@@ -354,6 +355,7 @@ export async function codeEditor(parent, doc, { onChange, keys = [], language = 
         EditorState.tabSize.of(4),
         EditorView.updateListener.of((u) => { if (u.docChanged && onChange) onChange(u); }),
         baseTheme,
+        ...extensions,
         EditorView.contentAttributes.of({ "aria-label": "Code", spellcheck: "false" }),
       ],
     }),

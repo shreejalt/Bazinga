@@ -2,6 +2,8 @@
 import { api, store, h, clear, icon, pill, toast, debounce, modKey, ApiError, uploadImage, pickFile, IMAGE_ACCEPT, anyLayerOpen, fill } from "./lib.js";
 import { markdownEditor, makeCompletions, insertBlock, wrapSelection, insertText, goToLine, startCompletion, EditorView } from "./cm.js";
 import { createPreview } from "./preview.js";
+import { mathExtensions } from "./mathtips.js";
+import { diagramButtons } from "./panels/diagram.js";
 import { go, themeButton, refreshState } from "./studio.js";
 
 const SPLIT_KEY = "tessera-studio-split";
@@ -90,6 +92,8 @@ export async function openEditor(app, id) {
       if (pos !== null && e.dataTransfer && e.dataTransfer.files.length) v.dispatch({ selection: { anchor: pos } });
       return handleFiles(e.dataTransfer && e.dataTransfer.files, e);
     },
+    extensions: [...mathExtensions({ onEdit: () => openPanel("equation"), modLabel: modKey() }),
+      ...diagramButtons((_v, pos) => openPanel("diagram", { at: pos }))],
   });
   ed.insertBlock = (text, off) => insertBlock(ed.view, text, off);
   ed.insertText = (text) => insertText(ed.view, text);
@@ -331,10 +335,11 @@ export async function openEditor(app, id) {
     const v = ed.view;
     return [
       { id: "heading", label: "Heading", detail: "## A section title", icon: "heading", run: () => toggleHeading(v) },
-      { id: "equation", label: "Equation…", detail: "display maths, with a live preview", icon: "sigma", key: "Mod-M", run: () => openPanel("equation") },
+      { id: "equation", label: "Equation…", detail: "an equation, with a live preview and templates", icon: "sigma", key: "Mod-M", run: () => openPanel("equation") },
       { id: "inline", label: "Inline math", detail: "$x^2$ inside a sentence", icon: "dollar", run: () => wrapSelection(v, "$", "$", "x") },
       { id: "figure", label: "Figure…", detail: "an interactive figure", icon: "figure", run: () => openPanel("figure") },
-      { id: "drawing", label: "Drawing…", detail: "a diagram", icon: "drawing", run: () => openPanel("drawing") },
+      { id: "diagram", label: "Diagram…", detail: "boxes and arrows, a flowchart, a timeline or a tree, written as text", icon: "drawing", run: () => openPanel("diagram") },
+      { id: "drawing", label: "Drawing from code…", detail: "a diagram drawn by a small code file", icon: "code", run: () => openPanel("drawing") },
       { id: "cite", label: "Citation…", detail: "a paper by arXiv id or DOI", icon: "quote", run: () => openPanel("cite") },
       { id: "link", label: "Link to page…", detail: "[[another page]]", icon: "link", key: "Mod-K", run: () => openPanel("link") },
       { id: "callout", label: "Callout", detail: "> [!NOTE] a highlighted box", icon: "callout", run: () => insertBlock(v, "> [!NOTE]\n> ", 12) },
@@ -395,13 +400,13 @@ export async function openEditor(app, id) {
     setTimeout(() => { const el = drawer.querySelector(`[data-field="${field}"]`); if (el) { el.scrollIntoView({ block: "center" }); el.focus(); } }, 120);
   };
 
-  async function openPanel(kind) {
+  async function openPanel(kind, opts = {}) {
     const mods = {
-      equation: "./panels/equation.js", figure: "./panels/figures.js", drawing: "./panels/figures.js",
+      equation: "./panels/equation.js", figure: "./panels/figure.js", drawing: "./panels/figures.js", diagram: "./panels/diagram.js",
       cite: "./panels/cite.js", link: "./panels/links.js", publish: "./panels/publish.js", history: "./panels/history.js",
     };
     const mod = await import(mods[kind]);
-    mod.open(ed, { kind });
+    mod.open(ed, { kind, ...opts });
   }
   ed.openPanel = openPanel;
   ed.refreshState = async () => { await refreshState(); };

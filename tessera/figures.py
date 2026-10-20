@@ -30,14 +30,15 @@ from pathlib import Path
 from tessera import plot
 
 __all__ = ["FigureError", "discover", "load", "run", "figure_html", "write_assets", "test_figure",
-           "defaults", "cli_new", "cli_test", "STARTERS"]
+           "test_report", "defaults", "cli_new", "cli_test", "cli_list", "cli_preview", "made_with", "STARTERS"]
 
 KINDS = ("slider", "steps", "toggle")
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 BUDGET_MS = 30.0
 STARTER_DIR = Path(__file__).parent / "starters"
-STARTERS = ("slider_plot", "compare_bars", "heatmap", "geometry2d", "animation")
-DRAWING_STARTERS = ("pipeline", "blocks")
+STARTERS = ("slider_plot", "compare_bars", "heatmap", "geometry2d", "animation", "scatter_fit", "distribution",
+            "matrix_transform", "step_through")
+DRAWING_STARTERS = ("pipeline", "blocks", "architecture", "flowchart", "timeline", "tree")
 
 
 class FigureError(Exception):
@@ -454,8 +455,8 @@ def _random_states(mod, n, seed):
     return states
 
 
-def check_state(name, values, narrow=0, cfg=None, budget_ms=BUDGET_MS):
-    """Problems for one state (empty list = fine)."""
+def check_state(name, values, narrow=0, cfg=None, budget_ms=BUDGET_MS, timing=None):
+    """Problems for one state (empty list = fine). The best time in ms is appended to ``timing`` when given."""
     label = "%s %s%s" % (name, json.dumps(values, sort_keys=True), " (narrow)" if narrow else "")
     try:
         best = None
@@ -472,7 +473,9 @@ def check_state(name, values, narrow=0, cfg=None, budget_ms=BUDGET_MS):
     except plot.PlotError as e:
         return ["%s: the spec cannot be drawn: %s" % (label, e)]
     except Exception as e:
-        return ["%s: %s" % (label, _short_exc(e))]
+        return ["%s: %s%s" % (label, _short_exc(e), _where_any(e, name, cfg))]
+    if timing is not None:
+        timing.append(best)
     problems = []
     bad = _walk_bad_numbers(spec)
     if bad:
@@ -528,14 +531,19 @@ def test_figure(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
 # CLI hooks (called by tessera.cli)
 
 def cli_new(name, starter="slider_plot", cfg=None, kind="figure"):
-    """Copy a starter to figures/<name>.py (or drawings/<name>.py for a drawing starter). Returns the path."""
+    """Copy a starter to figures/<name>.py (or drawings/<name>.py for a drawing starter). Returns the path.
+    ``builder`` or ``builder:<type>`` writes the figure builder's example of that type instead (the Studio can then
+    open it in the builder's form)."""
+    if kind == "figure" and (starter or "").startswith("builder"):
+        return _cli_new_builder(name, starter, cfg)
     if not NAME_RE.match(name or ""):
         raise FigureError("%r is not a valid name: use lowercase letters, digits and _ (e.g. my_plot)." % (name,))
     if starter in DRAWING_STARTERS and kind == "figure" and starter not in STARTERS:
         kind = "drawing"
     pool = STARTERS if kind == "figure" else DRAWING_STARTERS
     if starter not in pool:
-        raise FigureError("no %s starter %r. Choose one of: %s." % (kind, starter, ", ".join(pool)))
+        raise FigureError("no %s starter %r. Choose one of: %s%s." % (
+            kind, starter, ", ".join(pool), " (or builder, builder:<type> for the form)" if kind == "figure" else ""))
     src = STARTER_DIR / ("figures" if kind == "figure" else "drawings") / (starter + ".py")
     dest_dir = _figures_dir(cfg) if kind == "figure" else _root(cfg) / "drawings"
     if kind == "drawing" and cfg is not None and getattr(cfg, "drawings_dir", None):
@@ -572,3 +580,216 @@ def cli_test(name=None, cfg=None, out=None):
         else:
             print("ok   %s  (%.0f ms for all states)" % (n, ms), file=out)
     return 1 if bad else 0
+
+
+# ----------------------------------------------------------------------------------------------
+# the test in plain words (the Studio), and what a figure was made with
+
+_LINE_RE = re.compile(r"\bline (\d+)\b")
+
+
+def _where_any(e, name, cfg):
+    try:
+        return _where(e, _figures_dir(cfg) / (name + ".py"))
+    except Exception:
+        return ""
+
+
+def line_of(text):
+    """The line number a problem message points at, or None."""
+    m = _LINE_RE.search(str(text or ""))
+    return int(m.group(1)) if m else None
+
+
+def test_report(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
+    """The figure test as a list of plain checks: {"ok", "checks": [{"label", "ok", "detail"}], "problems",
+    "slowest_ms", "line"}. The same states as test_figure()."""
+    try:
+        mod = load(name, cfg)
+    except FigureError as e:
+        return {"ok": False, "problems": [str(e)], "slowest_ms": None, "line": line_of(e),
+                "checks": [{"label": "The file loads and follows the figure contract", "ok": False, "detail": str(e)}]}
+    checks, problems, times = [], [], []
+    for req in getattr(mod, "REQUIRES", []):
+        try:
+            importlib.import_module(req)
+        except ImportError:
+            problems.append("figure %r: REQUIRES %r but it is not installed in the build environment" % (name, req))
+            checks.append({"label": "Its packages are installed", "ok": False, "detail": problems[-1]})
+    groups = [("It draws at its starting values, wide and on a phone", [(defaults(mod), 0), (defaults(mod), 1)])]
+    ps = presets(mod)
+    if ps:
+        states = []
+        for p in ps:
+            v = plot.coerce(controls(mod), p["values"])
+            states += [(v, 0), (v, 1)]
+        groups.append(("Every preset draws (%d)" % len(ps), states))
+    if controls(mod):
+        rnd = [(v, i % 2) for i, v in enumerate(_random_states(mod, n_random, zlib.crc32(name.encode())))]
+        groups.append(("%d random settings of the controls draw" % n_random, rnd))
+    slow = []
+    for label, states in groups:
+        found = []
+        for v, nar in states:
+            for pr in check_state(name, v, nar, cfg, budget_ms, timing=times):
+                (slow if " took " in pr and "budget" in pr else found).append(pr)
+            if len(found) >= 4:
+                break
+        problems += found
+        checks.append({"label": label, "ok": not found, "detail": found[0] if found else ""})
+    slowest = max(times) if times else None
+    if slowest is not None:
+        ok = not slow
+        checks.append({"label": "Fast enough: the slowest setting took %.1f ms (the limit is %.0f ms)" % (slowest, budget_ms),
+                       "ok": ok, "detail": slow[0] if slow else ""})
+        problems += slow[:2]
+    try:
+        figure_html(name, cfg=cfg)
+    except FigureError as e:
+        problems.append(str(e))
+        checks.append({"label": "It can be placed in a page", "ok": False, "detail": str(e)})
+    line = next((line_of(p) for p in problems if line_of(p)), None)
+    return {"ok": not problems, "checks": checks, "problems": problems, "slowest_ms": slowest, "line": line}
+
+
+def made_with(source):
+    """'builder' (made with the form, unchanged), 'edited' (made with the form, then changed by hand) or 'code'."""
+    try:
+        from tessera import figbuilder
+    except ImportError:
+        return "code"
+    info = figbuilder.read_spec(source)
+    if info is None:
+        return "code"
+    return "edited" if info["edited"] else "builder"
+
+
+def _builder_source(name, starter):
+    from tessera import figbuilder
+    kind = starter.split(":", 1)[1] if ":" in starter else "function"
+    if kind not in figbuilder.TYPES:
+        raise FigureError("no builder type %r. Choose one of: %s (for example --from builder:%s)." % (
+            kind, ", ".join(figbuilder.TYPES), next(iter(figbuilder.TYPES))))
+    spec = figbuilder.default_spec(kind)
+    return figbuilder.generate(spec)
+
+
+def _cli_new_builder(name, starter, cfg):
+    """figures/<name>.py written by the figure builder from its example of a type (``builder:<type>``)."""
+    if not NAME_RE.match(name or ""):
+        raise FigureError("%r is not a valid name: use lowercase letters, digits and _ (e.g. my_plot)." % (name,))
+    dest_dir = _figures_dir(cfg)
+    dest = dest_dir / (name + ".py")
+    if dest.exists():
+        raise FigureError("%s already exists; pick another name or edit that file." % dest)
+    src = _builder_source(name, starter)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest.write_text(src, encoding="utf-8")
+    problems = test_figure(name, cfg)
+    if problems:
+        raise FigureError("the new figure fails its test: " + "; ".join(problems[:3]))
+    return dest
+
+
+def _uses(cfg):
+    """{figure name: [content files that place it]} from ::figure lines."""
+    root = _root(cfg)
+    content = Path(getattr(cfg, "content_dir", None) or root / "content")
+    out = {}
+    if content.is_dir():
+        for p in sorted(content.rglob("*.md")):
+            try:
+                text = p.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            for m in re.finditer(r"^\s*::figure\s+([a-z][a-z0-9_]*)", text, re.M):
+                out.setdefault(m.group(1), [])
+                rel = str(p.relative_to(content))
+                if rel not in out[m.group(1)]:
+                    out[m.group(1)].append(rel)
+    return out
+
+
+def cli_list(cfg=None, out=None):
+    """Print every figure: name, title, how it was made, its controls, and the pages that use it."""
+    out = out or sys.stdout
+    found = discover(cfg)
+    if not found:
+        print("No figures yet. Make one with: python -m tessera figure new my_plot --from builder", file=out)
+        return 0
+    uses = _uses(cfg)
+    rows = []
+    for name, path in found.items():
+        src = path.read_text(encoding="utf-8")
+        how = {"builder": "form", "edited": "form, then code", "code": "code"}[made_with(src)]
+        try:
+            mod = load(name, cfg)
+            title = mod.TITLE
+            ctl = "%d control%s, %d preset%s" % (len(controls(mod)), "" if len(controls(mod)) == 1 else "s",
+                                               len(presets(mod)), "" if len(presets(mod)) == 1 else "s")
+        except FigureError as e:
+            title, ctl = "(does not load: %s)" % str(e)[:60], ""
+        rows.append((name, title, how, ctl, ", ".join(uses.get(name, [])) or "not used yet"))
+    w0 = max(len(r[0]) for r in rows)
+    w1 = min(42, max(len(r[1]) for r in rows))
+    w2 = max(len(r[2]) for r in rows)
+    for r in rows:
+        title = r[1] if len(r[1]) <= w1 else r[1][:w1 - 1] + "…"
+        print("%-*s  %-*s  %-*s  %s; %s" % (w0, r[0], w1, title, w2, r[2], r[3], r[4]), file=out)
+    print("\n%d figure%s. Test them with: python -m tessera figure test" % (len(rows), "" if len(rows) == 1 else "s"), file=out)
+    return 0
+
+
+def preview_page(name, cfg=None):
+    """A standalone HTML page for one figure: the figure (interactive when the folder is served over http), the
+    picture at every preset and on a phone, and the test results."""
+    mod = load(name, cfg)
+    report = test_report(name, cfg)
+    fig = figure_html(name, cfg=cfg)
+    parts = []
+    for p in presets(mod):
+        r = run(name, plot.coerce(controls(mod), p["values"]), 0, cfg)
+        parts.append('<section><h3>Preset: %s</h3><div class="fig">%s%s</div></section>' % (
+            html.escape(p["label"]), r["svg"], r["readouts_html"]))
+    narrow = run(name, None, 1, cfg)
+    checks = "".join('<li class="%s">%s%s</li>' % ("ok" if c["ok"] else "bad", html.escape(c["label"]),
+                                                    ("<pre>%s</pre>" % html.escape(c["detail"])) if c["detail"] else "")
+                     for c in report["checks"])
+    return ("<!doctype html><html lang=en><head><meta charset=utf-8>"
+            "<meta name=viewport content='width=device-width,initial-scale=1'>"
+            "<meta name=tessera-root content='./'><title>%s · figure preview</title>"
+            "<link rel=stylesheet href='assets/css/tokens.css'><link rel=stylesheet href='assets/css/figure.css'>"
+            "<style>body{margin:0 auto;max-width:1000px;padding:24px 16px 64px;font:16px/1.55 system-ui,sans-serif;"
+            "background:var(--bg,#fcfcfa);color:var(--text,#1d1c1a)}h1{font-size:22px;margin:0 0 4px}"
+            "h2{font-size:17px;margin:40px 0 12px}h3{font-size:14px;font-weight:600;margin:24px 0 8px}"
+            ".muted{color:#777;font-size:14px}.checks{list-style:none;padding:0}.checks li{padding:4px 0}"
+            ".checks li.ok::before{content:'✓ ';color:#1a7f37}.checks li.bad::before{content:'✗ ';color:#b3261e}"
+            ".checks pre{white-space:pre-wrap;font-size:12px;background:#f4f3ef;padding:8px;border-radius:6px}"
+            ".phone{max-width:390px}figure.fig{margin:0}</style></head><body>"
+            "<h1>%s</h1><p class=muted>figures/%s.py. Moving the controls works when this folder is served over "
+            "http; opened as a file, the figure stays at its starting values.</p>%s"
+            "<h2>The test</h2><ul class=checks>%s</ul>"
+            "%s<h2>On a phone</h2><div class='fig phone'>%s%s</div>"
+            "<script src='assets/js/figure.js' defer></script></body></html>") % (
+        html.escape(mod.TITLE), html.escape(mod.TITLE), html.escape(name), fig, checks,
+        ("<h2>At each preset</h2>" + "".join(parts)) if parts else "", narrow["svg"], narrow["readouts_html"])
+
+
+def cli_preview(name, cfg=None, out=None, dest=None):
+    """Write a standalone preview of one figure (with the files it needs) and print where it is."""
+    out = out or sys.stdout
+    root = _root(cfg)
+    dest = Path(dest) if dest else root / ".studio" / "figure-preview"
+    page = preview_page(name, cfg)
+    theme = Path(__file__).parent / "theme" / "assets"
+    for rel in ("css/tokens.css", "css/figure.css", "js/figure.js", "js/pyworker.js"):
+        src = (root / "theme" / "assets" / rel)
+        src = src if src.is_file() else theme / rel
+        if src.is_file():
+            (dest / "assets" / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src, dest / "assets" / rel)
+    write_assets(cfg, {name}, dest)
+    path = dest / (name + ".html")
+    path.write_text(page, encoding="utf-8")
+    print(str(path), file=out)
+    return path

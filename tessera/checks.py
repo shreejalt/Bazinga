@@ -24,15 +24,21 @@ class Issue:
     message: str
     hint: str = ""
     code: str = ""
+    column: int | None = None  # 1-based, when the problem has a precise place on its line (maths)
+    length: int = 0            # how many characters it spans from there
 
     def format(self, path=None) -> str:
-        where = f"{path}:{self.line}" if path and self.line else (str(path) if path else f"line {self.line}"
-                                                                     if self.line else "")
+        col = f":{self.column}" if self.column and self.line else ""
+        where = f"{path}:{self.line}{col}" if path and self.line else (str(path) if path else
+                                                                       f"line {self.line}{col}" if self.line else "")
         text = f"{where}: {self.level}: {self.message}" if where else f"{self.level}: {self.message}"
         return text + (f"\n    hint: {self.hint}" if self.hint else "")
 
     def to_dict(self) -> dict:
-        return {"level": self.level, "line": self.line, "message": self.message, "hint": self.hint, "code": self.code}
+        out = {"level": self.level, "line": self.line, "message": self.message, "hint": self.hint, "code": self.code}
+        if self.column:
+            out["column"], out["length"] = self.column, self.length
+        return out
 
 
 def _did_you_mean(word: str, options) -> str:

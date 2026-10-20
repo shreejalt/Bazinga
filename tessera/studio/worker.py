@@ -134,6 +134,9 @@ OPS = {"figure-test": op_figure_test, "figure-run": op_figure_run, "drawing-test
        "log": op_log, "figure-tests": op_used_figure_tests, "figure-html": op_figure_html,
        "drawing-html": op_drawing_html}
 
+from .figworker import OPS as _FIGURE_PANEL_OPS  # noqa: E402  (the figure panel's operations)
+OPS.update(_FIGURE_PANEL_OPS)
+
 
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv

@@ -6,8 +6,10 @@
                                       "Write" button (local only; --no-studio leaves it out)
     studio                            the local editor (127.0.0.1 only)
     check [file ...]                  run the checks; exit code 1 when there are errors
-    figure new <name> --from slider_plot | figure test [name]
+    figure new <name> --from <starter|builder[:type]> | figure test [name] | figure preview <name> | figure list
     cite <arxiv-id|doi> [--key KEY]   add a reference to content/references.yml
+    math "<latex>" [--display] [--html FILE]
+                                      check one formula: the MathML, or what is wrong, where, and what to write
     wiki index|ingest|lint|highlights|describe|query [args]
     publish <file>                    the Studio's publish pipeline, from the terminal
 
@@ -143,7 +145,7 @@ def cmd_figure(args, cfg) -> int:
         return _missing("The figure engine (tessera/figures.py)")
     if args.action == "new":
         if not args.name:
-            print("usage: python -m tessera figure new <name> --from slider_plot", file=sys.stderr)
+            print("usage: python -m tessera figure new <name> --from <starter|builder[:type]>", file=sys.stderr)
             return 2
         try:
             path = figs.cli_new(args.name, args.starter, cfg)
@@ -151,6 +153,18 @@ def cmd_figure(args, cfg) -> int:
             print(f"error: {exc}", file=sys.stderr)
             return 1
         print(f"Created {Path(path).relative_to(cfg.root)}. Use it in a post with ::figure {args.name}")
+        return 0
+    if args.action == "list":
+        return figs.cli_list(cfg)
+    if args.action == "preview":
+        if not args.name:
+            print("usage: python -m tessera figure preview <name>", file=sys.stderr)
+            return 2
+        try:
+            figs.cli_preview(args.name, cfg)
+        except figs.FigureError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
         return 0
     return figs.cli_test(args.name, cfg)
 
@@ -168,6 +182,48 @@ def cmd_passthrough(module: str, fn: str, what: str):
             rest += ["--root", str(cfg.root)]
         return call(rest)
     return run
+
+
+def cmd_math(args, cfg=None) -> int:
+    """Check one formula; print the MathML, or the error with a caret under the place and what to write instead."""
+    import html as htmllib
+
+    from . import mathml
+    tex = sys.stdin.read() if args.tex == "-" else args.tex
+    res = mathml.check(tex, args.display)
+    if res["ok"]:
+        if args.html:
+            out = Path(args.html)
+            css = (Path(__file__).parent / "theme" / "assets" / "css" / "math.css").read_text(encoding="utf-8")
+            body = res["mathml"]
+            if args.display:
+                num = f'<span class="eq-number">({htmllib.escape(res["tag"])})</span>' if res.get("tag") else ""
+                body = f'<div class="math-display">{body}{num}</div>'
+            else:
+                body = f"<p>Inside a sentence: {body} and after it.</p>"
+            out.write_text(
+                '<!doctype html><html><head><meta charset="utf-8"><title>Formula preview</title>'
+                '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=STIX+Two+Math&display=swap">'
+                f'<style>:root{{--font-math:"STIX Two Math",math;--text-muted:#666;--accent-soft:#eef}}'
+                f'body{{font:20px Georgia,serif;max-width:46rem;margin:3rem auto;padding:0 1rem;color:#1a1a1a;'
+                f'background:#fff}}pre{{font-size:13px;color:#555;white-space:pre-wrap}}{css}</style></head><body>'
+                f"<pre>{htmllib.escape(tex)}</pre>{body}</body></html>", encoding="utf-8")
+            print(f"Wrote {out}")
+        else:
+            print(res["mathml"])
+        return 0
+    e = res["error"]
+    lines = tex.split("\n")
+    line = e["line"] or 0
+    col = e["column"] or 0
+    print(f"line {line + 1}, column {col + 1}: {e['message']}", file=sys.stderr)
+    if 0 <= line < len(lines):
+        print("    " + lines[line], file=sys.stderr)
+        print("    " + " " * col + "^" * max(1, min(e.get("length") or 1, len(lines[line]) - col or 1)),
+              file=sys.stderr)
+    if e["hint"]:
+        print(f"Instead: {e['hint']}", file=sys.stderr)
+    return 1
 
 
 # ---------------------------------------------------------------------------------------------------- argparse
@@ -207,10 +263,17 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--key", default=None, help="the citation key (default: FirstAuthorYY)")
     p.set_defaults(fn=cmd_cite)
 
-    p = sub.add_parser("figure", help="new figure from a starter, or test figures")
-    p.add_argument("action", choices=["new", "test"])
+    p = sub.add_parser("math", help="check one formula (MathML, or what is wrong and what to write instead)")
+    p.add_argument("tex", help='the LaTeX, in quotes; "-" reads it from the input')
+    p.add_argument("--display", action="store_true", help="as a displayed equation ($$ … $$), not inside a sentence")
+    p.add_argument("--html", default=None, metavar="FILE", help="write a preview page to FILE instead of printing")
+    p.set_defaults(fn=cmd_math)
+
+    p = sub.add_parser("figure", help="new figure (from a starter or the builder), test, preview or list figures")
+    p.add_argument("action", choices=["new", "test", "preview", "list"])
     p.add_argument("name", nargs="?")
-    p.add_argument("--from", dest="starter", default="slider_plot")
+    p.add_argument("--from", dest="starter", default="slider_plot",
+                   help="a starter (slider_plot, scatter_fit, distribution, …) or builder / builder:<type> for the form")
     p.set_defaults(fn=cmd_figure)
 
     for name, module, fn, what, help_text in [
@@ -256,6 +319,8 @@ def main(argv=None) -> int:
     if not getattr(args, "fn", None):
         ap.print_help()
         return 0
+    if args.fn is cmd_math:                     # needs no site
+        return cmd_math(args)
     root = Path(args.root).resolve() if args.root else Path.cwd()
     config.set_root(root)
     try:

@@ -163,16 +163,23 @@ Rules:
 | `![alt](static/uploads/x.png "caption")` | `<figure>` with caption; missing alt is a check warning |
 | `## Heading {#id}` | stable anchors; every h2/h3 gets an id and a hover link |
 
-**Math pipeline (mathml.py).** Pre-process, convert with latex2mathml, post-process, then validate.
-- **Pre-processing:**
-  - `aligned`/`align`/`align*`/`gather` become `\begin{array}{rl}`.
-  - `\\[4pt]` becomes `\\`.
-  - `\arg`, `\argmax`, `\argmin` and `\operatorname*` become `\operatorname{…}`.
-  - `\boldsymbol` and `\bm` become `\mathbf` (Chromium ignores bold-italic).
-  - `\big`/`\Big`/`\bigg` and their l/r forms are dropped (MathML stretches).
-  - `\text{}` keeps its spaces.
-  - `\tag{..}` and `\label{..}` are taken out into the equation number.
-- **Validation:** after conversion it rejects any `<mi>\`-leaked command, `menclose`, `mfenced` or `linebreak=`. It raises `MathError(message, line, hint)` with a plain-English hint, for example "\\cancel is not supported in browsers' math; try \\not or colour".
+**Math pipeline (mathml.py).** Lint the source, pre-process, convert with latex2mathml, post-process, then validate.
+- **Lint first:** common typos are found before converting, each with a line and column, a "what is wrong" and a "write this instead":
+  - an unclosed brace or an unbalanced `\left`/`\right`;
+  - `&` or `\\` outside an environment;
+  - `x^10` and double scripts;
+  - `\frac` with one argument;
+  - maths inside `\text{}`;
+  - unknown commands, with a suggested spelling;
+  - package or macro commands;
+  - a price-like `$5`, which gets a warning and stays text.
+- **Rewrites:**
+  - `aligned`, `align`, `gather`, `split` and `multline` become arrays that every browser draws.
+  - `\boldsymbol`/`\bm` become bold Chromium shows; `\boxed`, `\cancel`, `\color`, `\xrightarrow` and `\choose` render.
+  - `\big…` sizes are kept as stretchy fences.
+  - `\arg`, `\argmax` and `\operatorname*` take limits underneath in display; `\log` and the like get TeX spacing.
+  - `\tag` and `\label` become the equation number.
+- **Validation:** the output must be MathML Core: no leaked `\commands`, no `mfenced` or `linebreak=`. `tests/fixtures/math_corpus.yml` (254 snippets) is the contract. `python -m tessera math "<latex>"` shows the result or the error with a caret.
 - **Mobile:** display math sits in `<div class="math-display">`, which scrolls horizontally on phones.
 
 ## Interactive figures (figures/<name>.py)

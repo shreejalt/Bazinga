@@ -89,7 +89,8 @@ class ExampleTheme(unittest.TestCase):
         lst = self.html("reads/index.html")
         self.assertIn('<div class="pager" id="pager"', lst)
         self.assertIn("/assets/js/pager.js", lst)
-        self.assertEqual(lst.count("<tr data-text="), 6)                         # every row; the script shows ten
+        reads = [p for p in self.result.pages if p.kind == "reads"]
+        self.assertEqual(lst.count("<tr data-text="), len(reads))                # every row; the script shows ten
 
     def test_map_and_views(self):
         layout = json.loads(self.html("data/map.json"))

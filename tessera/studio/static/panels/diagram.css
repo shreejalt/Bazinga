@@ -1,0 +1,75 @@
+/* The diagram panel: text on the left, the drawing on the right (on the site's paper), the syntax at hand. */
+.dgp-modal.modal.wide { width: min(1280px, 100%); }
+.dgp-modal .modal-body { padding: 0; overflow: hidden; }
+.dgp { display: grid; grid-template-columns: minmax(340px, 5fr) minmax(0, 7fr); height: min(66vh, 760px); }
+.dgp-left { display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; border-right: 1px solid var(--line); min-width: 0; min-height: 0; background: var(--bg); }
+.dgp-right { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 0; }
+
+/* the gallery of examples */
+.dgp-gallery { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 10px 12px 9px; border-bottom: 1px solid var(--line); }
+.dgp-gallery-label { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-right: 2px; }
+.dgp-chip { border: 1px solid var(--line-2); background: var(--surface); color: var(--ink); font: 500 12.5px/1 var(--sans); padding: 5px 9px; border-radius: 999px; cursor: pointer; }
+.dgp-chip:hover { background: var(--surface-2); }
+.dgp-chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+/* the editor */
+.dgp-code { min-height: 0; overflow: hidden; }
+.dgp-code .cm-editor { height: 100%; font-size: 13.5px; background: var(--surface); }
+.dgp-code .cm-scroller { font-family: var(--mono); line-height: 1.65; }
+.dgp-code .cm-gutters { background: var(--surface-2); border-right: 1px solid var(--line); color: var(--muted); }
+.dgp-code .cm-activeLine { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+.dgp-code .cm-activeLineGutter { background: var(--surface-3); }
+.dgp-code .cm-focused { outline: none; }
+.dgp-com { color: var(--muted); font-style: italic; }
+.dgp-kw { color: var(--accent); font-weight: 600; }
+.dgp-arrow { color: var(--err); font-weight: 600; }
+.dgp-str { color: var(--ok); }
+.dgp-attr { color: var(--sched); }
+.dgp-shape { color: var(--warn); }
+.dgp-err-line { background: var(--err-soft); box-shadow: inset 3px 0 0 var(--err); }
+
+/* the status line under the editor */
+.dgp-status { display: block; padding: 9px 14px 9px 36px; text-indent: -22px; font-size: 13px; border-top: 1px solid var(--line); min-height: 40px; line-height: 1.45; }
+.dgp-status svg { display: inline-block; vertical-align: -3px; margin-right: 7px; }
+.dgp-status .dgp-jump { margin-right: 4px; }
+.dgp-status.ok { color: var(--ok); background: var(--ok-soft); }
+.dgp-status.err { color: var(--err); background: var(--err-soft); }
+.dgp-status .dgp-hint { color: var(--ink-2); }
+.dgp-jump { border: 0; background: none; color: inherit; font: 600 13px var(--sans); text-decoration: underline; cursor: pointer; padding: 0; }
+
+/* the cheat sheet */
+.dgp-help { border-top: 1px solid var(--line); max-height: 40vh; overflow: auto; }
+.dgp-help summary { cursor: pointer; padding: 9px 14px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.dgp-help[open] summary { border-bottom: 1px solid var(--line); }
+.dgp-help-sec { padding: 8px 14px 4px; }
+.dgp-help h4 { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 4px 0 6px; }
+.dgp-help dl { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 4px 12px; margin: 0 0 6px; font-size: 12.5px; }
+.dgp-help dt code { font-family: var(--mono); font-size: 12px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; white-space: pre-wrap; }
+.dgp-help dd { margin: 0; color: var(--ink-2); }
+
+/* the drawing, on the site's own paper */
+.dgp-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.dgp-label { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.dgp-bar .seg-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; }
+.dgp-paper {
+  --paper: #FBF7EC; --tint: #F2EBDB; --ink: #1D1A15; --ink-2: #4A443A; --ink-3: #655D51; --rule-2: #CBC1AD;
+  --rule-3: #E4DBC9; --blue: #0F52BA; --ref: #A34A12; --on-dark: #FBF7EC;
+  --fig-surface: var(--paper); --fig-panel: var(--tint); --fig-ink: var(--ink); --fig-ink-2: var(--ink-2);
+  --fig-ink-3: var(--ink-3); --fig-rule: var(--rule-2); --fig-c1: var(--blue); --fig-c2: var(--ref);
+  --fig-font: "Courier Prime", "Courier New", var(--mono);
+  background: var(--paper); color: var(--ink);
+}
+.dgp-stage { overflow: auto; padding: 28px 24px; display: grid; place-items: start center; min-height: 0; transition: opacity .2s; }
+.dgp-stage svg { display: block; max-width: 100%; height: auto; }
+.dgp-stage.phone { padding: 22px 8px; }
+.dgp-stage.phone svg { max-width: min(100%, 330px); }
+.dgp-stage.stale { opacity: .45; }
+
+/* the "Edit diagram" button on a ```diagram line of the page */
+.dgp-edit-btn { margin-left: 10px; font: 500 11.5px/1 var(--sans); color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 999px; padding: 3px 9px; cursor: pointer; vertical-align: 1px; }
+.dgp-edit-btn:hover { background: var(--accent); color: var(--accent-ink); }
+
+@media (max-width: 900px) {
+  .dgp { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); height: 82vh; }
+  .dgp-left { border-right: 0; border-bottom: 1px solid var(--line); }
+}

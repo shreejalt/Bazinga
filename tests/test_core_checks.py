@@ -60,9 +60,10 @@ class Rules(unittest.TestCase):
         self.assertEqual(found["heading-h1"].line, 7)
 
     def test_render_problems_are_included_with_lines(self):
-        found = issues_for(post(body="ok\n$\\cancel{x}$"))
+        found = issues_for(post(body="ok\nsee $\\alpah$"))
         self.assertEqual(found["math"].line, 8)
-        self.assertIn("colour", found["math"].hint)
+        self.assertEqual(found["math"].column, 6)
+        self.assertIn("\\alpha", found["math"].hint)
 
 
 class Cite(unittest.TestCase):

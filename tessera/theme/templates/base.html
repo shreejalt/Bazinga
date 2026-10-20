@@ -35,6 +35,8 @@
 <link rel="stylesheet" href="{{ asset('css/math.css') }}">
 <link rel="stylesheet" href="{{ asset('css/pygments.css') }}">
 <link rel="stylesheet" href="{{ asset('css/site.css') }}">
+{% if has_asset('css/diagram.css') %}<link rel="stylesheet" href="{{ asset('css/diagram.css') }}">
+{% endif %}
 {% if has_asset('css/wiki.css') %}<link rel="stylesheet" href="{{ asset('css/wiki.css') }}">
 {% endif %}
 {% if has_feed %}<link rel="alternate" type="application/atom+xml" title="{{ site.name }}" href="/feed.xml">

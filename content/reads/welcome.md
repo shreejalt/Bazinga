@@ -81,7 +81,7 @@ $$
 
 ## Figures you can move
 
-A figure is a small Python file in `figures/`. One line places it; readers drag the slider and the plot is
+A figure is a small code file in `figures/`. One line places it; readers drag the slider and the plot is
 recomputed in their browser. Before anyone touches it, the figure is already drawn, so it also works in feed readers
 and with scripts turned off.
 
@@ -101,7 +101,26 @@ Add `| start: <preset>` to open the same figure at one of its presets:
 
 ## Diagrams
 
-Diagrams are Python too: a function in `drawings/` returns the picture, drawn once at build time.
+Write a diagram as text in a `diagram` block: name the boxes and join them with arrows. The build lays it out and
+draws it in the page's own ink, paper and blue, with no script in the reader's browser. [[read:drawing-diagrams]]
+has the whole syntax: shapes, labels, groups, flowcharts, timelines and trees.
+
+~~~markdown
+```diagram
+Write -> Check -> Build -> Publish
+Check -> Write: "fix"
+Publish [accent]
+```
+~~~
+
+```diagram
+Write -> Check -> Build -> Publish
+Check -> Write: "fix"
+Publish [accent]
+```
+
+When a diagram needs a loop or data to draw it, a small code file in `drawings/` returns the picture instead, drawn
+once at build time.
 
 ```markdown
 ::drawing pipeline.overview | From a Markdown file to the live site.

@@ -110,13 +110,17 @@ class Drawings(unittest.TestCase):
             cfg = types.SimpleNamespace(root=tmp, figures_dir=tmp / "figures", drawings_dir=tmp / "drawings")
             for starter in figures.DRAWING_STARTERS:
                 figures.cli_new("s_" + starter, starter, cfg=cfg)
-            self.assertIn('<div class="drawing-svg"><svg', drawings.drawing_html("s_pipeline.steps", cfg=cfg))
+            # steps() has a phone layout (narrow=1), so the page gets both versions
+            self.assertIn('<div class="drawing-svg drawing-wide"><svg', drawings.drawing_html("s_pipeline.steps", cfg=cfg))
             found = drawings.discover(cfg)
-            self.assertEqual(sorted(found), ["s_blocks", "s_pipeline"])
+            self.assertEqual(sorted(found), ["s_architecture", "s_blocks", "s_flowchart", "s_pipeline", "s_timeline",
+                                             "s_tree"])
+            self.assertEqual(found["s_blocks"], ["by_hand", "stack"])
             for module, fns in found.items():
                 for fn in fns:
-                    with self.subTest(drawing="%s.%s" % (module, fn)):
-                        ET.fromstring(drawings.render("%s.%s" % (module, fn), cfg))
+                    for narrow in (0, 1):
+                        with self.subTest(drawing="%s.%s" % (module, fn), narrow=narrow):
+                            ET.fromstring(drawings.render("%s.%s" % (module, fn), cfg, narrow=narrow))
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 

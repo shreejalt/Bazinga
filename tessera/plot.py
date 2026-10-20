@@ -95,18 +95,23 @@ def _classes(style, base):
     return " ".join(parts)
 
 
+MONO_EM = 0.6     # the advance of one character in a monospaced face (Courier, Plex Mono, JetBrains Mono …)
+
+
 def text_width(s, fs):
-    """Approximate rendered width of s in a UI sans at font size fs."""
+    """Rendered width of s at font size fs, never less than it would be in a monospaced face.
+
+    Themes set figure text in their own font (a UI sans, or a monospaced face as in the default theme). Room for
+    labels is reserved from this estimate, so it errs wide: a proportional font then has a little spare room, and a
+    monospaced one is never clipped or overlapping."""
     w = 0.0
     for ch in str(s):
-        if ch in "il.,:;'|!ijtfI()[] ":
-            w += 0.32
-        elif ch in "mwMW@%":
+        if ch in "mwMW@%":
             w += 0.86
         elif ch.isupper() or ch in "0123456789":
             w += 0.62
         else:
-            w += 0.54
+            w += MONO_EM
     return w * fs
 
 
@@ -655,7 +660,7 @@ def _panel_xy(ctx, p, X, Y, W, H, where, scene=False):
     # end labels need room on the right
     series = _list(p.get("series"), where + ".series")
     end_labels = [s for s in series if s.get("name") and s.get("label_at", "end") == "end"
-                  and "points" not in str(s.get("style", "")).split()]
+                  and not ({"points", "stems"} & set(str(s.get("style", "")).split()))]
     right = 8
     if end_labels:
         right = min(W * 0.32, max(text_width(s["name"], fss) for s in end_labels) + 16)
@@ -697,8 +702,28 @@ def _panel_xy(ctx, p, X, Y, W, H, where, scene=False):
     rect = (px0, py0, px1, py1)
     boxes = _Boxes((X, Y, X + W, Y + H))
 
-    # grid + axes
+    # grid + axes. "grid": True (or "x" / "y") adds grid lines at the ticks in both (or one) directions, also in
+    # scenes without axes; "origin": True draws the lines x = 0 and y = 0 when they are in view.
     g = []
+    grid = p.get("grid")
+    if grid:
+        gx = grid in (True, "x", "both")
+        gy = grid in (True, "y", "both") and not axes     # with axes the y grid is already there
+        if gx:
+            for t, _l in xt:
+                xx = sx(t)
+                if xx is not None and px0 + 0.5 < xx < px1 - 0.5:
+                    g.append('<path class="grid" d="M%s %sV%s"/>' % (_f(xx), _f(py0), _f(py1)))
+        if gy:
+            for t, _l in yt:
+                yy = sy(t)
+                if yy is not None and py0 + 0.5 < yy < py1 - 0.5:
+                    g.append('<path class="grid" d="M%s %sH%s"/>' % (_f(px0), _f(yy), _f(px1)))
+    if p.get("origin"):
+        if not x_log and xlo < 0 < xhi:
+            g.append('<path class="axis zero" d="M%s %sV%s"/>' % (_f(sx(0)), _f(py0), _f(py1)))
+        if not y_log and ylo < 0 < yhi and not axes:
+            g.append('<path class="axis zero" d="M%s %sH%s"/>' % (_f(px0), _f(sy(0)), _f(px1)))
     if axes:
         for t, l in yt:
             yy = sy(t)
@@ -760,6 +785,7 @@ def _panel_xy(ctx, p, X, Y, W, H, where, scene=False):
     # series
     ends = []
     dots = []
+    point_labels = []
     for i, s in enumerate(series):
         w_ = "%s.series[%d]" % (where, i)
         y = _nums(s.get("y"), w_ + ".y")
@@ -796,12 +822,37 @@ def _panel_xy(ctx, p, X, Y, W, H, where, scene=False):
                 poly = _clip_poly(rt + rb[::-1], rect)
                 if poly:
                     ctx.add('<path class="%s" d="%s"/>' % (_classes(style, "fill"), _poly_d(poly)))
-        if "points" in names:
-            r = 4.5 if not ctx.narrow else 5
-            for q in pts:
+        if "points" in names or "stems" in names:
+            # dots (a scatter); "sizes" gives each dot its own radius in pixels, "labels" a text beside it;
+            # "stems" also draws a line from the baseline up to each dot (a probability mass function, say)
+            sizes = None
+            if s.get("sizes") is not None:
+                sizes = _nums(s["sizes"], w_ + ".sizes")
+                if len(sizes) != len(y):
+                    raise PlotError("%s: sizes has %d values but y has %d" % (w_, len(sizes), len(y)))
+            plabels = None
+            if s.get("labels") is not None:
+                plabels = [("" if v is None else str(v)) for v in _list(s["labels"], w_ + ".labels")]
+                if len(plabels) != len(y):
+                    raise PlotError("%s: labels has %d values but y has %d" % (w_, len(plabels), len(y)))
+            r0 = 4.5 if not ctx.narrow else 5
+            if "stems" in names:
+                b0 = sy(ylo if y_log else min(max(0.0, ylo), yhi))
+                stems = []
+                for q in pts:
+                    if q and px0 - 0.5 <= q[0] <= px1 + 0.5:
+                        top_ = min(max(q[1], py0), py1)
+                        stems.append("M%s %sV%s" % (_f(q[0]), _f(b0), _f(top_)))
+                if stems:
+                    ctx.add('<path class="%s" d="%s"/>' % (_classes(style, "stem"), "".join(stems)))
+            for k, q in enumerate(pts):
                 if q and px0 - 1 <= q[0] <= px1 + 1 and py0 - 1 <= q[1] <= py1 + 1:
+                    r = r0 if sizes is None or sizes[k] is None else max(1.0, min(40.0, sizes[k]))
                     dots.append('<circle class="%s" cx="%s" cy="%s" r="%s"/>' % (
                         _classes(style, "dot"), _f(q[0]), _f(q[1]), _f(r)))
+                    boxes.add((q[0] - r, q[1] - r, q[0] + r, q[1] + r))
+                    if plabels and plabels[k]:
+                        point_labels.append((q, plabels[k], r))
         else:
             d = _polyline_path(pts, rect)
             if d:
@@ -815,7 +866,7 @@ def _panel_xy(ctx, p, X, Y, W, H, where, scene=False):
             if q and px0 - 0.5 <= q[0] <= px1 + 0.5 and py0 - 0.5 <= q[1] <= py1 + 0.5:
                 last = q
                 break
-        if last and title and s.get("label_at", "end") == "end" and "points" not in names:
+        if last and title and s.get("label_at", "end") == "end" and not ({"points", "stems"} & set(names)):
             ends.append((last, title, style))
             dots.append('<circle class="%s" cx="%s" cy="%s" r="%s"/>' % (
                 _classes(style, "end-dot"), _f(last[0]), _f(last[1]), "3.5"))
@@ -859,6 +910,14 @@ def _panel_xy(ctx, p, X, Y, W, H, where, scene=False):
                 ctx.add('<path class="leader" d="M%s %sL%s %s"/>' % (_f(q[0] + 4), _f(q[1]), _f(lx - 3), _f(ly)))
             ctx.add('<g class="%s">%s</g>' % (_classes(style, "end-label"),
                                              _text(lx, ly + fss * 0.35, name, "t-label", fss)))
+
+    # labels beside dots (series "labels")
+    for q, txt, r in point_labels:
+        w = text_width(txt, fss)
+        cands = _label_candidates(q[0], q[1], w, fss + 2, gap=r + 4)
+        k = boxes.place([c[0] for c in cands])
+        _, anchor, tx, ty = cands[k]
+        ctx.add(_text(tx, ty, txt, "t-label", fss, anchor))
 
     # annotations
     for i, a in enumerate(_list(p.get("annotations"), where + ".annotations")):
