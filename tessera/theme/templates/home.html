@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import entry %}
+{#- Home: the intro, then the sections listed in site.yml home.show (latest, series, map). -#}
+{% block body_class %}is-home{% endblock %}
+{% block main %}
+<div class="wrap">
+  <section class="hero">
+    <h1 class="hero-title">{{ site.name }}</h1>
+    {% if site.tagline %}<p class="hero-tagline">{{ site.tagline }}</p>{% endif %}
+    {% if intro %}<div class="hero-intro prose">{{ intro }}</div>{% endif %}
+  </section>
+
+  {% for part in show %}
+  {% if part == 'latest' and latest %}
+  <section class="home-section" aria-labelledby="latest-title">
+    <div class="section-head"><h2 id="latest-title">Latest</h2>{% for k, spec in kinds.items() %}{% if loop.first %}<a class="more" href="/{{ k }}/">All {{ spec.label|lower }} →</a>{% endif %}{% endfor %}</div>
+    <div class="entries">{% for n in latest %}{{ entry(n, topic, 'h3') }}{% endfor %}</div>
+  </section>
+  {% elif part == 'series' and series_list and features.series %}
+  <section class="home-section" aria-labelledby="series-title">
+    <div class="section-head"><h2 id="series-title">Series</h2><a class="more" href="/series/">All series →</a></div>
+    <div class="series-cards">
+    {% for s in series_list %}
+      <a class="series-card" href="{{ s.url }}">
+        <span class="series-card-count">{{ s.count }} part{{ '' if s.count == 1 else 's' }}</span>
+        <span class="series-card-name">{{ s.name }}</span>
+        <span class="series-card-first">Starts with {{ s.parts[0].title }}</span>
+      </a>
+    {% endfor %}
+    </div>
+  </section>
+  {% elif part == 'map' and features.explore and map_svg %}
+  <section class="home-section" aria-labelledby="map-title">
+    <div class="section-head"><h2 id="map-title">The map</h2><a class="more" href="/explore/">Open the map →</a></div>
+    <a class="map-card" href="/explore/" aria-label="Open the map of all {{ page_count }} pages">
+      {{ map_svg }}
+      <span class="map-card-text">Every page is a tile; lines show which pages build on, mention or cite each other.</span>
+    </a>
+  </section>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endblock %}

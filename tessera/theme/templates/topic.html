@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import entry %}
+{#- One topic hub: the intro, the pages, and the live figures from those pages. -#}
+{% block body_class %}is-topic{% endblock %}
+{% block main %}
+<div class="wrap">
+  <header class="page-head">
+    <p class="eyebrow"><a href="/topics/">Topics</a>{% if t.group %}<span class="dot" aria-hidden="true">·</span>{{ t.group }}{% endif %}</p>
+    <h1>{{ t.label }}</h1>
+    {% if intro %}<div class="page-intro prose">{{ intro }}</div>{% endif %}
+  </header>
+  {% if items %}
+  <section aria-labelledby="pages-title">
+    <h2 id="pages-title" class="section-label">{{ items|length }} page{{ '' if items|length == 1 else 's' }}</h2>
+    <div class="entries">{% for n in items %}{{ entry(n, topic, 'h3') }}{% endfor %}</div>
+  </section>
+  {% else %}
+  <p class="empty">No pages on this topic yet.</p>
+  {% endif %}
+  {% if figures %}
+  <section class="topic-figures" aria-labelledby="figures-title">
+    <h2 id="figures-title" class="section-label">Figures</h2>
+    {% for f in figures %}
+    <div class="topic-figure prose">
+      {{ f.html }}
+      <p class="figure-from muted">From <a href="{{ f.from.url }}">{{ f.from.title }}</a></p>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

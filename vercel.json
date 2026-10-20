@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "python3 -m pip install -r requirements.txt",
+  "buildCommand": "python3 -m unittest discover tests && python3 -m tessera build",
+  "outputDirectory": "_site",
+  "trailingSlash": true,
+  "functions": {
+    "api/ask.py": {
+      "excludeFiles": "{tests/**,content/**,figures/**,drawings/**,static/**,_site/static/**,docs/**,proposals/**,sources/**}"
+    }
+  }
+}

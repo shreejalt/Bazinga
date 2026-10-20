@@ -1,0 +1,133 @@
+# Notes from the figures builder
+
+## Files (all owned by figures)
+
+| File | What it does |
+|---|---|
+| `tessera/plot.py` | spec → `(svg, readouts_html)`. Standard library only; shipped to `_site/figures/_plot.py` and run in the browser too. Panel kinds `xy`, `bars`, `heatmap`, `scene`; 1–4 panels in a row (880 wide) or a column when narrow (480 wide). Also `coerce(controls, values)`, used by the build and the worker so both see identical values. |
+| `tessera/figures.py` | `discover`, `load` (contract check, cached by mtime), `run`, `figure_html`, `write_assets`, `test_figure`, `defaults`, `cli_new`, `cli_test`, `FigureError`. |
+| `tessera/draw.py` | Diagram kit: `Diagram`, `box`, `arrow` (edge anchoring, `bend`, `start`/`end` sides, `both`), `label`, `note`, `group`, `row`, `column`, `grid`, `chain`, `svg()`. |
+| `tessera/drawings.py` | `drawing_html(ref, caption)`, `render`, `discover`, `DrawingError`. |
+| `tessera/theme/assets/js/figure.js` | Wires the controls, starts the worker on intent or when idle and on screen, coalesces requests, play, presets, Reset, plain status text. Exposes `window.Tessera.py` and `window.Tessera.figures`. |
+| `tessera/theme/assets/js/pyworker.js` | Module worker: boots the runtime, `loadPackage(REQUIRES)`, fetches modules into its file system, runs figures and generic calls. |
+| `tessera/theme/assets/css/figure.css` | Figures, controls, readouts and drawings; light and dark; phone layout. |
+| `tessera/starters/figures/` | `slider_plot`, `compare_bars`, `heatmap`, `geometry2d`, `animation` (commented for newcomers). |
+| `tessera/starters/drawings/` | `pipeline` (`steps()`), `blocks` (`stack()`). |
+| `figures/` | `softmax_temperature`, `gradient_descent`, `fourier_series` (numpy). |
+| `drawings/pipeline.py` | `overview(narrow=0)`: write → check → build → publish, with a stacked phone layout. |
+| `tests/test_fig_*.py` | 58 tests: plot kinds, determinism, escaping, narrow layout, errors, contract messages, HTML, assets, CLI hooks, every figure, every starter copied, drawings, `node --check`. |
+
+## For core (please act on these)
+
+1. **requirements.txt: add `numpy`.** The example `figures/fourier_series.py` declares `REQUIRES = ["numpy"]`, and the build imports it. I installed numpy 2.5.4 into `.venv`. Without numpy, `test_fig_figures` fails on that figure with a clear message.
+2. **Pyodide URL.** `figure.js` reads, in this order:
+   - `window.TesseraConfig.pyodide`;
+   - `<meta name="tessera-pyodide" content="…/full/">`, which base.html already writes from `vendor.pyodide_index`;
+   - the fallback constant `https://cdn.jsdelivr.net/pyodide/v314.0.7/full/` in `figure.js` and `pyworker.js`.
+
+   `tests/test_fig_js.py` checks that both constants are exactly this pinned URL. If you bump the version in `vendor.py`, bump them too.
+3. **Site root.** Module URLs in `data-tessera` are relative to the site root, for example `figures/softmax_temperature.py?v=<hash>`. figure.js resolves them against:
+   - `window.TesseraConfig.root`;
+   - else `<meta name="tessera-root">`;
+   - else `../../` from its own script URL, because it lives at `/assets/js/figure.js`.
+
+   That default works for sub-path deployments such as GitHub Pages project sites.
+4. **Breakout.** `site.css` already widens `.fig` and `.drawing` to `--wide`, so `figure.css` no longer does. `.fig .fig-head` overrides the prose `figcaption` centring and hyphenation.
+5. **Tokens used.** `figure.css` uses `--bg`, `--surface`, `--text`, `--text-muted`, `--text-faint`, `--border`, `--accent`, `--fig-accent-dark` and `--font-ui`, and has fallbacks for all of them. Dark mode follows `prefers-color-scheme` plus `:root[data-theme="dark"|"light"]`.
+6. **Signatures.**
+   - `figure_html(name, start=None, cfg=None)` and `drawing_html(ref, caption="", cfg=None)`: the optional `cfg` lets tests and the Studio point at other folders; otherwise they use `tessera.config.ROOT`.
+   - `cli_new(name, starter, cfg=None)` copies a drawing starter (`pipeline`, `blocks`) into `drawings/` and a figure starter into `figures/`, then runs `test_figure` on new figures.
+   - `cli_test(name=None, cfg=None)` returns the exit code.
+7. **Live preview.** `Tessera.figures.init(root)` initialises figures inserted after load; the Studio's `preview.js` already calls it. The `?v=` in module URLs changes with the file's content, and the worker re-imports a module when the URL changes, so edited figures refresh without a reload.
+
+## For wiki (Ask)
+
+```js
+await Tessera.py.call("/figures/_retrieve.py", "answer",
+                      {question: q, passages: {"$json": "/data/passages.json"}, page: id})
+```
+
+- The result is the function's return value, round-tripped as JSON.
+- Keyword arguments come from the object; an array is passed as positional arguments.
+- Any `{"$json": url}` value is fetched once by the worker and kept there, so the passages cross the boundary only once.
+- Errors reject with the exception's last line, for example `"TypeError: answer() got an unexpected keyword argument 'x'"`.
+- Verified in Chrome and WebKit.
+- `Tessera.py.start()` warms the worker; `Tessera.py.stats` holds `{bootMs, lastMs, requests}`.
+
+## How to make a figure
+
+1. `python -m tessera figure new my_plot --from slider_plot`. The other starters are `compare_bars`, `heatmap`, `geometry2d` and `animation`.
+2. Edit `figures/my_plot.py`. The comments explain every field. `compute()` returns a dict of panels; styles are names, never colours.
+3. `python -m tessera figure test my_plot` checks:
+   - the defaults, every preset and 20 random states, wide and narrow;
+   - under 30 ms each;
+   - no NaN or infinity (use `None` for a gap);
+   - well-formed SVG.
+4. Put `::figure my_plot` (or `::figure my_plot | start: Preset label`) in a post.
+
+**Spec additions beyond DESIGN.md:**
+- **Top level:**
+  - `legend` = `[{name, style, kind: "line"|"box"}]`
+  - `widths` (relative panel widths in a row)
+  - `height`
+  - `description` (the SVG `<desc>`)
+- **Panel:**
+  - `axes`
+  - `equal`
+  - `x_ticks` / `y_ticks` (values or `[value, "label"]`)
+  - `horizontal` (bars)
+  - `range` (bars)
+  - heatmap fields: `highlight` (cells), `diverging`, `decimals`, `legend`, `square`
+- **Series:** `base` (area lower bound).
+- **Shapes:**
+  - `circle` takes `rx`/`ry`;
+  - `line` and `arrow` take `points` (a polyline);
+  - `point` takes `r`;
+  - `text` takes `anchor`.
+- **Styles:** `main`, `second`, `third`, `fourth`, `muted`, `faint`, `highlight`, `good`, `bad`, `ink`, `contour`, `dashed`, `dotted`, `thick`, `thin`, `area`, `points`, `outline`, `solid`, `small`. Combine them with spaces.
+
+**Drawings:** a function returning `Diagram(...).svg()`. If it takes a `narrow` parameter, it is also drawn at about 400 wide for phones. Without one, it keeps a readable size on phones and scrolls inside its frame.
+
+## Test results (2026-10-20)
+
+- `python -m unittest discover tests`: 105 tests OK, 58 of them `test_fig_*`.
+- `python -m tessera figure test`: all three example figures pass.
+- Build-side `run()` (compute + render), median of 20:
+
+  | Figure | ms |
+  |---|---|
+  | softmax_temperature | 1.2 |
+  | gradient_descent | 0.9 |
+  | fourier_series (numpy) | 6.1 |
+
+**Browser checks.** I ran Playwright in Chrome (system channel) and WebKit at 1440 and 390 px. The pages were a harness with the 3 example figures, the 5 starters and 3 drawings, and core's real build of `posts/welcome`, served from a copy.
+- On every figure, a keyboard slider move or a choice click replaced the SVG through the worker.
+- Presets, Reset, Play and "Loading…" all worked.
+- There were no console errors and no horizontal overflow at 360, 390 or 1440 px.
+- With an unreachable runtime URL, the touched figure says "The interactive version could not start here; this is the figure at its default settings." It keeps the static SVG and disables its controls. Untouched figures stay quiet.
+- No visible text names the machinery (`tests/test_fig_js.py` checks this).
+
+**Timings in the browser:**
+
+| | Chrome | WebKit |
+|---|---|---|
+| Runtime boot (warm HTTP cache, fast connection) | 1.2–1.45 s | 1.4–1.5 s |
+| First recompute including boot, plain figure | ~1.0 s | ~1.5 s |
+| First recompute including boot plus numpy | 1.0–1.3 s | 2.1–2.3 s |
+| Later recomputes, end to end | 12–28 ms | 12–28 ms |
+| Worker compute + render, plain figure | 1–6 ms | 1–6 ms |
+| Worker compute + render, numpy Fourier figure | ~18 ms | ~18 ms |
+
+**Screenshots** are in the session scratchpad, under `scratchpad/figs/`:
+- `shots/` holds `<browser>-<width>[-dark]-{static,live}-<n>.png` and `draw-*.png`;
+- `real/` holds the built welcome post.
+
+## Known gaps
+
+- **Text width is estimated** from character classes; there is no font metrics. Labels can sit a few pixels off with unusual fonts.
+- **Label placement is a greedy candidate search.** It avoids other labels, points, lines and the plot edge, but very crowded plots can still touch.
+- **No hover tooltips beyond SVG `<title>`.** That is the native tooltip on lines, bars and cells. There is no crosshair.
+- **No helpers for contours, 3-D or images.** Contours are drawn as shapes, for example the ellipses in `gradient_descent`.
+- **One module per figure.** A figure cannot import a sibling helper module from `figures/`; only the module itself and `_plot.py` are shipped.
+- **One shared worker.** Figures on a page compute one at a time, latest values first. Play advances only when the previous frame has arrived, so slow devices play slower rather than skipping.
+- **The runtime comes from the pinned CDN.** Offline, figures stay static at their defaults.

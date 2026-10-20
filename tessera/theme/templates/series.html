@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{#- Either every series (/series/) or one series with its parts in order and their highlights. -#}
+{% block body_class %}is-series{% endblock %}
+{% block main %}
+<div class="wrap">
+{% if one %}
+  <header class="page-head">
+    <p class="eyebrow"><a href="/series/">Series</a><span class="dot" aria-hidden="true">·</span>{{ series.count }} part{{ '' if series.count == 1 else 's' }}</p>
+    <h1>{{ series.name }}</h1>
+    {% if intro %}<div class="page-intro prose">{{ intro }}</div>{% endif %}
+  </header>
+  <ol class="series-track">
+  {% for p in series.parts %}
+    <li class="series-step">
+      <span class="series-step-num" aria-hidden="true">{{ loop.index }}</span>
+      <div class="series-step-body">
+        <h2 class="series-step-title"><a href="{{ p.url }}">{{ p.title }}</a></h2>
+        {% if p.summary %}<p class="series-step-summary">{{ p.summary }}</p>{% endif %}
+        {% if p.highlights %}<ul class="highlights">{% for h in p.highlights %}<li>{{ h }}</li>{% endfor %}</ul>{% endif %}
+        <p class="entry-meta">{% if p.date %}<time datetime="{{ p.date|isodate }}">{{ p.date|date }}</time><span class="dot" aria-hidden="true">·</span>{% endif %}{{ p.minutes }} min read</p>
+      </div>
+    </li>
+  {% endfor %}
+  </ol>
+{% else %}
+  <header class="page-head">
+    <h1>Series</h1>
+    <p class="page-sub muted">Posts meant to be read in order.</p>
+  </header>
+  {% if series_list %}
+  <div class="series-cards">
+  {% for s in series_list %}
+    <a class="series-card" href="{{ s.url }}">
+      <span class="series-card-count">{{ s.count }} part{{ '' if s.count == 1 else 's' }}</span>
+      <span class="series-card-name">{{ s.name }}</span>
+      <span class="series-card-first">Starts with {{ s.parts[0].title }}</span>
+    </a>
+  {% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">No series yet. Add <code>series: {name: "…", part: 1}</code> to a post's front matter to start one.</p>
+  {% endif %}
+{% endif %}
+</div>
+{% endblock %}

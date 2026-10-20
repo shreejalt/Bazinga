@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{#- Shown for any missing URL (static hosts serve /404.html). -#}
+{% block body_class %}is-404{% endblock %}
+{% block main %}
+<div class="wrap">
+  <header class="page-head">
+    <p class="eyebrow">Error 404</p>
+    <h1>This page does not exist</h1>
+    <p class="page-sub muted">It may have moved, or the link has a typo. Try the <a href="/explore/">map</a>, the <a href="/topics/">topics</a>{% if features.ask %} or <a href="/ask/">ask a question</a>{% endif %}.</p>
+  </header>
+  {% if latest %}
+  <section aria-labelledby="recent-title">
+    <h2 id="recent-title" class="section-label">Recent pages</h2>
+    <ul class="plain-list">{% for n in latest %}<li><a href="{{ n.url }}">{{ n.title }}</a></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{#- Every topic, grouped as in content/topics.yml. -#}
+{% block body_class %}is-topics{% endblock %}
+{% block main %}
+<div class="wrap">
+  <header class="page-head">
+    <h1>Topics</h1>
+    <p class="page-sub muted">Each topic gathers the pages about it and their figures.</p>
+  </header>
+  {% for group, items in groups.items() %}
+  <section class="topic-group" aria-labelledby="g-{{ loop.index }}">
+    <h2 id="g-{{ loop.index }}">{{ group }}</h2>
+    <ul class="topic-grid">
+    {% for t in items %}
+      <li><a class="topic-card{% if not t.count %} is-empty{% endif %}" href="/topics/{{ t.slug }}/">
+        <span class="topic-card-name">{{ t.label }}</span>
+        {% if t.blurb %}<span class="topic-card-blurb">{{ t.blurb }}</span>{% endif %}
+        <span class="topic-card-count">{{ t.count }} page{{ '' if t.count == 1 else 's' }}</span>
+      </a></li>
+    {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+</div>
+{% endblock %}

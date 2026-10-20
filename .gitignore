@@ -1,0 +1,24 @@
+# build output and local environment
+_site/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+node_modules/
+
+# secrets: API keys live in .env.local (never commit it)
+.env
+.env.*
+
+# the Studio's local state and the LLM's proposals waiting for review
+.studio/
+proposals/
+
+# raw source material for the wiki (papers, notes); keep it local unless you want it public
+sources/
+
+.vercel/
+
+# build staging folders (normally removed by the build)
+_site.partial/
+_site.old/

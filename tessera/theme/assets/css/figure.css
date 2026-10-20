@@ -1,0 +1,366 @@
+/* Interactive figures (.fig) and drawings (.drawing).
+   Every colour is a --fig-* variable. The defaults below follow the site's tokens when they exist
+   (--accent, --bg, --text, --muted, --border, --font-ui, --font-code) and fall back to a calm
+   palette of their own, with dark values chosen for a dark surface (not an automatic flip). */
+
+:root {
+  --fig-surface: var(--bg, #fcfcfa);
+  --fig-panel: var(--surface, #f6f5f1);
+  --fig-ink: var(--text, #1d1c1a);
+  --fig-ink-2: var(--text-muted, #5b5a55);
+  --fig-ink-3: var(--text-faint, #8a8983);
+  --fig-rule: var(--border, #e3e1da);
+  --fig-grid: #ecebe5;
+  --fig-axis: #b9b7ae;
+  --fig-focus: var(--accent, #2a78d6);
+
+  /* categorical slots, fixed order */
+  --fig-c1: var(--fig-accent, var(--accent, #2a78d6));
+  --fig-c2: #eb6834;
+  --fig-c3: #1baf7a;
+  --fig-c4: #4a3aa7;
+  --fig-muted: #b4b2aa;
+  --fig-faint: #cfcdc5;
+  --fig-hl: #e34948;
+  --fig-good: #0ca30c;
+  --fig-bad: #d03b3b;
+
+  /* heatmaps: sequential (one hue) and diverging (two poles + grey middle) */
+  --fig-seq-lo: #eef3fb;
+  --fig-seq-hi: #184f95;
+  --fig-div-neg: #c03a39;
+  --fig-div-mid: #f0efec;
+  --fig-div-pos: #1c5cab;
+  --fig-cell-hi-ink: #fff;
+
+  --fig-font: var(--font-ui, "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  --fig-radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --fig-surface: var(--bg, #171716);
+    --fig-panel: var(--surface, #1f1f1d);
+    --fig-ink: var(--text, #f1f0eb);
+    --fig-ink-2: var(--text-muted, #b9b8b0);
+    --fig-ink-3: var(--text-faint, #8b8a83);
+    --fig-rule: var(--border, #34332f);
+    --fig-grid: #2b2b28;
+    --fig-axis: #57564f;
+    --fig-c1: var(--fig-accent-dark, #4c93ea);
+    --fig-c2: #e06a37;
+    --fig-c3: #22a877;
+    --fig-c4: #9085e9;
+    --fig-muted: #5d5c56;
+    --fig-faint: #45443f;
+    --fig-hl: #ef6b6a;
+    --fig-seq-lo: #1d2430;
+    --fig-seq-hi: #8fc0ff;
+    --fig-div-neg: #ef6b6a;
+    --fig-div-mid: #2c2c29;
+    --fig-div-pos: #6aa8f5;
+    --fig-cell-hi-ink: #0f1b2d;
+  }
+}
+:root[data-theme="dark"] {
+  --fig-surface: var(--bg, #171716);
+  --fig-panel: var(--surface, #1f1f1d);
+  --fig-ink: var(--text, #f1f0eb);
+  --fig-ink-2: var(--text-muted, #b9b8b0);
+  --fig-ink-3: var(--text-faint, #8b8a83);
+  --fig-rule: var(--border, #34332f);
+  --fig-grid: #2b2b28;
+  --fig-axis: #57564f;
+  --fig-c1: var(--fig-accent-dark, #4c93ea);
+  --fig-c2: #e06a37;
+  --fig-c3: #22a877;
+  --fig-c4: #9085e9;
+  --fig-muted: #5d5c56;
+  --fig-faint: #45443f;
+  --fig-hl: #ef6b6a;
+  --fig-seq-lo: #1d2430;
+  --fig-seq-hi: #8fc0ff;
+  --fig-div-neg: #ef6b6a;
+  --fig-div-mid: #2c2c29;
+  --fig-div-pos: #6aa8f5;
+  --fig-cell-hi-ink: #0f1b2d;
+}
+
+/* ---------------------------------------------------------------- the block */
+
+.fig, .drawing {
+  margin: 2.25rem 0;
+  font-family: var(--fig-font);
+  color: var(--fig-ink);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.fig *, .fig *::before, .fig *::after { box-sizing: border-box; }
+
+/* Breaking out of the reading column (up to --wide, 1000px) is done by the theme's site.css,
+   which knows whether the page has a side table of contents. */
+
+.fig .fig-head { display: block; margin: 0 0 .9rem; padding: 0; text-align: left; hyphens: manual;
+  font-family: var(--fig-font); font-style: normal; }
+.fig-title {
+  display: block;
+  font-size: 1.02rem; font-weight: 650; letter-spacing: -.005em;
+  line-height: 1.3; color: var(--fig-ink);
+}
+.fig-caption {
+  display: block; margin-top: .3rem;
+  font-size: .9rem; line-height: 1.5; color: var(--fig-ink-2);
+  max-width: 68ch;
+}
+
+.fig-stage { position: relative; }
+.fig-svg svg { display: block; width: 100%; height: auto; overflow: visible; }
+.fig-svg-narrow { display: none; }
+@media (max-width: 600px) {
+  .fig-svg-wide { display: none; }
+  .fig-svg-narrow { display: block; }
+}
+/* once the browser has drawn a live version, it alone is shown */
+.fig.is-live .fig-svg-wide, .fig.is-live .fig-svg-narrow { display: none; }
+.fig-svg-live { display: none; }
+.fig.is-live .fig-svg-live { display: block; }
+.fig.is-busy .fig-stage svg { transition: opacity .25s ease .35s; opacity: .82; }
+
+/* ---------------------------------------------------------------- SVG marks */
+
+.fig-plot, .dg { font-family: var(--fig-font); }
+.fig-plot text { fill: var(--fig-ink-2); }
+.fig-plot .t-title { fill: var(--fig-ink); font-weight: 600; }
+.fig-plot .t-axis-label { fill: var(--fig-ink-2); font-weight: 500; }
+.fig-plot .t-tick { fill: var(--fig-ink-3); font-variant-numeric: tabular-nums; }
+.fig-plot .t-cat { fill: var(--fig-ink-2); }
+.fig-plot .t-note { fill: var(--fig-ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.fig-plot .t-label, .fig-plot .t-legend { fill: var(--fig-ink); }
+.fig-plot .t-anno { fill: var(--fig-ink); font-style: italic; }
+.fig-plot .t-mark { fill: var(--fig-ink-2); }
+.fig-plot .t-cell { fill: var(--fig-ink); font-variant-numeric: tabular-nums; }
+.fig-plot .t-cell.hi { fill: var(--fig-cell-hi-ink); }
+
+.fig-plot .grid { stroke: var(--fig-grid); stroke-width: 1; fill: none; }
+.fig-plot .axis { stroke: var(--fig-axis); stroke-width: 1; fill: none; }
+.fig-plot .tick { stroke: var(--fig-axis); stroke-width: 1; }
+.fig-plot .leader { stroke: var(--fig-axis); stroke-width: 1; fill: none; }
+.fig-plot .mark { stroke: var(--fig-ink-3); stroke-width: 1.25; stroke-dasharray: 4 4; fill: none; }
+.fig-plot .mark.s-highlight { stroke: var(--fig-hl); stroke-dasharray: none; stroke-width: 1.5; }
+.fig-plot .mark.s-main { stroke: var(--fig-c1); }
+
+/* colour per style: lines use stroke, fills/bars/dots use fill */
+.fig-plot, .dg {
+  --c: var(--fig-c1);
+}
+.fig-plot .s-main, .dg .s-main { --c: var(--fig-c1); }
+.fig-plot .s-second, .dg .s-second { --c: var(--fig-c2); }
+.fig-plot .s-third, .dg .s-third { --c: var(--fig-c3); }
+.fig-plot .s-fourth, .dg .s-fourth { --c: var(--fig-c4); }
+.fig-plot .s-muted, .dg .s-muted { --c: var(--fig-muted); }
+.fig-plot .s-faint { --c: var(--fig-faint); }
+.fig-plot .s-highlight, .dg .s-highlight { --c: var(--fig-hl); }
+.fig-plot .s-good { --c: var(--fig-good); }
+.fig-plot .s-bad { --c: var(--fig-bad); }
+.fig-plot .s-ink { --c: var(--fig-ink); }
+.fig-plot .s-contour { --c: var(--fig-axis); }
+
+.fig-plot .line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.fig-plot .line.s-thick { stroke-width: 2.75; }
+.fig-plot .line.s-thin, .fig-plot .line.s-faint, .fig-plot .line.s-contour { stroke-width: 1.25; }
+.fig-plot .line.s-dashed { stroke-dasharray: 6 5; }
+.fig-plot .line.s-dotted { stroke-dasharray: 1.5 4.5; }
+.fig-plot .fill { fill: var(--c); fill-opacity: .12; stroke: none; }
+.fig-plot .bar { fill: var(--c); }
+.fig-plot .bar.s-muted { fill: var(--fig-muted); }
+.fig-plot .dot, .fig-plot .end-dot { fill: var(--c); stroke: var(--fig-surface); stroke-width: 2; }
+.fig-plot .dot.s-small { stroke-width: 1; }
+.fig-plot .anno-dot { fill: var(--fig-ink); stroke: var(--fig-surface); stroke-width: 1.5; }
+.fig-plot .head { fill: var(--c); stroke: var(--c); stroke-width: 1; stroke-linejoin: round; }
+.fig-plot .poly { fill: var(--c); fill-opacity: .14; stroke: var(--c); stroke-width: 1.5; }
+.fig-plot .poly.s-contour { fill: none; stroke-width: 1; }
+.fig-plot .poly.no-edge { stroke: none; }
+.fig-plot .poly-edge { fill: none; stroke: var(--c); stroke-width: 1.5; stroke-linejoin: round; }
+.fig-plot .poly-edge.s-contour { stroke-width: 1; }
+.fig-plot .poly-edge.s-dashed { stroke-dasharray: 6 5; }
+.fig-plot .poly.s-outline { fill: none; }
+.fig-plot .poly.s-solid { fill-opacity: .85; }
+.fig-plot .poly.s-dashed { stroke-dasharray: 6 5; }
+.fig-plot .cell.missing { fill: var(--fig-grid); }
+.fig-plot .cell-hl { fill: none; stroke: var(--fig-ink); stroke-width: 2; }
+.fig-plot .key.line { stroke-width: 2.5; }
+
+/* ---------------------------------------------------------------- readouts */
+
+.fig-out:empty { display: none; }
+.fig-readouts {
+  display: flex; flex-wrap: wrap; gap: .5rem 2rem;
+  margin: 1rem 0 0; padding: .1rem 0 0;
+}
+.fig-readout { display: flex; flex-direction: column; min-width: 0; }
+.fig-readout-label {
+  font-size: .74rem; letter-spacing: .02em; color: var(--fig-ink-3);
+  font-weight: 500;
+}
+.fig-readout-value {
+  font-size: 1.12rem; font-weight: 600; color: var(--fig-ink);
+  font-variant-numeric: tabular-nums; line-height: 1.35;
+}
+.fig-readout-note { font-size: .78rem; color: var(--fig-ink-2); }
+.fig-note { margin: .6rem 0 0; font-size: .86rem; color: var(--fig-ink-2); }
+
+/* ---------------------------------------------------------------- controls */
+
+.fig-controls { margin: 1.1rem 0 0; padding: 1rem 0 0; border-top: 1px solid var(--fig-rule); }
+.fig-fs {
+  border: 0; margin: 0; padding: 0; min-width: 0;
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: .9rem 2rem;
+}
+.fig-fs[disabled] .fig-ctl, .fig-fs[disabled] .fig-presets button { opacity: .55; }
+.fig-ctl { border: 0; margin: 0; padding: 0; min-width: 0; }
+.fig-ctl-label {
+  display: block; padding: 0; margin: 0 0 .35rem;
+  font-size: .8rem; font-weight: 550; color: var(--fig-ink-2);
+}
+
+/* slider: label and value on one line, the track under them, play to the right */
+.fig-slider {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-rows: auto auto;
+  align-items: center; column-gap: .75rem;
+  flex: 1 1 15rem; max-width: 24rem;
+}
+.fig-slider label { display: contents; }
+.fig-slider .fig-ctl-label { grid-column: 1; grid-row: 1; margin: 0; }
+.fig-slider .fig-ctl-value { grid-column: 2; grid-row: 1; }
+.fig-slider input[type="range"] { grid-column: 1 / 3; grid-row: 2; }
+.fig-slider .fig-play { grid-column: 3; grid-row: 2; }
+.fig-ctl-value {
+  font-size: .86rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--fig-ink);
+  text-align: right; line-height: 1.4;
+}
+
+.fig input[type="range"] {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; height: 26px; margin: 0; padding: 0;
+  background: transparent; cursor: pointer; touch-action: pan-y;
+  --p: 50%;
+}
+.fig input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 4px;
+  background: linear-gradient(to right, var(--fig-c1) var(--p), var(--fig-rule) var(--p));
+}
+.fig input[type="range"]::-moz-range-track { height: 4px; border-radius: 4px; background: var(--fig-rule); }
+.fig input[type="range"]::-moz-range-progress { height: 4px; border-radius: 4px; background: var(--fig-c1); }
+.fig input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; margin-top: -7px; border-radius: 50%;
+  background: var(--fig-surface); border: 2px solid var(--fig-c1);
+  box-shadow: 0 1px 2px rgb(0 0 0 / .18);
+  transition: transform .12s ease;
+}
+.fig input[type="range"]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--fig-surface); border: 2px solid var(--fig-c1);
+}
+.fig input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.12); }
+.fig input[type="range"]:focus { outline: none; }
+.fig input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--fig-focus) 35%, transparent); }
+.fig input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px color-mix(in srgb, var(--fig-focus) 35%, transparent); }
+
+/* segmented choices (steps, toggle) */
+.fig-seg {
+  display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 2px;
+  border-radius: 8px; background: var(--fig-panel); border: 1px solid var(--fig-rule);
+}
+.fig-seg label { position: relative; display: block; cursor: pointer; }
+.fig-seg input {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer;
+}
+.fig-seg span {
+  display: block; padding: .32rem .75rem; border-radius: 6px;
+  font-size: .84rem; font-weight: 500; color: var(--fig-ink-2); line-height: 1.3;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  transition: background-color .12s ease, color .12s ease;
+}
+.fig-seg label:hover span { color: var(--fig-ink); }
+.fig-seg input:checked + span {
+  background: var(--fig-surface); color: var(--fig-ink); font-weight: 600;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .12), 0 0 0 1px var(--fig-rule);
+}
+.fig-seg input:focus-visible + span { outline: 2px solid var(--fig-focus); outline-offset: 1px; }
+
+/* buttons: play, presets, reset */
+.fig-presets { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; flex: 1 1 100%; }
+.fig-play, .fig-preset, .fig-reset {
+  font: inherit; font-size: .82rem; font-weight: 550; line-height: 1.2;
+  padding: .4rem .8rem; border-radius: 999px; cursor: pointer;
+  color: var(--fig-ink); background: transparent; border: 1px solid var(--fig-rule);
+  transition: background-color .12s ease, border-color .12s ease;
+}
+.fig-play:hover, .fig-preset:hover, .fig-reset:hover { border-color: var(--fig-axis); background: var(--fig-panel); }
+.fig-play:focus-visible, .fig-preset:focus-visible, .fig-reset:focus-visible { outline: 2px solid var(--fig-focus); outline-offset: 2px; }
+.fig-preset[aria-pressed="true"] { border-color: var(--fig-c1); color: var(--fig-c1); }
+.fig-reset { color: var(--fig-ink-2); border-color: transparent; }
+.fig-play { display: inline-flex; align-items: center; gap: .4rem; padding: .32rem .7rem .32rem .6rem; }
+.fig-play-icon {
+  width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px;
+  border-color: transparent transparent transparent currentColor;
+}
+.fig-play[aria-pressed="true"] .fig-play-icon {
+  width: 8px; height: 10px; border: 0;
+  border-left: 3px solid currentColor; border-right: 3px solid currentColor;
+}
+.fig-status { margin-left: auto; font-size: .8rem; color: var(--fig-ink-3); min-height: 1em; }
+.fig-status.is-error { color: var(--fig-bad); }
+
+@media (max-width: 600px) {
+  .fig { margin: 1.75rem 0; }
+  .fig-fs { gap: .9rem 1.25rem; }
+  .fig-slider { flex-basis: 100%; max-width: none; }
+  .fig input[type="range"] { height: 32px; }
+  .fig input[type="range"]::-webkit-slider-thumb { width: 22px; height: 22px; margin-top: -9px; }
+  .fig-seg span { padding: .42rem .8rem; }
+  .fig-status { flex-basis: 100%; margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fig *, .fig *::before { transition: none !important; }
+}
+
+/* ---------------------------------------------------------------- drawings */
+
+.drawing svg { display: block; width: 100%; height: auto; margin: 0 auto; }
+.drawing-narrow { display: none; }
+@media (max-width: 600px) {
+  .drawing-wide { display: none; }
+  .drawing-narrow { display: block; }
+  /* a drawing with no phone layout keeps readable text and scrolls sideways inside its frame */
+  .drawing-svg:not(.drawing-wide):not(.drawing-narrow) { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .drawing-svg:not(.drawing-wide):not(.drawing-narrow) svg { min-width: 560px; }
+}
+.drawing figcaption { margin-top: .7rem; font-size: .88rem; line-height: 1.5; color: var(--fig-ink-2); text-align: center; }
+.dg text { fill: var(--fig-ink); }
+.dg .dg-box { fill: var(--fig-surface); stroke: var(--fig-axis); stroke-width: 1.25; }
+.dg .dg-box.s-main, .dg .dg-box.s-second, .dg .dg-box.s-third, .dg .dg-box.s-fourth, .dg .dg-box.s-highlight {
+  fill: color-mix(in oklab, var(--c) 10%, var(--fig-surface)); stroke: var(--c); stroke-width: 1.5;
+}
+.dg .dg-box.s-muted { fill: var(--fig-panel); stroke: var(--fig-rule); }
+.dg .dg-box.s-solid { fill: var(--c); stroke: var(--c); }
+.dg .dg-box.s-solid + .dg-text text, .dg .s-solid .dg-text-main { fill: #fff; }
+.dg .dg-box.s-ghost { fill: none; stroke: var(--fig-axis); stroke-dasharray: 5 4; }
+.dg .dg-box.s-dashed { stroke-dasharray: 5 4; }
+.dg .dg-text-main { font-weight: 600; fill: var(--fig-ink); }
+.dg .dg-text-sub { fill: var(--fig-ink-2); }
+.dg .dg-group { fill: none; stroke: var(--fig-rule); stroke-width: 1.25; stroke-dasharray: 5 4; }
+.dg .dg-group.s-solid { stroke-dasharray: none; fill: var(--fig-panel); }
+.dg .dg-group-label { fill: var(--fig-ink-3); font-weight: 600; letter-spacing: .06em; }
+.dg .dg-arrow { fill: none; stroke: var(--fig-ink-3); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.dg .dg-head { fill: var(--fig-ink-3); }
+.dg .dg-arrow.s-main, .dg .dg-arrow.s-second, .dg .dg-arrow.s-highlight, .dg .dg-arrow.s-third { stroke: var(--c); }
+.dg .dg-head.s-main, .dg .dg-head.s-second, .dg .dg-head.s-highlight, .dg .dg-head.s-third { fill: var(--c); }
+.dg .dg-arrow.s-dashed { stroke-dasharray: 5 4; }
+.dg .dg-arrow-label { fill: var(--fig-ink-2); }
+.dg .dg-arrow-label-bg { fill: var(--fig-surface); }
+.dg .dg-label { fill: var(--fig-ink-2); }
+.dg .dg-note { fill: var(--fig-ink-3); font-style: italic; }
+.dg .s-solid .dg-text-sub { fill: rgb(255 255 255 / .86); }

@@ -1,0 +1,21 @@
+{#- Site header: the name, the navigation and the light/dark switch. -#}
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="/" aria-label="{{ site.name }}, home">
+      <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="2"/><rect x="11" y="1" width="8" height="8" rx="2" opacity=".45"/><rect x="1" y="11" width="8" height="8" rx="2" opacity=".45"/><rect x="11" y="11" width="8" height="8" rx="2" opacity=".75"/></svg>
+      <span class="brand-name">{{ site.name }}</span>
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <ul>
+      {% for item in nav %}
+        {% set active = (item.href != '/' and url.startswith(item.href)) or url == item.href %}
+        <li><a href="{{ item.href }}"{% if active %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
+      {% endfor %}
+      </ul>
+    </nav>
+    <button class="theme-toggle" type="button" aria-label="Switch between light and dark" title="Light or dark">
+      <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6z"/></svg>
+    </button>
+  </div>
+</header>

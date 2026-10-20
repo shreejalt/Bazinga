@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import entry %}
+{#- A list of one kind (posts, projects …), ten per page. -#}
+{% block body_class %}is-list{% endblock %}
+{% block main %}
+<div class="wrap">
+  <header class="page-head">
+    <h1>{{ label }}</h1>
+    <p class="page-sub muted">{{ total }} {{ 'entry' if total == 1 else 'entries' }}{% if pager %} · page {{ pager.page }} of {{ pager.total }}{% endif %}</p>
+  </header>
+  {% if items %}
+  <div class="entries">
+    {% for n in items %}{{ entry(n, topic) }}{% endfor %}
+  </div>
+  {% else %}
+  <p class="empty">Nothing here yet.</p>
+  {% endif %}
+  {% if pager %}
+  <nav class="pager" aria-label="Pages">
+    {% if pager.prev %}<a class="pager-step" href="{{ pager.prev }}" rel="prev">← Newer</a>{% else %}<span class="pager-step is-off">← Newer</span>{% endif %}
+    <ol>{% for k, href in pager.pages %}<li>{% if k == pager.page %}<span aria-current="page">{{ k }}</span>{% else %}<a href="{{ href }}">{{ k }}</a>{% endif %}</li>{% endfor %}</ol>
+    {% if pager.next %}<a class="pager-step" href="{{ pager.next }}" rel="next">Older →</a>{% else %}<span class="pager-step is-off">Older →</span>{% endif %}
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

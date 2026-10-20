@@ -1,0 +1,8 @@
+# Netlify: build the site on every push. Ask's quick answers work (they run in the reader's browser);
+# written answers need a server function, which this static setup does not include.
+[build]
+  command = "python3 -m pip install -r requirements.txt && python3 -m unittest discover tests && python3 -m tessera build"
+  publish = "_site"
+
+[build.environment]
+  PYTHON_VERSION = "3.12"

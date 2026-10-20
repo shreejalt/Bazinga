@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{#- The map. explore.js draws it from /data/graph.json; without scripts the list below is the map. -#}
+{% block body_class %}is-explore{% endblock %}
+{% block main %}
+<div class="wrap wrap-wide">
+  <header class="page-head">
+    <h1>Map</h1>
+    <p class="page-sub muted">Every page and how it connects: pages that build on, mention or cite each other sit close together.</p>
+  </header>
+  <div id="explore-root" class="map" data-explore data-graph="/data/graph.json" data-src="/data/graph.json" data-kinds='{{ kinds_labels|default({}, true)|json }}'>
+    {% if not has_asset('js/explore.js') and map_svg %}<div class="map-static">{{ map_svg }}</div>{% endif %}
+  </div>
+  <section class="map-list" aria-labelledby="all-pages">
+    <h2 id="all-pages" class="section-label">All pages by topic</h2>
+    <div class="map-groups">
+    {% for group, nodes in groups.items() %}
+      <div class="map-group">
+        <h3>{{ group }}</h3>
+        <ul>{% for n in nodes %}<li><a href="{{ n.url }}">{{ n.title }}</a></li>{% endfor %}</ul>
+      </div>
+    {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+{% if has_asset('js/explore.js') %}<script src="{{ asset('js/explore.js') }}" defer></script>{% endif %}
+{% endblock %}

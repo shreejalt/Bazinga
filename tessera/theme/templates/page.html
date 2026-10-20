@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import mini %}
+{#- One post or project: header, side contents, body, connections, references, series navigation. -#}
+{% block body_class %}is-page kind-{{ page.kind }}{% endblock %}
+{% block main %}
+<article class="post{% if toc|length > 1 %} has-toc{% endif %}">
+  {% if page.state != 'published' %}
+  <div class="state-banner state-{{ page.state }}" role="status">
+    {% if page.state == 'draft' %}<strong>Draft.</strong> Only you can see this preview; it is not on the public site.
+    {% else %}<strong>Scheduled.</strong> This page goes live on {{ page.date|date }}.{% endif %}
+  </div>
+  {% endif %}
+  {% if issues %}
+  <details class="preview-issues" open>
+    <summary>{{ issues|length }} thing{{ '' if issues|length == 1 else 's' }} to fix before publishing</summary>
+    <ul>
+    {% for i in issues %}<li class="issue-{{ i.level }}"><span class="issue-line">{% if i.line %}line {{ i.line }}{% endif %}</span> {{ i.message }}{% if i.hint %} <span class="issue-hint">{{ i.hint }}</span>{% endif %}</li>
+    {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+
+  <header class="post-header">
+    <p class="eyebrow">
+      <a href="{{ kind_list_url }}">{{ kind_list_label }}</a>
+      {% if series_nav %}<span class="dot" aria-hidden="true">·</span><a href="{{ series_nav.url }}">{{ series_nav.name }}</a>, part {{ series_nav.index + 1 }} of {{ series_nav.total }}{% endif %}
+    </p>
+    <h1 class="post-title">{{ page.title }}</h1>
+    {% if page.summary %}<p class="post-dek">{{ page.summary }}</p>{% endif %}
+    <div class="post-meta">
+      {% if page.date %}<time datetime="{{ page.date|isodate }}">{{ page.date|date }}</time><span class="dot" aria-hidden="true">·</span>{% endif %}
+      {% if page.updated %}<span>Updated <time datetime="{{ page.updated|isodate }}">{{ page.updated|date }}</time></span><span class="dot" aria-hidden="true">·</span>{% endif %}
+      <span>{{ reading_minutes }} min read</span>
+      {% if page_topics %}
+      <ul class="chips">{% for t in page_topics %}<li><a class="chip" href="/topics/{{ t.slug }}/">{{ t.label }}</a></li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="post-grid">
+    {% if toc|length > 1 %}
+    <nav class="toc" aria-label="On this page">
+      <details class="toc-box" open>
+        <summary>On this page</summary>
+        <ol>
+        {% for item in toc %}<li class="toc-l{{ item.level }}"><a href="#{{ item.id }}">{{ item.text }}</a></li>
+        {% endfor %}
+        </ol>
+      </details>
+    </nav>
+    {% endif %}
+
+    <div class="post-body prose">
+      {{ html }}
+    </div>
+
+    <footer class="post-end">
+      {% if series_nav %}
+      <nav class="series-box" aria-label="Series">
+        <p class="series-box-head"><a href="{{ series_nav.url }}">{{ series_nav.name }}</a> <span class="muted">· part {{ series_nav.index + 1 }} of {{ series_nav.total }}</span></p>
+        <ol class="series-parts">
+        {% for p in series_nav.parts %}<li{% if loop.index0 == series_nav.index %} aria-current="page"{% endif %}>{% if loop.index0 == series_nav.index %}<span>{{ p.title }}</span>{% else %}<a href="{{ p.url }}">{{ p.title }}</a>{% endif %}</li>
+        {% endfor %}
+        </ol>
+        <div class="series-steps">
+          {% if series_nav.prev %}<a class="step prev" href="{{ series_nav.prev.url }}"><span class="step-label">Previous</span><span class="step-title">{{ series_nav.prev.title }}</span></a>{% else %}<span></span>{% endif %}
+          {% if series_nav.next %}<a class="step next" href="{{ series_nav.next.url }}"><span class="step-label">Next</span><span class="step-title">{{ series_nav.next.title }}</span></a>{% endif %}
+        </div>
+      </nav>
+      {% endif %}
+
+      {% if has_connections %}
+      <section class="connections" id="connections" aria-labelledby="connections-title">
+        <h2 id="connections-title">Connections</h2>
+        <div class="connection-groups">
+        {% for key, label, note in [('builds_on', 'Builds on', 'Read these first'), ('read_next', 'Read next', 'Pages that build on this one'), ('backlinks', 'Mentioned in', 'Pages that link here'), ('related', 'Related', 'Shares topics or sources')] %}
+          {% if connections[key] %}
+          <div class="connection-group">
+            <h3>{{ label }} <span class="muted">{{ note }}</span></h3>
+            <div class="mini-list">{% for n in connections[key] %}{{ mini(n) }}{% endfor %}</div>
+          </div>
+          {% endif %}
+        {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      {% if references %}
+      <section class="references" id="references" aria-labelledby="references-title">
+        <h2 id="references-title">References</h2>
+        <ol>
+        {% for r in references %}<li id="ref-{{ r.key }}">{{ r.html|safe }}</li>
+        {% endfor %}
+        </ol>
+      </section>
+      {% endif %}
+    </footer>
+  </div>
+</article>
+{% endblock %}

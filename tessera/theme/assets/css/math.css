@@ -1,0 +1,43 @@
+/* Maths (MathML from the build). Browsers draw it natively; this file picks a math font and handles the layout.
+   STIX Two Math comes from Google Fonts (base.html); Latin Modern / Cambria Math / the system math font follow. */
+
+math { font-family: var(--font-math); font-size: 1.04em; math-style: normal; }
+math[display="inline"] { font-size: 1.02em; }
+.prose math { line-height: normal; }
+
+/* Display maths sits in a block that scrolls sideways on narrow screens instead of overflowing the page. */
+.math-display {
+  position: relative;
+  display: flex; align-items: center; gap: 1em;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.35em 0.1em;
+  margin-left: 0; margin-right: 0;
+  scrollbar-width: thin;
+}
+.math-display > math { flex: 1 0 auto; margin: 0 auto; font-size: 1.12em; }
+.math-display.numbered > math { padding-left: 2.6em; }      /* keeps the formula centred against the number */
+.eq-number {
+  flex: 0 0 auto; margin-left: auto;
+  font-family: var(--font-text); font-size: 0.95em; color: var(--text-muted);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.math-display:target { background: var(--accent-soft); border-radius: 8px; }
+
+/* Arrays from aligned/align: a little air between rows and columns. */
+mtable mtd { padding: 0.22em 0.2em; }
+mtable mtr:first-child mtd { padding-top: 0; }
+mtable mtr:last-child mtd { padding-bottom: 0; }
+
+/* Colour follows the text in both themes. */
+math, math * { color: inherit; }
+
+
+@media (max-width: 560px) {
+  .math-display > math { font-size: 1.04em; }
+  .math-display.numbered > math { padding-left: 0; }
+  .math-display { gap: 0.6em; }
+}
+
+/* Maths inside tables follows the table's smaller sans text; give it back its size. */
+.prose td math, .prose th math { font-size: 1.18em; }

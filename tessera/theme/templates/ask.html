@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{#- The Ask page. ask.js fills #ask-page; without scripts it explains what to do instead. -#}
+{% block body_class %}is-ask{% endblock %}
+{% block main %}
+<div class="wrap">
+  <header class="page-head">
+    <h1>Ask</h1>
+    <p class="page-sub muted">Ask a question in your own words. Answers come only from the pages of this site, with links to where each part comes from.</p>
+  </header>
+  <div id="ask-page" class="ask-page" data-mode="page" data-passages="/data/passages.json" data-graph="/data/graph.json"{% if suggestions %} data-suggestions='{{ suggestions|json }}'{% endif %}>
+    <noscript><p class="empty">Asking needs JavaScript. You can still browse the <a href="/explore/">map</a> or the <a href="/topics/">topics</a>.</p></noscript>
+  </div>
+</div>
+{% endblock %}
