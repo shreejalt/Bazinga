@@ -766,11 +766,11 @@ a.eqref{font-family:var(--mono);font-size:.9em;font-weight:700;white-space:nowra
 .math-error{font-family:var(--mono);font-size:13px;color:var(--alert);border:1px solid var(--alert);padding:2px 6px}
 .embed-error{font-family:var(--mono);font-size:13.5px;border:1px solid var(--alert);color:var(--alert);padding:10px 14px;margin:16px 0}
 /* callouts: > [!NOTE], [!TIP], [!WARNING], [!KEY] */
-.callout{margin:18px 0;padding:12px 16px 4px;border:1px solid var(--rule-2);border-left:3px solid var(--blue);background:var(--tint)}
+.callout{margin:18px 0;padding:12px 16px 4px;border:1px solid var(--blue);background:var(--tint)}
 .callout-title{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--blue);margin:0 0 6px}
-.callout-tip{border-left-color:var(--ink)} .callout-tip .callout-title{color:var(--ink)}
-.callout-warning{border-left-color:var(--ref)} .callout-warning .callout-title{color:var(--ref)}
-.callout-key{border-left-color:var(--alert)} .callout-key .callout-title{color:var(--alert)}
+.callout-tip{border-color:var(--ink)} .callout-tip .callout-title{color:var(--ink)}
+.callout-warning{border-color:var(--ref)} .callout-warning .callout-title{color:var(--ref)}
+.callout-key{border-color:var(--alert)} .callout-key .callout-title{color:var(--alert)}
 .callout p:last-child{margin-bottom:10px}
 /* code */
 .code-block{margin:16px 0;position:relative}
