@@ -9,7 +9,7 @@
     note Encoder: "6 layers"
     ```
 
-The whole syntax (also shown in the Studio and in the guide, content/reads/drawing-diagrams.md):
+The whole syntax (also shown in the Editor and in the guide, content/reads/drawing-diagrams.md):
 
 Boxes and arrows (kind: flow, the default)
     A name on its own makes a box; a name used in an arrow is made for you. Names are matched without regard to
@@ -2339,14 +2339,14 @@ def render_html(src, kind=None, caption=None):
 
 
 def summary(g):
-    """A plain sentence about the drawing (for search passages and the Studio)."""
+    """A plain sentence about the drawing (for search passages and the Editor)."""
     if g.kind == "timeline":
         return "Timeline: " + "; ".join("%s %s" % (d, t) for d, t, *_ in g.items) + "."
     return _title(g) + "."
 
 
 # --------------------------------------------------------------------------------------------------------------------
-# examples (the Studio's gallery, the guide and the tests use these)
+# examples (the Editor's gallery, the guide and the tests use these)
 
 EXAMPLES = [
     {"name": "pipeline", "title": "Pipeline", "caption": "Steps left to right, a side branch and a group",

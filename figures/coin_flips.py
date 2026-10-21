@@ -1,7 +1,7 @@
 """Heads in n tosses
 
-Made with the figure builder (a distribution). Open it in the Studio to change it with the form, or edit
-this file by hand: it is an ordinary figure file, and the Studio then opens it as code.
+Made with the figure builder (a distribution). Open it in the Editor to change it with the form, or edit
+this file by hand: it is an ordinary figure file, and the Editor then opens it as code.
 
 How it works: compute() receives the value of every control and returns a description of the picture
 (panels, lines, bars, readouts). The site draws it when the page is built, and again in the reader's
@@ -114,6 +114,6 @@ def _fmt(v, decimals=None):
 
 
 # --------------------------------------------------------------------------------------------------------------
-# The figure builder's settings. The Studio uses this line to reopen the figure in the builder; once
+# The figure builder's settings. The Editor uses this line to reopen the figure in the builder; once
 # the code above is changed by hand, it opens the figure as code instead and leaves this line alone.
 # bazinga-builder: {"v":1,"hash":"23cd1c4c4bb41fe0","spec":{"type":"distribution","family":"binomial","title":"Heads in n tosses","caption":"The chance of each number of heads. The highlighted counts lie within the chosen number of standard deviations of the mean.","params":{"n":{"label":"Tosses n","max":40,"value":20},"p":{"label":"Chance of heads p","value":0.5}},"interval":{"mode":"sigma"},"x_label":"number of heads"}}

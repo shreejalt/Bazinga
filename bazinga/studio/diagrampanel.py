@@ -1,7 +1,7 @@
-"""The Studio's diagram panel: text diagrams (```diagram blocks) drawn as the author types.
+"""The Editor's diagram panel: text diagrams (```diagram blocks) drawn as the author types.
 
-Drawing a text diagram runs no author code (it only reads the text), so it happens in the Studio's own process,
-fast enough for a live preview. Installed onto :class:`bazinga.studio.api.Studio` by ``install``.
+Drawing a text diagram runs no author code (it only reads the text), so it happens in the Editor's own process,
+fast enough for a live preview. Installed onto :class:`bazinga.studio.api.Editor` by ``install``.
 """
 from __future__ import annotations
 

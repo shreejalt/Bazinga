@@ -58,7 +58,7 @@ passages only, with per-visitor and daily limits; nothing is stored.
 
 ## Writing and publishing
 
-`python -m bazinga studio` opens a local editor with a live preview, an equation helper, figure and citation panels
+`python -m bazinga editor` opens the Editor, a local writing window with a live preview, an equation helper, figure and citation panels
 and the same checks. It listens on 127.0.0.1 only and needs a token printed at launch. Publishing from it (or from
 `python -m bazinga publish`) checks the page, builds, commits and pushes; the deployed site itself can only answer
 questions, never write.

@@ -25,7 +25,7 @@ export async function renderLibrary(app) {
 
   const root = h("div.library",
     h("header.lib-top",
-      h("div.brand", h("span.brand-mark"), h("span.brand-name", state.site.name), h("span.brand-sub", "Studio")),
+      h("div.brand", h("span.brand-mark"), h("span.brand-name", state.site.name), h("span.brand-sub", "Editor")),
       h("div.top-actions",
         h("a.btn.ghost", { href: state.site.origin, target: "_blank", rel: "noopener noreferrer", title: "Open the live site" },
           icon("external", 16), h("span", "Live site")),
@@ -73,7 +73,7 @@ export async function renderLibrary(app) {
       list.append(h("div.empty",
         h("div.empty-art", icon("pen", 28)),
         h("h2", "Nothing written yet"),
-        h("p", "Start a post: give it a title and the Studio makes a draft you can write in straight away."),
+        h("p", "Start a post: give it a title and the Editor makes a draft you can write in straight away."),
         h("button.btn.primary", { onclick: () => newPostDialog() }, icon("plus", 16), h("span", "New post"))));
       return;
     }

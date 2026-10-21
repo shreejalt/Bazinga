@@ -43,7 +43,7 @@ def make_repo(tmp: Path, extra_site_yml: str = "") -> tuple[Path, Path]:
     subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
     git(root, "init", "-q", "-b", "main")
     git(root, "config", "user.email", "test@example.org")
-    git(root, "config", "user.name", "Studio Test")
+    git(root, "config", "user.name", "Editor Test")
     git(root, "config", "commit.gpgsign", "false")
     git(root, "add", "-A")
     git(root, "commit", "-qm", "init")
@@ -212,8 +212,8 @@ class Pipeline(unittest.TestCase):
         self.assertFalse((self.root / "pwned").exists())
 
     def test_rename_stages_the_old_file_removal(self):
-        from bazinga.studio.api import Studio
-        studio = Studio(self.root)
+        from bazinga.studio.api import Editor
+        studio = Editor(self.root)
         res = studio.rename_page({"id": "post:hello", "slug": "hello-world"})
         self.assertEqual(res["id"], "post:hello-world")
         out = publish.run(self.cfg(), "post:hello-world", publish.Options(build_cmd=FAKE_BUILD), self.emit)

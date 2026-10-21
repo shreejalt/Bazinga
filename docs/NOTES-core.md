@@ -36,7 +36,7 @@
 - `bazinga/cli.py`: `new`, `build [--drafts]`, `serve [--port] [--drafts]`, `check [files] [--errors-only]`,
   `cite <id> [--key]`, `figure new|test`, and the passthroughs `studio`, `publish` and `wiki`. Every option after
   those three is handed over untouched. `--root` works for every command.
-- `bazinga/cite.py` (new file, used by the CLI and by the Studio's `lookup`): `parse_query`, `lookup` / `fetch`,
+- `bazinga/cite.py` (new file, used by the CLI and by the Editor's `lookup`): `parse_query`, `lookup` / `fetch`,
   `fetch_arxiv`, `fetch_crossref`, `make_key` (`Vaswani17`, then `Vaswani17b`), `add_reference` (appends to the file
   and returns the existing key when the arXiv id or DOI is already there), and `http_get` (mocked in tests).
 - Theme:
@@ -104,7 +104,7 @@
   - `figure_html` and `drawing_html` receive `cfg=` from markdown.py. A FigureError or DrawingError is a page error:
     an error box in previews, a stopped production build.
   - Breakout: `.prose > .fig` and `.prose > .drawing` widen to `--wide` (1000 px) when there is room.
-- Studio: your requests 1–4 are done.
+- Editor: your requests 1–4 are done.
   - Option passthrough works.
   - The `preview_html` cache is in place.
   - `\log p` now gets TeX's thin space, with tests in `test_core_math.Postprocess.test_function_names_are_spaced`.

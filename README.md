@@ -29,8 +29,8 @@ Open http://127.0.0.1:8000. You see the example site, and it rebuilds whenever y
 
 There are two ways, and both edit the same file:
 
-- **In the Studio.** While `serve` is running, every page has a **Write** button (and **Edit this page**). The
-  Studio is an editor with a live preview, with helpers for equations, diagrams, figures and citations.
+- **In the Editor.** While `serve` is running, every page has a **Write** button (and **Edit this page**). The
+  Editor is a writing window with a live preview, with helpers for equations, diagrams, figures and citations.
 - **In any editor.** Create `content/reads/my-post.md`, and the open page reloads when you save.
 
 A post looks like this:
@@ -70,7 +70,7 @@ You write ordinary LaTeX between `$ … $` or `$$ … $$`. It is turned into rea
 readers' browsers load no math library. If a formula would not render, the build stops. It names the line and gives
 the fix, for example: `\begin{align} is not supported here; write \begin{aligned} … \end{aligned} inside $$ … $$`.
 
-- In the Studio, **Equation…** opens a helper with a palette and a live preview. It can also insert a ready-made
+- In the Editor, **Equation…** opens a helper with a palette and a live preview. It can also insert a ready-made
   equation (a fraction, a sum, a matrix, cases).
 - From a terminal, `python -m bazinga math "\frac{a}{b}"` checks a single formula.
 - `content/reads/writing-math.md` is the full guide.
@@ -100,18 +100,18 @@ site's colours. It also gets a narrower layout for phones. Nothing runs in the r
 | `direction: down` | top to bottom instead of left to right |
 | `timeline` and `tree` blocks | a timeline or a tree |
 
-In the Studio, type `/` and choose **Diagram…**, and the drawing appears next to your text. The full guide, with
+In the Editor, type `/` and choose **Diagram…**, and the drawing appears next to your text. The full guide, with
 flowcharts, timelines and trees, is `content/reads/drawing-diagrams.md`.
 
 *Optional, with code:* if the boxes come from data or a loop, write a small function in `drawings/` and place it with
-`::drawing module.function | caption`. The Studio has six starters (**Drawing from code…**).
+`::drawing module.function | caption`. The Editor has six starters (**Drawing from code…**).
 
 ## 6. Interactive figures: no code needed either
 
 A figure is a picture with sliders under it. When the reader moves a slider, the picture redraws in their browser.
 It also shows straight away without any script, because the build draws it first.
 
-**Without code:** in the Studio, choose **Figure… → New figure → Fill in a form**. Pick a kind and type formulas as
+**Without code:** in the Editor, choose **Figure… → New figure → Fill in a form**. Pick a kind and type formulas as
 you would on paper:
 
 - a function plot, such as `y = a*sin(f*x)*exp(-d*x)`;
@@ -145,7 +145,7 @@ python -m bazinga figure new my_plot --from data_lines      # copy one to figure
 python -m bazinga figure test my_plot                       # runs it at every setting; fails on errors or if slow
 ```
 
-In the Studio it's **Figure… → New figure → Start from an example**. The page `content/reads/templates.md`
+In the Editor it's **Figure… → New figure → Start from an example**. The page `content/reads/templates.md`
 (`/reads/templates/` on the example site) shows every template working. It also has text diagrams ready to copy.
 
 A figure file lists its sliders and has one function that returns what to draw:
@@ -166,11 +166,11 @@ def compute(t=1.0, _narrow=0):
 
 ## 7. Publish
 
-In the Studio, **Publish** checks the post, builds the site, updates the wiki files, commits the post and pushes it.
+In the Editor, **Publish** checks the post, builds the site, updates the wiki files, commits the post and pushes it.
 Your host then deploys it. **Schedule** publishes on a later date, and **Unpublish** turns a post back into a draft.
 From a terminal: `python -m bazinga publish -- content/reads/my-post.md`.
 
-Publishing works only on your own computer. The Studio listens on `127.0.0.1` and needs a new key each time it starts.
+Publishing works only on your own computer. The Editor listens on `127.0.0.1` and needs a new key each time it starts.
 None of it is part of the built site, so the live site cannot change anything.
 
 To check everything without publishing, run `python -m bazinga check`.
@@ -209,7 +209,7 @@ committed. Any OpenAI-compatible service works, including a local one through Ol
 site.yml      settings and home page        content/   your posts, cv.yml, topics.yml, references.yml
 figures/      interactive figures           drawings/  diagrams made with code (optional)
 static/       images and files              wiki/      generated wiki files
-bazinga/      the engine, theme and Studio  tests/     run before every deploy
+bazinga/      the engine, theme and Editor  tests/     run before every deploy
 ```
 
 The full design is in `docs/DESIGN.md`. To change the theme, copy a file from `bazinga/theme/` to the same path under

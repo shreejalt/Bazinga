@@ -1,7 +1,7 @@
 """Pages, topics and references: the site's content, read from ``content/``.
 
 A page is ``content/<kind>/<slug>.md``: YAML front matter between ``---`` lines, then Markdown. :func:`parse` turns one
-file into a :class:`Page` without touching any other file, so the Studio can parse an unsaved buffer. Problems that a
+file into a :class:`Page` without touching any other file, so the Editor can parse an unsaved buffer. Problems that a
 build should report (a malformed date, a list given as a string) are kept on ``page.problems`` with their line
 number; ``checks.py`` turns them into issues.
 """
@@ -242,7 +242,7 @@ def sort_newest(pages: list[Page]) -> list[Page]:
 
 
 def load_pages(cfg, drafts: bool = False) -> list[Page]:
-    """All pages, newest first. Only public pages unless ``drafts`` (previews, the Studio, ``build --drafts``)."""
+    """All pages, newest first. Only public pages unless ``drafts`` (previews, the Editor, ``build --drafts``)."""
     pages = [load_file(p, cfg) for p in content_files(cfg)]
     if not drafts:
         pages = [p for p in pages if p.public]

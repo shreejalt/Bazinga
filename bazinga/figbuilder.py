@@ -1,6 +1,6 @@
 """The figure builder: a filled-in form (a JSON "spec") turned into an ordinary figure file.
 
-Authors who do not write code pick a type and fill in a form in the Studio; this module checks the form and
+Authors who do not write code pick a type and fill in a form in the Editor; this module checks the form and
 writes ``figures/<name>.py``. The file it writes follows the figure contract exactly and is meant to be read and
 edited by hand later, so it is plain, commented, standard-library code that does not import this module (it runs in
 the reader's browser, where only the figure file and the renderer are shipped).
@@ -12,7 +12,7 @@ into the file. Mistakes come back as plain messages that point at the bad part (
 'freq'?").
 
 The last lines of a generated file hold the spec (``# bazinga-builder: {...}``) and a hash of everything above it,
-so the Studio can reopen the figure in the builder, and can tell when the code was changed by hand (then it opens
+so the Editor can reopen the figure in the builder, and can tell when the code was changed by hand (then it opens
 as code and the builder leaves it alone).
 
     problems = validate(spec)          # [] or [{"path", "message", "col", "end", "text"}]
@@ -1095,8 +1095,8 @@ class _Gen:
         doc = TYPES[self.kind]["label"].lower()
         w('"""%s' % self.title.replace('"""', "'''").replace("\\", "\\\\"))
         w()
-        w("Made with the figure builder (a %s). Open it in the Studio to change it with the form, or edit" % doc)
-        w("this file by hand: it is an ordinary figure file, and the Studio then opens it as code.")
+        w("Made with the figure builder (a %s). Open it in the Editor to change it with the form, or edit" % doc)
+        w("this file by hand: it is an ordinary figure file, and the Editor then opens it as code.")
         w()
         w("How it works: compute() receives the value of every control and returns a description of the picture")
         w("(panels, lines, bars, readouts). The site draws it when the page is built, and again in the reader's")
@@ -1159,7 +1159,7 @@ class _Gen:
         spec = clean_spec(self.spec)
         digest = _digest(body)
         tail = ("\n# " + "-" * 110 + "\n"
-                "# The figure builder's settings. The Studio uses this line to reopen the figure in the builder; once\n"
+                "# The figure builder's settings. The Editor uses this line to reopen the figure in the builder; once\n"
                 "# the code above is changed by hand, it opens the figure as code instead and leaves this line alone.\n"
                 + MARK + json.dumps({"v": VERSION, "hash": digest, "spec": spec}, ensure_ascii=False,
                                     separators=(",", ":")) + "\n")
@@ -2183,7 +2183,7 @@ def read_spec(source):
 
 
 # ==============================================================================================================
-# examples and the description for the Studio's form
+# examples and the description for the Editor's form
 
 def default_spec(kind="function"):
     """A small working example of each type: what the form starts from."""
@@ -2247,7 +2247,7 @@ def default_spec(kind="function"):
 
 
 def describe():
-    """What the Studio's form needs to know: types, functions, styles, families, limits."""
+    """What the Editor's form needs to know: types, functions, styles, families, limits."""
     return {
         "types": [{"type": k, **v} for k, v in TYPES.items()],
         "functions": [{"name": k, "args": lo if lo == hi else "%d-%d" % (lo, hi), "help": d}

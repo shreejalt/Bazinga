@@ -1,5 +1,5 @@
-"""The Studio's figure panel: the gallery, the figure builder (a form that writes the figure file), and checking code
-before it is saved. Installed onto :class:`bazinga.studio.api.Studio` by :func:`install`.
+"""The Editor's figure panel: the gallery, the figure builder (a form that writes the figure file), and checking code
+before it is saved. Installed onto :class:`bazinga.studio.api.Editor` by :func:`install`.
 
 Unsaved work (the builder's current form, code typed but not saved) is written to ``.studio/drafts/figures/`` and
 tested there by the worker, so nothing reaches ``figures/`` until the author saves. The preview frame of a draft is
@@ -22,7 +22,7 @@ MAX_SOURCE = 400_000
 
 
 class FigurePanel:
-    """Mixed into Studio. Every public method is a route (see server.py)."""
+    """Mixed into Editor. Every public method is a route (see server.py)."""
 
     # --- places ------------------------------------------------------------------------------------------------
     def _drafts_root(self) -> Path:
@@ -237,7 +237,7 @@ def _plain_failure(res) -> dict:
 
 
 def install(cls):
-    """Add the figure panel's routes to the Studio class."""
+    """Add the figure panel's routes to the Editor class."""
     for key, value in vars(FigurePanel).items():
         if not key.startswith("__") and not hasattr(cls, key):
             setattr(cls, key, value)

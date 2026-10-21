@@ -1,4 +1,4 @@
-"""The Studio's scripts: syntax, the pinned editor imports, and plain wording on screen.
+"""The Editor's scripts: syntax, the pinned editor imports, and plain wording on screen.
 
 ``node --check file.js`` exits 0 on an ES module with a syntax error (Node's module detection hides it), so every file
 is checked as a ``.mjs`` copy, which Node always parses as a module.

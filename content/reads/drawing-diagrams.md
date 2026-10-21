@@ -15,7 +15,7 @@ draws them in the page's own paper, ink and blue. Nothing runs in the reader's b
 zoom, and changing a word is changing a word.
 
 This guide shows every part of the syntax. Each section has **what you type**, then **what you get** right under it.
-In the Studio, type `/` on an empty line and choose **Diagram…** to write one with the drawing next to your text.
+In the Editor, type `/` on an empty line and choose **Diagram…** to write one with the drawing next to your text.
 
 ## The shortest diagram
 
@@ -319,7 +319,7 @@ Machine learning
 ## When something is wrong
 
 A mistake never draws a wrong picture. The page shows a short note where the diagram would be, and the checks (in
-the Studio, in the check command and in the build) name the line in your file and what to write instead:
+the Editor, in the check command and in the build) name the line in your file and what to write instead:
 
 | You wrote | The check says |
 | --- | --- |
@@ -329,7 +329,7 @@ the Studio, in the check command and in the build) name the line in your file an
 | `note Decoderr: "x"` | note on 'Decoderr', which is not in the diagram (did you mean Decoder?) |
 | `2017 Transformer` in a timeline | a timeline item is a date, a colon and what happened |
 
-In the Studio's diagram editor the line turns red as you type, and clicking the message takes you to it.
+In the Editor's diagram panel the line turns red as you type, and clicking the message takes you to it.
 
 ## Diagrams from a small code file
 
@@ -358,7 +358,7 @@ and the post says `::drawing diagrams.stages`:
 
 `draw.flow` takes the same shapes, styles, labels, notes and groups as the text; `draw.timeline` and `draw.tree` do
 the same for the other two kinds. The `narrow` argument is how the phone version gets drawn. Six starting points
-are in the Studio (pipeline, blocks, model architecture, flowchart, timeline, tree): choose **Drawing from code…**
+are in the Editor (pipeline, blocks, model architecture, flowchart, timeline, tree): choose **Drawing from code…**
 in the `/` menu.
 
 ## Tips

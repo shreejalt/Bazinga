@@ -1,4 +1,4 @@
-"""Every third-party URL the site or the Studio loads, pinned to exact versions in one place.
+"""Every third-party URL the site or the Editor loads, pinned to exact versions in one place.
 
 Nothing here is downloaded at build time. Pages reference these URLs; a test checks that each carries an exact
 version (no ``@latest``, no bare major version). Update a version here and nowhere else.
@@ -11,7 +11,7 @@ PYODIDE_VERSION = "314.0.7"   # CPython 3.14; module workers only (see docs/rese
 PYODIDE_INDEX_URL = f"https://cdn.jsdelivr.net/pyodide/v{PYODIDE_VERSION}/full/"
 PYODIDE_MODULE = PYODIDE_INDEX_URL + "pyodide.mjs"
 
-# CodeMirror 6 for the Studio's editor, through esm.sh's "*" prefix so @codemirror/state loads once.
+# CodeMirror 6 for the Editor's text area, through esm.sh's "*" prefix so @codemirror/state loads once.
 CODEMIRROR_IMPORT_MAP = {
     "codemirror": "https://esm.sh/*codemirror@6.0.2",
     "@codemirror/state": "https://esm.sh/*@codemirror/state@6.7.6",

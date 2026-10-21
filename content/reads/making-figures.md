@@ -9,14 +9,14 @@ builds_on: [read:welcome]
 ---
 
 A figure in Bazinga is a picture with controls under it. Move a slider and the picture follows. This guide shows how
-one is made, from the form in the Studio that needs no code at all to the small code file behind every figure, and
+one is made, from the form in the Editor that needs no code at all to the small code file behind every figure, and
 how to keep figures quick and correct.
 
 Here is one to start with. Drag the rate and watch the gap open up.
 
 ::figure compound_interest
 
-I made this one with the form in the Studio, in about two minutes: two curves, one slider, three readouts and two
+I made this one with the form in the Editor, in about two minutes: two curves, one slider, three readouts and two
 presets. Nothing in it is special; every figure on this site works the same way.
 
 ## How a figure works
@@ -57,7 +57,7 @@ All three end in the same kind of file, so you can start one way and continue an
 
 ### With the form (no code)
 
-In the Studio, choose **Figure…** in the toolbar (or type `/` on an empty line), then **New figure**, then **Fill in
+In the Editor, choose **Figure…** in the toolbar (or type `/` on an empty line), then **New figure**, then **Fill in
 a form**. Pick what to draw:
 
 | Kind | What it draws | You write |
@@ -106,8 +106,8 @@ And a distribution, where the form asked only for the family and how to shade it
 ::figure coin_flips
 
 When you save, the form writes `figures/<name>.py`, a plain, commented code file that you could have written by hand.
-Its last line keeps the form's settings, so the Studio reopens the figure in the form next time. If you change the code
-by hand, the Studio notices and opens it as code from then on, keeping your changes.
+Its last line keeps the form's settings, so the Editor reopens the figure in the form next time. If you change the code
+by hand, the Editor notices and opens it as code from then on, keeping your changes.
 
 ### From an example
 
@@ -149,7 +149,7 @@ figure preview my_plot                       # a page with the figure at every p
 figure list                                  # every figure, how it was made, and where it is used
 ```
 
-In the Studio, the code opens in an editor beside the preview. The preview follows as you type, the test runs each
+In the Editor, the code opens beside the preview. The preview follows as you type, the test runs each
 time, and when something fails the line is marked and **Go to line** jumps to it.
 
 ## The figure's code, part by part
@@ -232,7 +232,7 @@ text, so format numbers yourself (`"%.2f" % period`). `note` is one plain line u
 
 ## Testing a figure
 
-The Studio tests a figure every time you save it, and `figure test` does the same from a terminal. The test
+The Editor tests a figure every time you save it, and `figure test` does the same from a terminal. The test
 draws the figure:
 
 - at its starting values, wide and phone-sized;
@@ -240,7 +240,7 @@ draws the figure:
 - at 20 random settings of its controls, including the ends of every slider.
 
 Each drawing must finish in under 30 milliseconds, contain no number that is not a number (`nan` or an infinity:
-use `None` for a gap), and produce a well-formed picture. In the Studio the results read as a short list, such as
+use `None` for a gap), and produce a well-formed picture. In the Editor the results read as a short list, such as
 "Fast enough: the slowest setting took 1.5 ms", and a failure says which setting broke it and on which line. The
 build refuses a page whose figure fails to load, so a broken figure never reaches the site.
 
@@ -252,7 +252,7 @@ The 30 milliseconds are for the reader: a slider that answers within a frame or 
 - Work out what does not depend on the controls once, outside `compute()`. The bubble sort example runs the whole
   sort when the figure loads and `compute()` only picks a step, so Play is smooth.
 - Prefer the standard library to packages, and a few hundred shapes to thousands.
-- `figure test` prints the time for every figure, and the Studio shows the slowest setting.
+- `figure test` prints the time for every figure, and the Editor shows the slowest setting.
 
 ## Common mistakes
 
@@ -266,7 +266,7 @@ The 30 milliseconds are for the reader: a slider that answers within a frame or 
   the error says which one is missing.
 - **Reading files or the network in `compute()`.** The code runs in the reader's browser, where neither exists. Put
   data in the file itself (the form's data table does exactly that).
-- **Crowded phone layouts.** Check the figure at phone width (the Studio preview and `figure preview` show
+- **Crowded phone layouts.** Check the figure at phone width (the Editor preview and `figure preview` show
   it); use `_narrow` to drop a panel or shorten labels there.
 - **In the form:** `sin x` needs brackets, `sin(x)`; a power is `^`; names are lowercase letters, digits and `_`;
   and `x` exists only inside a curve's expression, while readouts use whole curves, as in `max(wave)`.

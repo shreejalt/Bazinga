@@ -12,5 +12,5 @@ licence. Nothing below is copied into this repository; versions are pinned in `r
 | [Pygments](https://github.com/pygments/pygments) | code highlighting at build time | BSD-2-Clause |
 | [NumPy](https://numpy.org) (optional, for figures that declare it) | figure maths | BSD-3-Clause |
 | [Pyodide](https://github.com/pyodide/pyodide) (loaded from jsDelivr in the reader's browser) | re-running figures and Ask in the browser | MPL-2.0 |
-| [CodeMirror 6](https://codemirror.net) (loaded from esm.sh, Studio only) | the Studio's editor | MIT |
+| [CodeMirror 6](https://codemirror.net) (loaded from esm.sh, Editor only) | the Editor's text area | MIT |
 | [STIX Two Math / Text](https://github.com/stipub/stixfonts), [Source Serif 4](https://github.com/adobe-fonts/source-serif), [Inter](https://github.com/rsms/inter), [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) (Google Fonts) | typography | SIL Open Font License 1.1 |

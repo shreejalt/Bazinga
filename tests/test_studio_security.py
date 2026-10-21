@@ -1,4 +1,4 @@
-"""The Studio's guards: local binding, Host allowlist, token cookie, Origin/Sec-Fetch-Site, JSON-only writes, no CORS,
+"""The Editor's guards: local binding, Host allowlist, token cookie, Origin/Sec-Fetch-Site, JSON-only writes, no CORS,
 path confinement (traversal and symlinks), upload limits and atomic writes."""
 
 import base64
@@ -292,10 +292,10 @@ class Paths(unittest.TestCase):
             confine(self.root, "figures/x.py")
 
     def test_symlinked_page_is_not_written(self):
-        from bazinga.studio.api import Studio
+        from bazinga.studio.api import Editor
         link = self.root / "content" / "posts" / "link.md"
         os.symlink(self.tmp / "outside" / "x.md", link)
-        studio = Studio(self.root)
+        studio = Editor(self.root)
         with self.assertRaises(Refused):
             studio.save_page({"id": "post:link", "meta": {"title": "x"}, "body": "pwned"})
         self.assertEqual((self.tmp / "outside" / "x.md").read_text(), "outside")

@@ -1,4 +1,4 @@
-/* The figure panel and the figure builder's form. Uses the Studio's tokens (studio.css). */
+/* The figure panel and the figure builder's form. Uses the Editor's tokens (studio.css). */
 
 .fg-modal.modal { width: min(1380px, 100%); height: min(92vh, 1100px); display: flex; flex-direction: column; }
 .fg-modal .modal-body { padding: 0; flex: 1; min-height: 0; overflow: hidden; display: flex; }

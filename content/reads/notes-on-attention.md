@@ -2,7 +2,7 @@
 title: "Notes on Attention (draft)"
 date: 2026-10-21
 status: draft
-summary: "A draft that shows how unpublished work stays private: it appears in the Studio and in --drafts previews, never on the public site, in the sitemap, the feed or the search data."
+summary: "A draft that shows how unpublished work stays private: it appears in the Editor and in --drafts previews, never on the public site, in the sitemap, the feed or the search data."
 topics: [attention, transformers]
 builds_on: [read:welcome]
 cites: [Vaswani17]
@@ -22,4 +22,4 @@ $$ {#eq:attention}
 Dividing by $\sqrt{d_k}$ in [eq:attention] acts like the temperature in [[read:welcome|the welcome post]].
 
 > [!NOTE]
-> To publish it, set `status: published` (or remove the line), or use Publish in the Studio.
+> To publish it, set `status: published` (or remove the line), or use Publish in the Editor.

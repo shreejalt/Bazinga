@@ -543,7 +543,7 @@ def test_figure(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
 
 def cli_new(name, starter="slider_plot", cfg=None, kind="figure"):
     """Copy a starter to figures/<name>.py (or drawings/<name>.py for a drawing starter). Returns the path.
-    ``builder`` or ``builder:<type>`` writes the figure builder's example of that type instead (the Studio can then
+    ``builder`` or ``builder:<type>`` writes the figure builder's example of that type instead (the Editor can then
     open it in the builder's form)."""
     if kind == "figure" and (starter or "").startswith("builder"):
         return _cli_new_builder(name, starter, cfg)
@@ -621,7 +621,7 @@ def cli_test(name=None, cfg=None, out=None):
 
 
 # ----------------------------------------------------------------------------------------------
-# the test in plain words (the Studio), and what a figure was made with
+# the test in plain words (the Editor), and what a figure was made with
 
 _LINE_RE = re.compile(r"\bline (\d+)\b")
 

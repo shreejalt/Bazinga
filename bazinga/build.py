@@ -73,7 +73,7 @@ def _optional(name: str):
 
 # --------------------------------------------------------------------------------------------- the site index
 def make_site_index(cfg, pages, references=None, topics=None, preview=True, hidden=None) -> md.SiteIndex:
-    """A SiteIndex for rendering: the Studio and previews pass every page (drafts included)."""
+    """A SiteIndex for rendering: the Editor and previews pass every page (drafts included)."""
     if references is None:
         references = content.load_references(cfg)
     if topics is None:
@@ -1049,7 +1049,7 @@ def _preview_base(cfg) -> dict:
 
 
 def preview_html(page: Page, cfg) -> str:
-    """One page as full HTML for the Studio preview: drafts visible, problems shown in the page, nothing written.
+    """One page as full HTML for the Editor preview: drafts visible, problems shown in the page, nothing written.
 
     The other pages are rendered once and cached (until a content file changes), so a preview costs one page render.
     """

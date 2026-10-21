@@ -213,7 +213,7 @@ new EditorView({doc: "# Hi", extensions: [basicSetup, markdown({base: markdownLa
 - **Caveats**:
   - `@codemirror/language` 6.13+ adds a dependency on `@codemirror/streamparser`. Add it to the map if you upgrade.
   - lang-markdown pulls in lang-html, lang-css and lang-javascript, which is why they are in the map.
-  - The Studio is local-only, so an alternative is to vendor these files once into `studio/vendor/`, so it works
+  - The Editor is local-only, so an alternative is to vendor these files once into `studio/vendor/`, so it works
     offline and does not depend on esm.sh staying up.
 
 ## 7. Licensing
@@ -269,9 +269,9 @@ new EditorView({doc: "# Hi", extensions: [basicSetup, markdown({base: markdownLa
     requirement.
 13. Ship STIX Two Math from Google Fonts (`css2?family=STIX+Two+Math`), not Fontsource. Add a small `math.css` with a
     font stack, `overflow-x:auto` on display maths, and a scaled `math{font-size}`.
-14. Studio: a stdlib `http.server` (or a minimal ASGI server) bound to `127.0.0.1` on a random free port. It opens the
+14. Editor: a stdlib `http.server` (or a minimal ASGI server) bound to `127.0.0.1` on a random free port. It opens the
     browser at `/?token=…` and exchanges the token for a `SameSite=Strict` cookie.
-15. Studio checks on every request:
+15. Editor checks on every request:
     - Host allowlist.
     - Origin or `Sec-Fetch-Site` check on writes.
     - No CORS headers.
@@ -279,21 +279,21 @@ new EditorView({doc: "# Hi", extensions: [basicSetup, markdown({base: markdownLa
     - Path containment under `content/`.
     - Atomic writes.
     - git called with argument lists, never a shell.
-16. Studio editor: CodeMirror 6 through the esm.sh import map in §6, vendored for offline use. Split view with a live
+16. Editor text area: CodeMirror 6 through the esm.sh import map in §6, vendored for offline use. Split view with a live
     preview that the real build pipeline renders for a single page (the same Markdown and maths code).
-17. Studio UX borrowed from Ghost:
+17. Editor UX borrowed from Ghost:
     - `/` menu: equation, figure from a starter, drawing, citation, callout, series link.
     - Cmd/Ctrl+P for preview.
     - Autosave to the file.
     - A "draft / published / scheduled" pill.
-18. Status lives in front matter (`status: draft|published`). Drafts build only in the Studio preview, never in the
+18. Status lives in front matter (`status: draft|published`). Drafts build only in the Editor preview, never in the
     public build or the sitemap. A future `date` means scheduled.
 19. Publish is one button with a visible pipeline: checks, then the status flip, then build, then a diff preview, then
     commit, then deploy (`git push` or a configured CLI command). Stop on the first failure and show its output.
 20. Citation lookup: arXiv API and Crossref (DOI) only, writing to `references.yml`. Show the fetched metadata for
     confirmation before saving.
 21. Figure starters are a `figures/_starters/` folder of three or four tested examples (slider plot, 2-D geometry,
-    matrix heatmap, 3-D scene), copied and renamed by the Studio. Every new figure also gets a generated test.
+    matrix heatmap, 3-D scene), copied and renamed by the Editor. Every new figure also gets a generated test.
 22. Licence: MIT for the code, with a `LICENSE`. Put CC BY 4.0 on the example posts in `content/LICENSE`, and say in
     the README that authors should replace the content licence with their own. List third-party items (fonts, CDN libs,
     Pyodide MPL-2.0) in `THIRD_PARTY.md`.

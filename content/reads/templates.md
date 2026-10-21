@@ -12,7 +12,7 @@ The quickest way to a good figure is to start from one that already works. Every
 controls, press Play. Under each is the line that copies it into your site. After that it is your file, and you change
 the words, numbers and formulas in it.
 
-**How to copy one.** In the Studio, choose **Figure… → New figure → Start from an example** and pick it from the list. From a
+**How to copy one.** In the Editor, choose **Figure… → New figure → Start from an example** and pick it from the list. From a
 terminal, run the command you build the site with, putting `figure new my_name --from <template>` in place of `build`.
 The copy lands in `figures/my_name.py`. Then write `::figure my_name` in a post. Every part of each file has a comment
 saying what it does. `figure starters` lists them all.

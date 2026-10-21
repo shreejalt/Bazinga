@@ -205,7 +205,7 @@ export async function openEditor(app, id) {
 
   function showConflict() {
     fill(conflict, icon("alert", 16),
-      h("span", "This page was changed outside the Studio since you opened it."),
+      h("span", "This page was changed outside the Editor since you opened it."),
       h("button.btn.small", { onclick: () => location.reload() }, "Load the file"),
       h("button.btn.small.ghost", { onclick: () => save(true, true) }, "Keep my version"));
     conflict.hidden = false;

@@ -1,6 +1,6 @@
-# Studio: notes from the Studio builder
+# Editor: build notes
 
-The Studio is the local-only writing app: `python -m bazinga studio`. It is a library of pages, a Markdown editor
+The Editor is the local-only writing app: `python -m bazinga editor`. It is a library of pages, a Markdown editor
 with a live preview of the real page, helpers (equations, figures, drawings, citations, links, images), checks,
 versions, and the publish pipeline. Nothing under `bazinga/studio/` is ever copied to `_site/`, and a test enforces
 that.
@@ -9,7 +9,7 @@ that.
 
 ```
 bazinga/studio/
-  __init__.py, __main__.py   python -m bazinga.studio works too (same as python -m bazinga studio)
+  __init__.py, __main__.py   python -m bazinga.studio works too (same as python -m bazinga editor)
   server.py     ThreadingHTTPServer on 127.0.0.1 (random free port unless --port); main(argv); the guard on every
                 request; the app page with the pinned import map and a strict CSP; the publish log streamed as
                 server-sent events on the POST's own response
@@ -37,8 +37,8 @@ tests/test_studio_security.py  test_studio_publish.py  test_studio_pages.py  tes
 ## How to run
 
 ```
-python -m bazinga studio                    # opens http://127.0.0.1:<port>/?token=...
-python -m bazinga studio -- --port 9000 --no-browser
+python -m bazinga editor                    # opens http://127.0.0.1:<port>/?token=...
+python -m bazinga editor -- --port 9000 --no-browser
 python -m bazinga publish -- content/posts/x.md [--dry-run] [--unpublish] [--schedule 2026-11-01] [--yes]
 ```
 
@@ -88,7 +88,7 @@ The suggestion buttons appear only when `llm.configured(cfg)` is true. The UI ne
    - Every route except the token exchange needs the cookie: the app, the API, previews and assets. Comparison is
      constant-time.
 4. **Writes** must be POST with `Content-Type: application/json`, plus one of:
-   - an `Origin` equal to the Studio's own origin;
+   - an `Origin` equal to the Editor's own origin;
    - no Origin, but `Sec-Fetch-Site: same-origin`.
 
    `Sec-Fetch-Site: cross-site` or `same-site` is refused even when an Origin is present. Bodies are capped at
@@ -122,8 +122,8 @@ The suggestion buttons appear only when `llm.configured(cfg)` is true. The UI ne
     - no file under `_site/` comes from `bazinga/studio/`, by path or by content hash;
     - no page refers to `/_studio/`, the cookie name or the write endpoints.
 
-Known trade-off: the preview iframe is same-origin with the Studio, which the in-place patching and live figure
-state need. So the site's own scripts and its pinned CDN scripts (Pyodide, fonts) run with the Studio's cookie. They
+Known trade-off: the preview iframe is same-origin with the Editor, which the in-place patching and live figure
+state need. So the site's own scripts and its pinned CDN scripts (Pyodide, fonts) run with the Editor's cookie. They
 are the author's own site code, pinned in `vendor.py`.
 
 ## Publish pipeline (publish.py)
@@ -164,8 +164,8 @@ Modes:
 | `test_studio_security.py` (33) | Binding; the Host allowlist; token/cookie exchange and attributes; Origin and Sec-Fetch-Site; JSON-only writes; 405 without CORS; no CORS anywhere; CSP; body limit; traversal on ids, code and asset routes; symlink escapes; upload limits and types; atomic write; image sniffing; the draft gate |
 | `test_studio_publish.py` (14) | A temp git repo with a bare remote: commit and push; only the page's files committed; dry run changes nothing; a failing build stops the run and restores the page; errors block; a push failure keeps the commit; unpublish; schedule; republish sets `updated`; nothing to commit is not an error; author from site.yml; the deploy command runs without a shell; a rename stages the old file's removal; a real `python -m bazinga build` in a dry run; the SSE stream over HTTP |
 | `test_studio_pages.py` (17) | Front matter kept byte for byte, comments kept on patch, tricky values round-trip; starter drafts; save conflict (409); rename rewrites `[[links]]` and `builds_on` and moves the history; snapshots and dedupe; topic add; citation parsing, keys, append without reformatting |
-| `test_studio_site.py` (3) | No Studio file in `_site` (production and `--drafts` builds), and no Studio addresses in the built site |
-| `test_studio_js.py` (6) | `node --check` on every Studio script *as a .mjs copy*; imports are relative or in the pinned import map; the map is pinned; no machinery named in visible strings; writes send JSON, no FormData or EventSource |
+| `test_studio_site.py` (3) | No Editor file in `_site` (production and `--drafts` builds), and no Editor addresses in the built site |
+| `test_studio_js.py` (6) | `node --check` on every Editor script *as a .mjs copy*; imports are relative or in the pinned import map; the map is pinned; no machinery named in visible strings; writes send JSON, no FormData or EventSource |
 
 ## Verified in a real browser
 
@@ -209,24 +209,24 @@ Screenshots are in the scratchpad: `scratchpad/studio/*.png`. Among them: 01-lib
   (with a pinned fallback in server.py), and `@codemirror/lang-python` is used for figure code when the map has it.
 - Scroll sync is one way, from the editor to the preview.
 - Link suggestions apply only while their sentence still appears word for word in the page.
-- Renaming or unpublishing a published page adds no redirect. The Studio says the address changes.
+- Renaming or unpublishing a published page adds no redirect. The Editor says the address changes.
 - Scheduling relies on the host's daily build (core's README and the workflows).
 - Only Chrome was checked; Safari and Firefox were not.
 
 ## Requests to the other builders
 
 - **core, `cli.py`:** `studio` and `publish` use `nargs=argparse.REMAINDER`, which does not capture options that
-  come first. `python -m bazinga studio --no-browser` fails with "unrecognized arguments"; it works with `--`.
+  come first. `python -m bazinga editor --no-browser` fails with "unrecognized arguments"; it works with `--`.
   Suggested fix: parse with `parse_known_args()` and forward the extras, or add the options explicitly.
 - **core, `build.preview_html`:** it renders every page on each call. That is fine for the example site; on a large
-  site the Studio's preview, which runs about 300 ms after typing stops, would benefit from caching the other pages'
+  site the Editor's preview, which runs about 300 ms after typing stops, would benefit from caching the other pages'
   renders by mtime.
 - **core, `mathml.py`:** `\log p_i` renders as "logp" in Chrome (no space between the operator and its argument).
   Consider emitting `\log` and similar as `<mi>log</mi><mo>&#x2061;</mo>` (function application).
 - **core and figures:** `node --check file.js` exits 0 on an ES module with a syntax error (Node's module detection
   hides it). Checking a `.mjs` copy catches it. This affects any test that runs `node --check` on module workers
   (`pyworker.js`, `test_fig_js.py`).
-- **wiki, `llm.check_figure_source`:** it allows any standard-library import (`os`, `subprocess` …). The Studio adds
+- **wiki, `llm.check_figure_source`:** it allows any standard-library import (`os`, `subprocess` …). The Editor adds
   its own stricter gate before running a draft, but `python -m bazinga wiki figure` users may want the same.
-- **content:** the example posts are hard-wrapped at about 120 columns. In the Studio's proportional editor, one line
+- **content:** the example posts are hard-wrapped at about 120 columns. In the Editor's proportional font, one line
   per paragraph reads more naturally. This is optional.

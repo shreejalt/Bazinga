@@ -3,7 +3,7 @@
 ``python -m bazinga cite 1706.03762`` (or an arXiv URL, a DOI, a doi.org URL) fetches the record from the arXiv API
 (export.arxiv.org) or Crossref (api.crossref.org), makes a key such as ``Vaswani17`` (first author's surname + the
 two-digit year; ``Vaswani17b`` if taken), and appends the entry to the file without rewriting what is there.
-The Studio's citation panel uses :func:`lookup` too.
+The Editor's citation panel uses :func:`lookup` too.
 """
 from __future__ import annotations
 

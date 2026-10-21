@@ -7,9 +7,9 @@
 - Errors in pages do not stop the server: they are printed and shown in the page (a lenient build).
 - ``/api/ask/`` is passed to ``bazinga.ask_server.handle`` when that module exists, so the "written answer" can be
   tried locally.
-- The Studio starts with it (on 127.0.0.1, the serve port + 1 when free). Every page served then carries a "Write"
+- The Editor starts with it (on 127.0.0.1, the serve port + 1 when free). Every page served then carries a "Write"
   button in the rail, and an "Edit this page" button on a page of the site; both go through ``/__bazinga/write``,
-  which sends the browser to the Studio with its per-launch token. These buttons are added to the HTML as it is
+  which sends the browser to the Editor with its per-launch token. These buttons are added to the HTML as it is
   served, at the theme's ``<!-- local-tools -->`` mark: the built files never contain them.
 """
 from __future__ import annotations
@@ -185,14 +185,14 @@ def make_handler(state: State):
             if not head:
                 self.wfile.write(data)
 
-        # ---- the Studio, behind the Write button
+        # ---- the Editor, behind the Write button
         def write_redirect(self):
-            """Send the browser to the Studio (with its token), opened at a page when ?page=<id> names one."""
+            """Send the browser to the Editor (with its token), opened at a page when ?page=<id> names one."""
             host = (self.headers.get("Host") or "").lower()
             allowed = {f"127.0.0.1:{state.port}", f"localhost:{state.port}"}
             if state.studio is None or host not in allowed or \
                     (self.headers.get("Sec-Fetch-Site") or "").lower() in ("cross-site", "same-site"):
-                return self.send_error(HTTPStatus.FORBIDDEN, "The Studio opens from this site's own Write button.")
+                return self.send_error(HTTPStatus.FORBIDDEN, "The Editor opens from this site's own Write button.")
             page = (parse_qs(urlsplit(self.path).query).get("page") or [""])[0]
             target = state.studio.url + ("#/edit/" + quote(page, safe=":") if _PAGE_ID.match(page) else "")
             self.send_response(HTTPStatus.FOUND)
@@ -298,7 +298,7 @@ def inject_local(html: bytes, studio: bool) -> bytes:
 
 
 def start_studio(cfg, port: int):
-    """The Studio on 127.0.0.1 in this process (a thread). Returns the server, or None if it cannot start."""
+    """The Editor on 127.0.0.1 in this process (a thread). Returns the server, or None if it cannot start."""
     try:
         from .studio.server import StudioServer
     except ImportError:
@@ -332,7 +332,7 @@ def _dotenv(path: Path) -> dict:
 def serve(cfg=None, port: int = 8000, host: str = "127.0.0.1", watch_files: bool = True, open_browser: bool = False,
           drafts: bool = False, studio: bool = True, studio_port: int | None = None):
     """Build, then serve until Ctrl+C. With ``drafts`` the preview includes drafts and scheduled pages. With ``studio``
-    (the default, and only when serving on this computer) the Studio starts too and the pages get a Write button."""
+    (the default, and only when serving on this computer) the Editor starts too and the pages get a Write button."""
     cfg = cfg or config.load()
     state = State(cfg, drafts)
     print(f"Building {cfg['site']['name']} …")
@@ -342,7 +342,7 @@ def serve(cfg=None, port: int = 8000, host: str = "127.0.0.1", watch_files: bool
     if studio and host in ("127.0.0.1", "localhost"):
         state.studio = start_studio(cfg, studio_port if studio_port is not None else state.port + 1)
         if state.studio is not None:
-            print(f"  The Studio runs at http://127.0.0.1:{state.studio.port}/ (the Write button opens it)")
+            print(f"  The Editor runs at http://127.0.0.1:{state.studio.port}/ (the Write button opens it)")
     stop = threading.Event()
     if watch_files:
         threading.Thread(target=watch, args=(state, stop), daemon=True).start()

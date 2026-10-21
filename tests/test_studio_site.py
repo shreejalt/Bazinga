@@ -1,5 +1,5 @@
-"""The Studio is never part of the built site: building the example site copies no file of bazinga/studio/ into
-_site/, and nothing in _site/ refers to the Studio's addresses."""
+"""The Editor is never part of the built site: building the example site copies no file of bazinga/studio/ into
+_site/, and nothing in _site/ refers to the Editor's addresses."""
 
 import hashlib
 import os

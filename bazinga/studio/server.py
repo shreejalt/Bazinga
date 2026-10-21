@@ -1,6 +1,6 @@
-"""The Studio's HTTP server: local only.
+"""The Editor's HTTP server: local only.
 
-``python -m bazinga studio [--port N] [--no-browser]`` binds 127.0.0.1 (a random free port unless ``--port``),
+``python -m bazinga editor [--port N] [--no-browser]`` binds 127.0.0.1 (a random free port unless ``--port``),
 prints ``http://127.0.0.1:<port>/?token=<random>`` and opens the browser. Every request goes through
 :meth:`Handler.guard`: Host allowlist, then the token cookie, then (for writes) Origin / Sec-Fetch-Site and a JSON
 body. No CORS headers are sent, ever. See security.py for the reasons.
@@ -21,7 +21,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
 from . import security
-from .api import STATIC_DIR, Studio, guess_type
+from .api import STATIC_DIR, Editor, guess_type
 from .security import Refused
 
 BODY_LIMIT = 2 * 1024 * 1024
@@ -80,7 +80,7 @@ class StudioServer(ThreadingHTTPServer):
         super().__init__(("127.0.0.1", port), Handler)
         self.port = self.server_address[1]
         self.token = token or security.new_token()
-        self.studio = Studio(root)
+        self.studio = Editor(root)
         self.cookie = security.cookie_name(self.port)
         self._index = None
 
@@ -170,7 +170,7 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(exc.status, {"error": exc.message})
         else:
             from .api import _message_page
-            self.send(exc.status, _message_page("Bazinga Studio", exc.message), "text/html; charset=utf-8",
+            self.send(exc.status, _message_page("Bazinga Editor", exc.message), "text/html; charset=utf-8",
                       {"X-Frame-Options": "DENY"})
 
     # --- the guard -------------------------------------------------------------------------------------------------
@@ -184,7 +184,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self._exchange_token(parse_qs(url.query)["token"][0])
             cookies = security.parse_cookies(self.headers.get("Cookie"))
             if not security.same_token(cookies.get(self.server.cookie), self.server.token):
-                raise Refused(401, "Open the Studio with the link printed in the terminal.")
+                raise Refused(401, "Open the Editor with the link printed in the terminal.")
             if write:
                 security.check_write(self.headers, port)
             return True
@@ -342,7 +342,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="bazinga studio", description="The local editor (127.0.0.1 only).")
+    ap = argparse.ArgumentParser(prog="bazinga editor", description="The Editor, the local writing window (127.0.0.1 only).")
     ap.add_argument("--port", type=int, default=0, help="port on 127.0.0.1 (default: a free one)")
     ap.add_argument("--no-browser", action="store_true", help="do not open the browser")
     ap.add_argument("--root", default=None, help="the site folder (default: the current folder)")
@@ -354,14 +354,14 @@ def main(argv=None) -> int:
         config.set_root(root)
         config.load(root)
     except Exception as exc:  # noqa: BLE001
-        print(f"Cannot start the Studio: {exc}", file=sys.stderr)
+        print(f"Cannot start the Editor: {exc}", file=sys.stderr)
         return 1
     try:
         server = StudioServer(root, a.port)
     except OSError as exc:
         print(f"Cannot listen on 127.0.0.1:{a.port}: {exc}", file=sys.stderr)
         return 1
-    print(f"Bazinga Studio for {root}")
+    print(f"Bazinga Editor for {root}")
     print(f"  {server.url}")
     print("  Local only: this address works on this computer and nowhere else. Press Ctrl+C to stop.", flush=True)
     if not a.no_browser:

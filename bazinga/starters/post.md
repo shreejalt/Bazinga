@@ -23,7 +23,7 @@ $$ {#eq:energy}
 Refer back to it as [eq:energy]. Link another page with [[read:welcome]] and cite a paper with [@Vaswani17].
 
 > [!TIP]
-> Run `python -m bazinga check` (or open the Studio's checks drawer) to see anything that needs fixing, with line numbers.
+> Run `python -m bazinga check` (or open the Editor's checks drawer) to see anything that needs fixing, with line numbers.
 
 ## What to remember
 

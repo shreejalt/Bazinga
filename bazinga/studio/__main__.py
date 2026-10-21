@@ -1,4 +1,4 @@
-"""``python -m bazinga.studio`` starts the Studio (the same as ``python -m bazinga studio``)."""
+"""``python -m bazinga.studio`` starts the Editor (the same as ``python -m bazinga editor``)."""
 import sys
 
 from .server import main

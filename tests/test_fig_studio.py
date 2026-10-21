@@ -1,4 +1,4 @@
-"""The Studio's figure panel API: the gallery, the builder (preview, save, reopen), checking unsaved code, the draft
+"""The Editor's figure panel API: the gallery, the builder (preview, save, reopen), checking unsaved code, the draft
 frame and its files, and the guards on all of them (over real HTTP)."""
 
 import http.client
@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 from bazinga import figbuilder
-from bazinga.studio.api import Studio
+from bazinga.studio.api import Editor
 from bazinga.studio.security import Refused
 from bazinga.studio.server import ROUTES_GET, ROUTES_POST, StudioServer
 
@@ -29,7 +29,7 @@ class Handlers(unittest.TestCase):
     def setUp(self):
         self.root = Path(tempfile.mkdtemp(prefix="fig-studio-"))
         make_site(self.root)
-        self.studio = Studio(self.root)
+        self.studio = Editor(self.root)
 
     def tearDown(self):
         shutil.rmtree(self.root, ignore_errors=True)

@@ -1,9 +1,9 @@
-"""The Studio's view of the rest of the engine.
+"""The Editor's view of the rest of the engine.
 
 Other parts of Bazinga (markdown, checks, build, figures, drawings, llm, wiki) are imported lazily, on first use, so
-the Studio starts and stays usable while one of them is missing or broken; the screen that needs it then says it is
+the Editor starts and stays usable while one of them is missing or broken; the screen that needs it then says it is
 "not available yet" instead of failing. Work that runs the author's own code (figures, drawings) or that depends on
-a site root other than the Studio's (publish dry runs) goes through :mod:`bazinga.studio.worker` in a subprocess.
+a site root other than the Editor's (publish dry runs) goes through :mod:`bazinga.studio.worker` in a subprocess.
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ _lock = threading.RLock()
 
 
 class Unavailable(Exception):
-    """A part of the engine the Studio needs is not there (yet)."""
+    """A part of the engine the Editor needs is not there (yet)."""
 
     def __init__(self, what: str, detail: str = ""):
         super().__init__(f"{what} is not available yet." + (f" ({detail})" if detail else ""))
@@ -36,7 +36,7 @@ def module(name: str):
         if exc.name in (f"bazinga.{name}", "bazinga"):
             raise Unavailable(_LABELS.get(name, name)) from None
         raise Unavailable(_LABELS.get(name, name), f"missing {exc.name}") from None
-    except Exception as exc:  # noqa: BLE001 - a half-written module must not take the Studio down
+    except Exception as exc:  # noqa: BLE001 - a half-written module must not take the Editor down
         raise Unavailable(_LABELS.get(name, name), f"{type(exc).__name__}: {exc}") from None
 
 
@@ -54,7 +54,7 @@ _LABELS = {"markdown": "Rendering", "checks": "Checks", "build": "Preview", "fig
 
 
 def lock():
-    """Calls into the engine share module state (config.ROOT, caches); the Studio runs them one at a time."""
+    """Calls into the engine share module state (config.ROOT, caches); the Editor runs them one at a time."""
     return _lock
 
 
@@ -62,7 +62,7 @@ def lock():
 
 def site_index(cfg, override=None):
     """The SiteIndex ``override`` (a Page, or None) is checked against: every page on disk, with ``override`` in
-    place of its file's version. Uses core's ``checks.site_for`` so the Studio and the build agree on what a draft
+    place of its file's version. Uses core's ``checks.site_for`` so the Editor and the build agree on what a draft
     or a public page may link to."""
     content = module("content")
     md = module("markdown")

@@ -1,4 +1,4 @@
-"""Reading and writing page files for the Studio.
+"""Reading and writing page files for the Editor.
 
 The editor works on two things: the front matter (as a dict, edited through the Details form) and the Markdown body.
 :func:`compose` turns them back into a file. When the front matter did not change, the original YAML text is kept
@@ -18,7 +18,7 @@ from ..config import kind_id_prefix
 from .security import Refused, atomic_write, confine
 
 DATE_KEYS = ("date", "updated")
-# The order fields are written in when the Studio re-serialises the front matter; unknown keys follow in their order.
+# The order fields are written in when the Editor re-serialises the front matter; unknown keys follow in their order.
 ORDER = ("title", "date", "updated", "status", "summary", "description", "topics", "series", "builds_on", "cites",
          "cover")
 _PLAIN = re.compile(r"^[A-Za-z_][A-Za-z0-9 _.\-/:]*$")

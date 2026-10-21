@@ -1,4 +1,4 @@
-"""The Studio's handlers. ``server.py`` does the transport and the security checks; this file does the work.
+"""The Editor's handlers. ``server.py`` does the transport and the security checks; this file does the work.
 
 GET handlers only read. Every POST handler receives the parsed JSON body (already checked for Origin, cookie and
 content type) and returns a dict that becomes the JSON response; :class:`~bazinga.studio.security.Refused` turns into
@@ -35,7 +35,7 @@ def _hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
-class Studio:
+class Editor:
     def __init__(self, root: Path):
         self.root = Path(root).resolve()
         self._cfg = None
@@ -228,7 +228,7 @@ class Studio:
         text, original = self._text_for(cfg, pid, data, path)
         base = data.get("base")
         if base and original is not None and _hash(original) != base and not data.get("force"):
-            raise Refused(409, "This page was changed outside the Studio since you opened it.")
+            raise Refused(409, "This page was changed outside the Editor since you opened it.")
         kind, slug = pages.kind_of(cfg, pid), pid.split(":", 1)[1]
         if original is not None and original != text:
             history.snapshot(self.root, kind, slug, original, explicit=bool(data.get("explicit")))
@@ -831,8 +831,8 @@ _ = IMAGE_TYPES  # imported for callers that list the allowed types
 
 # The figure panel (gallery, figure builder, checking unsaved code) lives in figpanel.py.
 from . import figpanel as _figpanel  # noqa: E402
-_figpanel.install(Studio)
+_figpanel.install(Editor)
 
 # The diagram panel (text diagrams drawn as you type) lives in diagrampanel.py.
 from . import diagrampanel as _diagrampanel  # noqa: E402
-_diagrampanel.install(Studio)
+_diagrampanel.install(Editor)

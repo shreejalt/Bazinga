@@ -220,7 +220,7 @@
 - {id: unicode-dot, tex: 'a · b', has: ['<mo>⋅</mo>']}
 - {id: unicode-nbsp, tex: "a\u00a0+\u00a0b", has: ['<mo>+</mo>']}
 
-# ---------------------------------------------------------------- the ML equations in the Studio's templates
+# ---------------------------------------------------------------- the ML equations in the Editor's templates
 - {id: softmax, tex: '\operatorname{softmax}(\mathbf{z})_i = \frac{e^{z_i}}{\sum_{j=1}^{K} e^{z_j}}', display: true, has: ['>softmax</mo>']}
 - {id: cross-entropy, tex: '\mathcal{L}_{\mathrm{CE}} = -\sum_{k=1}^{K} y_k \log \hat{y}_k', display: true, has: ['ℒ']}
 - {id: attention, tex: '\operatorname{Attention}(Q, K, V) = \operatorname{softmax}\left( \frac{Q K^\top}{\sqrt{d_k}} \right) V', display: true, has: ['>Attention</mo>']}

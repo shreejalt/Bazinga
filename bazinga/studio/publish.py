@@ -1,4 +1,4 @@
-"""The publish pipeline (docs/DESIGN.md, "The Studio", Publish). It runs on the author's machine only.
+"""The publish pipeline (docs/DESIGN.md, "The Editor", Publish). It runs on the author's machine only.
 
 Steps, in order; the first failure stops the run and its output is shown:
 

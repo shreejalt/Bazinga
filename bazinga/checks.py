@@ -1,6 +1,6 @@
 """Checks on a page: front matter, rendering problems and writing-style rules.
 
-One function, :func:`check_page`, serves the build, ``python -m bazinga check`` and the Studio's checks drawer. Every
+One function, :func:`check_page`, serves the build, ``python -m bazinga check`` and the Editor's checks drawer. Every
 :class:`Issue` has a level (``error`` blocks a production build and publishing; ``warning`` does not), the file line
 when there is one, a plain-English message and a hint saying how to fix it.
 """

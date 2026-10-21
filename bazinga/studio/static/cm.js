@@ -1,4 +1,4 @@
-// CodeMirror 6 for the Studio: the Markdown writing surface (with maths, links, citations and figures marked up as
+// CodeMirror 6 for the Editor: the Markdown writing surface (with maths, links, citations and figures marked up as
 // you type) and a plain code editor for figure and drawing files.
 import { EditorState, Compartment, Prec } from "@codemirror/state";
 import {

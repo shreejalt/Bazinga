@@ -1,4 +1,4 @@
-"""The Studio's file handling: front matter kept as written, new drafts from the starter, renames that keep links,
+"""The Editor's file handling: front matter kept as written, new drafts from the starter, renames that keep links,
 version history, and citations appended without reformatting references.yml."""
 
 import datetime
@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest import mock
 
 from bazinga.studio import cite, history, pages
-from bazinga.studio.api import Studio
+from bazinga.studio.api import Editor
 from bazinga.studio.security import Refused
 
 DOC = """---
@@ -103,7 +103,7 @@ class Site(unittest.TestCase):
         (self.root / "content" / "posts" / "linker.md").write_text(
             '---\ntitle: "Linker"\nstatus: draft\nbuilds_on: [post:other]\n---\n\nSee [[post:other]].\n',
             encoding="utf-8")
-        self.studio = Studio(self.root)
+        self.studio = Editor(self.root)
 
     def tearDown(self):
         shutil.rmtree(self.root, ignore_errors=True)

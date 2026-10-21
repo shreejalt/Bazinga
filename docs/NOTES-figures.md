@@ -45,8 +45,8 @@ and the failing line), `made_with(source)` (`builder` / `edited` / `code`), `lin
 narrower than a monospaced face (0.6 em), because the default theme sets figure text in Courier Prime; labels were
 being clipped at the right edge.
 
-**Studio figure panel** (`static/panels/figure.js`, `figbuilder.js`, `figure.css`; server side in
-`bazinga/studio/figpanel.py`, installed onto `Studio`, and `figworker.py`, whose ops are added to the worker): gallery with
+**Editor figure panel** (`static/panels/figure.js`, `figbuilder.js`, `figure.css`; server side in
+`bazinga/studio/figpanel.py`, installed onto `Editor`, and `figworker.py`, whose ops are added to the worker): gallery with
 live thumbnails, a page per figure (preview, open at a preset, place in the text), New figure → form / example /
 describe, the builder (form beside a live preview with the test in plain words; problems marked in the field), and a
 code view (CodeMirror, live check on a 0.9 s pause, failing line marked, Go to line). Unsaved work is tested in
@@ -84,10 +84,10 @@ terminal commands as `figure test …` after saying "the command you build the s
 4. **Breakout.** `site.css` already widens `.fig` and `.drawing` to `--wide`, so `figure.css` no longer does. `.fig .fig-head` overrides the prose `figcaption` centring and hyphenation.
 5. **Tokens used.** `figure.css` uses `--bg`, `--surface`, `--text`, `--text-muted`, `--text-faint`, `--border`, `--accent`, `--fig-accent-dark` and `--font-ui`, and has fallbacks for all of them. Dark mode follows `prefers-color-scheme` plus `:root[data-theme="dark"|"light"]`.
 6. **Signatures.**
-   - `figure_html(name, start=None, cfg=None)` and `drawing_html(ref, caption="", cfg=None)`: the optional `cfg` lets tests and the Studio point at other folders; otherwise they use `bazinga.config.ROOT`.
+   - `figure_html(name, start=None, cfg=None)` and `drawing_html(ref, caption="", cfg=None)`: the optional `cfg` lets tests and the Editor point at other folders; otherwise they use `bazinga.config.ROOT`.
    - `cli_new(name, starter, cfg=None)` copies a drawing starter (`pipeline`, `blocks`) into `drawings/` and a figure starter into `figures/`, then runs `test_figure` on new figures.
    - `cli_test(name=None, cfg=None)` returns the exit code.
-7. **Live preview.** `Bazinga.figures.init(root)` initialises figures inserted after load; the Studio's `preview.js` already calls it. The `?v=` in module URLs changes with the file's content, and the worker re-imports a module when the URL changes, so edited figures refresh without a reload.
+7. **Live preview.** `Bazinga.figures.init(root)` initialises figures inserted after load; the Editor's `preview.js` already calls it. The `?v=` in module URLs changes with the file's content, and the worker re-imports a module when the URL changes, so edited figures refresh without a reload.
 
 ## For wiki (Ask)
 

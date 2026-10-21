@@ -1,6 +1,6 @@
-"""The Studio's guards: who may talk to it, where it may write, and how it writes.
+"""The Editor's guards: who may talk to it, where it may write, and how it writes.
 
-The Studio can change files and run git, so a web page the author happens to visit must never be able to reach it.
+The Editor can change files and run git, so a web page the author happens to visit must never be able to reach it.
 The rules (docs/research.md §3, after Vite's CVE-2025-24010):
 
 1. The server binds 127.0.0.1 only (server.py).
@@ -8,7 +8,7 @@ The rules (docs/research.md §3, after Vite's CVE-2025-24010):
    (an attacker's name pointing at 127.0.0.1 still sends the attacker's name as Host).
 3. Every request needs the per-launch token. It arrives once in the launch URL and is swapped for an HttpOnly,
    ``SameSite=Strict`` cookie; the cookie's name carries the port because cookies are shared between ports.
-4. A write is a POST with a JSON body, an ``Origin`` equal to the Studio's own origin (or, without Origin,
+4. A write is a POST with a JSON body, an ``Origin`` equal to the Editor's own origin (or, without Origin,
    ``Sec-Fetch-Site: same-origin``). Cross-site form posts and fetches are refused.
 5. No CORS headers are ever sent.
 6. Paths are resolved (symlinks included) and must stay inside the allowed folders.
@@ -22,7 +22,7 @@ import secrets
 import tempfile
 from pathlib import Path
 
-# Folders (relative to the site root) the Studio may write into, and single files it may write.
+# Folders (relative to the site root) the Editor may write into, and single files it may write.
 WRITE_DIRS = ("content", "figures", "drawings", "static/uploads")
 WRITE_FILES = ("content/references.yml", "content/topics.yml")
 
@@ -38,7 +38,7 @@ IMAGE_TYPES = {
 
 
 class Refused(Exception):
-    """A request or path the Studio will not serve. ``status`` is the HTTP status to answer with."""
+    """A request or path the Editor will not serve. ``status`` is the HTTP status to answer with."""
 
     def __init__(self, status: int, message: str):
         super().__init__(message)
@@ -67,20 +67,20 @@ def allowed_origins(port: int) -> set[str]:
 
 def check_host(host: str | None, port: int) -> None:
     if not host or host.strip().lower() not in allowed_hosts(port):
-        raise Refused(403, "This address is not allowed. Open the Studio at the link it printed in the terminal.")
+        raise Refused(403, "This address is not allowed. Open the Editor at the link it printed in the terminal.")
 
 
 def check_write(headers, port: int) -> None:
-    """A state-changing request must come from the Studio's own page and carry JSON."""
+    """A state-changing request must come from the Editor's own page and carry JSON."""
     origin = headers.get("Origin")
     site = (headers.get("Sec-Fetch-Site") or "").strip().lower()
     if origin is not None:
         if origin.strip().lower() not in allowed_origins(port):
-            raise Refused(403, "Writes are accepted only from the Studio's own page.")
+            raise Refused(403, "Writes are accepted only from the Editor's own page.")
     elif site != "same-origin":
-        raise Refused(403, "Writes are accepted only from the Studio's own page.")
+        raise Refused(403, "Writes are accepted only from the Editor's own page.")
     if site and site not in ("same-origin", "none"):
-        raise Refused(403, "Writes are accepted only from the Studio's own page.")
+        raise Refused(403, "Writes are accepted only from the Editor's own page.")
     ctype = (headers.get("Content-Type") or "").split(";")[0].strip().lower()
     if ctype != "application/json":
         raise Refused(415, "Writes must be JSON.")
@@ -123,7 +123,7 @@ def confine(root: Path, rel: str | Path, write: bool = True) -> Path:
             raise Refused(403, f"{name}/ points outside the site folder.")
         if _within(target, base) and target != base:
             return target
-    raise Refused(403, "The Studio only writes in content/, figures/, drawings/ and static/uploads/.")
+    raise Refused(403, "The Editor only writes in content/, figures/, drawings/ and static/uploads/.")
 
 
 def _within(path: Path, base: Path) -> bool:

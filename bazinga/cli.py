@@ -2,16 +2,16 @@
 
     new "Title" [--kind posts]        a new draft from bazinga/starters/post.md
     build [--drafts]                  build _site/ (drafts only with --drafts, for private previews)
-    serve [--port 8000]               build, watch, live-reload, /api/ask/ locally, and the Studio behind a
-                                      "Write" button (local only; --no-studio leaves it out)
-    studio                            the local editor (127.0.0.1 only)
+    serve [--port 8000]               build, watch, live-reload, /api/ask/ locally, and the Editor behind a
+                                      "Write" button (local only; --no-editor leaves it out)
+    editor                            the Editor, the local writing window (127.0.0.1 only; "studio" also works)
     check [file ...]                  run the checks; exit code 1 when there are errors
     figure new <name> --from <starter|builder[:type]> | figure starters | figure test [name] | figure preview <name> | figure list
     cite <arxiv-id|doi> [--key KEY]   add a reference to content/references.yml
     math "<latex>" [--display] [--html FILE]
                                       check one formula: the MathML, or what is wrong, where, and what to write
     wiki index|ingest|lint|highlights|describe|query [args]
-    publish <file>                    the Studio's publish pipeline, from the terminal
+    publish <file>                    the Editor's publish pipeline, from the terminal
 
 Every command runs in the current folder (the site root) unless ``--root`` says otherwise.
 """
@@ -250,9 +250,10 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--open", action="store_true", help="open the browser")
     p.add_argument("--drafts", action="store_true", help="also show drafts and scheduled pages (local preview)")
-    p.add_argument("--no-studio", action="store_true", help="do not start the Studio (no Write button)")
+    p.add_argument("--no-editor", "--no-studio", dest="no_studio", action="store_true",
+                   help="do not start the Editor (no Write button)")
     p.add_argument("--studio-port", type=int, default=None,
-                   help="port of the Studio on 127.0.0.1 (default: the serve port + 1, or a free one)")
+                   help="port of the Editor on 127.0.0.1 (default: the serve port + 1, or a free one)")
     p.set_defaults(fn=cmd_serve)
 
     p = sub.add_parser("check", help="check pages; exit code 1 on errors")
@@ -279,7 +280,8 @@ def parser() -> argparse.ArgumentParser:
     p.set_defaults(fn=cmd_figure)
 
     for name, module, fn, what, help_text in [
-        ("studio", "studio.server", "main", "The Studio (bazinga/studio/)", "the local editor"),
+        ("editor", "studio.server", "main", "The Editor (bazinga/studio/)", "the Editor, the local writing window"),
+        ("studio", "studio.server", "main", "The Editor (bazinga/studio/)", "the same as editor"),
         ("publish", "studio.publish", "cli_main", "Publishing (bazinga/studio/publish.py)", "publish one page"),
         ("wiki", "llm", "cli", "The wiki tools (bazinga/llm.py)", "index, ingest, lint, highlights, describe"),
     ]:
@@ -289,11 +291,11 @@ def parser() -> argparse.ArgumentParser:
     return ap
 
 
-PASSTHROUGH = {"studio", "publish", "wiki"}
+PASSTHROUGH = {"editor", "studio", "publish", "wiki"}
 
 
 def _split_passthrough(argv: list) -> tuple[list, list] | None:
-    """``[--root R] studio --port 9 …`` -> (``[--root R, studio]``, ``[--port 9 …]``): options after these commands
+    """``[--root R] editor --port 9 …`` -> (``[--root R, editor]``, ``[--port 9 …]``): options after these commands
     belong to them, so they are handed over untouched."""
     i = 0
     while i < len(argv):

@@ -1,4 +1,4 @@
-// Small helpers shared by every Studio screen: the API, DOM building, icons, dialogs, toasts, dates.
+// Small helpers shared by every Editor screen: the API, DOM building, icons, dialogs, toasts, dates.
 
 export const store = { state: null };
 
@@ -14,7 +14,7 @@ export async function api(path, body) {
         body: JSON.stringify(body) };
   let res;
   try { res = await fetch(path, opts); }
-  catch (e) { throw new ApiError(0, "The Studio is not running. Start it again from the terminal."); }
+  catch (e) { throw new ApiError(0, "The Editor is not running. Start it again from the terminal."); }
   let data = null;
   try { data = await res.json(); } catch (e) { data = null; }
   if (!res.ok) throw new ApiError(res.status, (data && data.error) || `Request failed (${res.status})`);

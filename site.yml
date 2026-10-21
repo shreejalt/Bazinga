@@ -170,7 +170,7 @@ ask:
   per_visitor: 5                        # written answers per visitor (IP) per day
   daily_cap: 300                        # written answers per day for the whole site
 
-# What Publish (Studio or `python -m bazinga publish`) does after building, on your machine.
+# What Publish (Editor or `python -m bazinga publish`) does after building, on your machine.
 publish:
   commit: true                          # git add the page and its files, then commit
   push: true                            # git push (Vercel, Netlify or GitHub Pages deploy from the repository)

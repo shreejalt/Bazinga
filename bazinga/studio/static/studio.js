@@ -1,4 +1,4 @@
-// Studio entry: theme, state, routing between the Library and the Editor.
+// Editor entry: theme, state, routing between the Library and the page editor.
 import { api, store, h, clear, toast, icon, fill } from "./lib.js";
 import { renderLibrary } from "./library.js";
 
@@ -31,7 +31,7 @@ applyTheme(readTheme());
 export async function refreshState() {
   store.state = await api("/api/state");
   document.documentElement.style.setProperty("--accent", store.state.accent || "#3b5bdb");
-  document.title = `Studio · ${store.state.site.name}`;
+  document.title = `Editor · ${store.state.site.name}`;
   return store.state;
 }
 
@@ -68,7 +68,7 @@ window.addEventListener("beforeunload", (e) => {
   try {
     await refreshState();
   } catch (e) {
-    fill(app, h("div.fatal", h("h1", "The Studio could not start"), h("p", e.message)));
+    fill(app, h("div.fatal", h("h1", "The Editor could not start"), h("p", e.message)));
     return;
   }
   route();

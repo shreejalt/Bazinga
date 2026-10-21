@@ -1,4 +1,4 @@
-"""The Studio's equation helper: the maths API (one formula or many), and the helper's palette and templates.
+"""The Editor's equation helper: the maths API (one formula or many), and the helper's palette and templates.
 
 Every palette snippet and every template is rendered through the real converter, so nothing the helper offers can
 insert a formula that fails.
@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 
 from bazinga.mathml import check
-from bazinga.studio.api import Studio
+from bazinga.studio.api import Editor
 from bazinga.studio.security import Refused
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -41,7 +41,7 @@ def const_block(name: str) -> str:
 
 class Api(unittest.TestCase):
     def setUp(self):
-        self.studio = Studio(ROOT)
+        self.studio = Editor(ROOT)
 
     def test_one_formula(self):
         res = self.studio.math({"tex": r"\frac{a}{b}", "display": True})

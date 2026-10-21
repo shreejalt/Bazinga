@@ -1,5 +1,5 @@
 """Text diagrams in the rest of Bazinga: ```diagram blocks in Markdown (with the file's line on a problem), the code
-route (draw.flow, draw.timeline, draw.tree), the theme's stylesheet, and the Studio's diagram panel and its API."""
+route (draw.flow, draw.timeline, draw.tree), the theme's stylesheet, and the Editor's diagram panel and its API."""
 import http.client
 import json
 import os

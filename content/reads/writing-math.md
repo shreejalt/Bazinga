@@ -10,7 +10,7 @@ builds_on: [read:welcome]
 
 Bazinga turns the LaTeX in your posts into MathML when the site is built. Browsers draw MathML themselves, so
 equations appear at once, with no script and no flash of raw code; they scale with the text, and screen readers can
-read them. You do not need to know much LaTeX: the patterns below cover most posts, the Studio's equation helper
+read them. You do not need to know much LaTeX: the patterns below cover most posts, the Editor's equation helper
 builds the rest from buttons, and when something is wrong the message says where and what to write instead.
 
 ## The basics
@@ -175,7 +175,7 @@ and Windows machines have none.
 
 ## Messages you may see, and the fixes
 
-A formula never breaks silently. A production build stops, and a preview, `python -m bazinga check` and the Studio
+A formula never breaks silently. A production build stops, and a preview, `python -m bazinga check` and the Editor
 show the file, the line and the column, what is wrong and what to write instead. The ones you are most likely to meet:
 
 | Message | What to write instead |
@@ -210,7 +210,7 @@ Add `--display` for a displayed equation and `--html preview.html` to write a pa
 
 ## The equation helper
 
-In the Studio, type `/` on an empty line and pick **Equation**, press the Σ button in the toolbar, or press ⌘M (Ctrl+M
+In the Editor, type `/` on an empty line and pick **Equation**, press the Σ button in the toolbar, or press ⌘M (Ctrl+M
 on Windows and Linux). With the cursor inside an existing equation, the same shortcut, the **Edit equation** button
 that appears above it, or a double-click on its `$` opens it for editing in place.
 

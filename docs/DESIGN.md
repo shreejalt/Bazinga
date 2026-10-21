@@ -3,7 +3,7 @@
 Bazinga is an open-source template for technical blogs and personal sites. Its parts:
 - **Posts** are Markdown, with real equations rendered at build time and interactive figures written as small Python files. The same Python runs at build time and again in the reader's browser.
 - **The site is kept as an LLM wiki:** a catalog, a log, a knowledge-graph map, topic hubs and series, plus an **Ask** box on every page.
-- **The Studio**, which runs on localhost only, is where authors write, check and **publish** like on Medium.
+- **The Editor**, which runs on localhost only, is where authors write, check and **publish** like on Medium.
 
 The name is Sheldon's catchphrase from The Big Bang Theory. Change it in `site.yml`.
 
@@ -11,11 +11,11 @@ This file is the contract between the parts. Every builder reads it first. `docs
 
 ## Principles
 
-1. **One Python file, three places.** A figure's `compute()` runs at build time (static SVG in the HTML), in the browser on Pyodide (when the reader moves a control), and in the Studio (live preview). The SVG renderer (`bazinga/plot.py`) is Python too, so the browser gets the *same* SVG the build made.
+1. **One Python file, three places.** A figure's `compute()` runs at build time (static SVG in the HTML), in the browser on Pyodide (when the reader moves a control), and in the Editor (live preview). The SVG renderer (`bazinga/plot.py`) is Python too, so the browser gets the *same* SVG the build made.
 2. **Works without JavaScript.** Every page, equation, figure (at its defaults) and drawing is static HTML/SVG/MathML. JS only adds interaction, the map's hover, and Ask.
-3. **Authors write Markdown, not HTML.** Everything has a short syntax and a Studio button. Errors are caught and explained with the line number, never silently rendered wrong.
+3. **Authors write Markdown, not HTML.** Everything has a short syntax and a Editor button. Errors are caught and explained with the line number, never silently rendered wrong.
 4. **Models propose, people publish.** LLM features (optional, any OpenAI-compatible endpoint, a local Ollama included) write proposals; nothing a model writes reaches the site without the author accepting it.
-5. **Publishing happens only on the author's machine.** The Studio is not part of the built site. No file of `bazinga/studio/` is ever copied to `_site/`, and a test enforces this. The Studio:
+5. **Publishing happens only on the author's machine.** The Editor is not part of the built site. No file of `bazinga/studio/` is ever copied to `_site/`, and a test enforces this. The Editor:
    - binds to 127.0.0.1;
    - checks Host and Origin;
    - requires a per-launch token.
@@ -41,7 +41,7 @@ bazinga/             the engine (a Python package, run as `python -m bazinga <co
   content.py         load pages from content/<kind>/*.md: front matter, ids, status, dates, series
   markdown.py        Markdown → HTML: math, [[links]], [@KEY] cites, ::figure, ::drawing, callouts, footnotes, code
   mathml.py          LaTeX → MathML with pre/post-processing and validation (MathError with line + hint)
-  checks.py          all checks on a page (used by build, `bazinga check`, the Studio)
+  checks.py          all checks on a page (used by build, `bazinga check`, the Editor)
   graph.py           the site graph: nodes, edges, backlinks, related, series order, topic hubs, map layout
   figures.py         discover figures/*.py, validate the contract, run compute at build, write data + static SVG
   plot.py            figure spec → SVG (runs at build AND in the browser; stdlib only)
@@ -75,7 +75,7 @@ content/
   series/            generated series highlights (proposals accepted by the author)
 figures/*.py         the site's interactive figures (examples)
 drawings/*.py        the site's diagrams (examples)
-static/              images and files copied as-is (static/uploads/ for Studio uploads)
+static/              images and files copied as-is (static/uploads/ for Editor uploads)
 wiki/                GENERATED and committed: index.md (catalog), log.md (append-only log) — the agent-facing wiki
 proposals/           LLM proposals waiting for the author (git-ignored by default)
 tests/
@@ -144,11 +144,11 @@ cover: static/uploads/x.png             # optional share image
 ```
 
 Rules:
-- **What is public:** a page is public when `status: published` and `date <= today`. A future date means scheduled: it appears on the first build after that date. Drafts and scheduled pages are never written to `_site`, the sitemap, the feed, the wiki files or the passages. The Studio previews them.
+- **What is public:** a page is public when `status: published` and `date <= today`. A future date means scheduled: it appears on the first build after that date. Drafts and scheduled pages are never written to `_site`, the sitemap, the feed, the wiki files or the passages. The Editor previews them.
 - **Topics:** `topics.yml` looks like `{groups: [{name: "Methods", topics: [{slug: attention, label: "Attention", blurb: "…"}]}]}`. An unknown topic is an error with a "did you mean".
 - **References:** `references.yml` maps `KEY: {title, authors: [..], year, venue, arxiv?, doi?, url?}`.
 
-## Markdown syntax (markdown.py) — all of it is in the showcase post and the Studio's "/" menu
+## Markdown syntax (markdown.py) — all of it is in the showcase post and the Editor's "/" menu
 
 | Write | Get |
 |---|---|
@@ -184,7 +184,7 @@ Rules:
 
 ## Interactive figures (figures/<name>.py)
 
-The contract. `figures.py` validates it; the Studio's starters follow it.
+The contract. `figures.py` validates it; the Editor's starters follow it.
 
 ```python
 TITLE = "Softmax temperature"                 # shown above the figure
@@ -264,20 +264,20 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
   - `_site/<kind>/<slug>/index.md` is a Markdown copy of each page, with `<link rel="alternate" type="text/markdown">`.
   - `_site/data/passages.json` holds one passage per section (h2/h3) of every page, as plain text: `{id, title, url, section, anchor, text}`.
   - `_site/data/graph.json` holds the nodes (id, title, url, kind, summary, topics, x, y), the edges and the rings.
-- **LLM operations** (`llm.py`, CLI `bazinga wiki <op>`, and Studio buttons). They write `proposals/<op>-<slug>.md` (or JSON for the Studio) and never edit content:
+- **LLM operations** (`llm.py`, CLI `bazinga wiki <op>`, and Editor buttons). They write `proposals/<op>-<slug>.md` (or JSON for the Editor) and never edit content:
   - `ingest <page>` proposes topics, builds_on, `[[links]]` to add (with the sentence they fit in), a summary, a description, three questions the page answers, and series membership.
   - `lint` runs fixed rules (orphans, one-way links, thin topics, pages without figures, stale `updated`) and, with a model, flags contradictions between pages that share a topic.
   - `highlights <series>` writes 3–4 highlights per part from the part's own text; numbers must appear in the page or the line is rejected.
   - `describe <page>` writes a ≤155-character description from the page's own words.
-  - `equation "<words>"` turns words into LaTeX (Studio equation helper).
-  - `figure "<description>"` drafts a figure module from the closest starter. The Studio runs it through the contract test before showing it.
+  - `equation "<words>"` turns words into LaTeX (Editor equation helper).
+  - `figure "<description>"` drafts a figure module from the closest starter. The Editor runs it through the contract test before showing it.
 - **Ask** (`retrieve.py`, the same code everywhere):
   - **The browser box:** the `/ask/` page and the floating "Ask" button on every page (which takes the current page as context). It runs `retrieve.answer(question, passages, graph, page=None)` on Pyodide. That does BM25 over the passages, boosted for the current page and its graph neighbours, and returns the top passages, the pages they come from, and a short extractive answer. The quick answer needs no server.
   - **A "Written answer" button** appears when `/api/ask/` says it is on. It POSTs `{q, page}` to `api/ask.py`, which picks passages with the same `retrieve` code and asks the configured model to answer **only** from them with numbered citations. It has per-IP and daily limits and stores nothing. Locally, `bazinga serve` serves the same endpoint.
 
-## The Studio (local only)
+## The Editor (local only)
 
-`bazinga studio` (or `python -m bazinga studio`):
+`bazinga editor` (or `python -m bazinga editor`):
 - picks a free port on **127.0.0.1**;
 - prints `http://127.0.0.1:<port>/?token=<random>` and opens the browser;
 - swaps the token for a `SameSite=Strict`, HttpOnly cookie.
@@ -345,12 +345,12 @@ The look is calm and editorial: a reading column of about 720 px, a generous ser
 python -m bazinga new "Title" [--kind posts]       new draft from the starter
 python -m bazinga build [--drafts]                 build _site/ (drafts only with --drafts, for previews)
 python -m bazinga serve [--port 8000]              build, watch, live-reload, /api/ask locally
-python -m bazinga studio                           the local editor (127.0.0.1 only)
+python -m bazinga editor                           the Editor (127.0.0.1 only)
 python -m bazinga check [file ...]                 run the checks; exit 1 on errors
 python -m bazinga figure new <name> --from slider_plot | figure test [name]
 python -m bazinga cite <arxiv-id|doi> [--key KEY]  add a reference
 python -m bazinga wiki index|ingest|lint|highlights|describe [args]
-python -m bazinga publish <file>                   the Studio's publish pipeline, from the terminal
+python -m bazinga publish <file>                   the Editor's publish pipeline, from the terminal
 ```
 
 ## Tests (tests/, unittest, must pass before a deploy)
@@ -364,7 +364,7 @@ The tests cover:
 - `retrieve` ranking on a fixture;
 - the figure contract plus every figure in `figures/` at defaults, presets and random states (< 30 ms, no NaN, valid SVG);
 - drawings;
-- the Studio security (Host, Origin, token, path traversal, no Studio files in `_site`);
+- the Editor security (Host, Origin, token, path traversal, no Editor files in `_site`);
 - the publish pipeline in a temporary git repo (a dry run with no push);
 - the example site building end to end;
 - `node --check` on every JS file when node is available.
@@ -386,6 +386,6 @@ deeper / Go broader, Papers, older/newer). Kinds carry a `role` (read, paper, pr
 `bazinga/mapview.py` (standard library) computes the map layout, every page's view (related, reading order, the hover
 motion), the links figure and the series finder; the build writes `/data/site.js`, `/data/map.json`,
 `/data/mapdata.json`, `/data/series.json` and `/data/view/<id>.json`, and ships the module as `/figures/_mapview.py`
-for the Explore page's "chain between" and "in reading order". There is no dark mode. `bazinga serve` starts the Studio
+for the Explore page's "chain between" and "in reading order". There is no dark mode. `bazinga serve` starts the Editor
 and adds a Write button (and Edit this page) at the theme's `<!-- local-tools -->` mark as it serves; builds never
 contain them.

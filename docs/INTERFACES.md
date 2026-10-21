@@ -136,7 +136,7 @@ Browser side (owner: wiki): `bazinga/theme/assets/js/explore.js`, `bazinga/theme
 
 The core may import graph/wiki lazily and skip them with a printed note if they don't exist yet, so builders can work in parallel.
 
-Also `def preview_html(page: Page, cfg) -> str` gives a full HTML page for the Studio preview, with drafts visible.
+Also `def preview_html(page: Page, cfg) -> str` gives a full HTML page for the Editor preview, with drafts visible.
 
 **Template context:**
 - Every template gets:

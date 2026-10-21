@@ -1552,7 +1552,7 @@ def _library_error(exc: Exception, tex: str) -> MathError:
 
 
 def check(tex: str, display: bool) -> dict:
-    """Convert with the details the Studio and the command line show.
+    """Convert with the details the Editor and the command line show.
 
     Returns ``{"ok": True, "mathml", "tag", "label"}`` or ``{"ok": False, "error": {message, hint, line, column,
     index, length}}``. Display formulas may carry ``\\tag``/``\\label``; they are taken out first.
