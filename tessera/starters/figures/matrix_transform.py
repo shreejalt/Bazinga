@@ -68,8 +68,8 @@ def compute(a=1.0, b=0.5, c=0.0, d=1.0, _narrow=0):
 
     # the images of the two basis vectors: the columns of M
     e1, e2 = move(1, 0), move(0, 1)
-    shapes.append({"type": "arrow", "x1": 0, "y1": 0, "x2": e1[0], "y2": e1[1], "style": "main thick", "label": "M e₁"})
-    shapes.append({"type": "arrow", "x1": 0, "y1": 0, "x2": e2[0], "y2": e2[1], "style": "third thick", "label": "M e₂"})
+    shapes.append({"type": "arrow", "x1": 0, "y1": 0, "x2": e1[0], "y2": e1[1], "style": "main thick", "label": "M·e1"})
+    shapes.append({"type": "arrow", "x1": 0, "y1": 0, "x2": e2[0], "y2": e2[1], "style": "third thick", "label": "M·e2"})
 
     if abs(det) < 1e-9:
         effect = "squashed onto a line"

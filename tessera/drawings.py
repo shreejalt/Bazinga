@@ -121,15 +121,29 @@ def render(ref, cfg=None, narrow=None):
     return svg
 
 
+def _fit(svg):
+    """A drawing made with tessera.draw is shown at its own size (never blown up to the column), like a ```diagram."""
+    return " drawing-fit" if 'class="dg dg-fit"' in svg[:300] else ""
+
+
+def _inline(text):
+    """A caption's `code` and **bold**, everything else as plain text."""
+    out = html.escape(text)
+    out = re.sub(r"`([^`]+)`", r"<code>\1</code>", out)
+    return re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", out)
+
+
 def drawing_html(ref, caption="", cfg=None):
     """<figure class="drawing"> with the SVG and an optional caption."""
     m = REF_RE.match(str(ref or "").strip())
     mod = _load(m.group(1), cfg) if m else None
     f = getattr(mod, m.group(2), None) if m else None
-    cap = ('<figcaption>%s</figcaption>' % html.escape(caption.strip())) if caption and caption.strip() else ""
+    cap = ('<figcaption>%s</figcaption>' % _inline(caption.strip())) if caption and caption.strip() else ""
     if f is not None and callable(f) and _takes_narrow(f):
-        body = ('<div class="drawing-svg drawing-wide">%s</div><div class="drawing-svg drawing-narrow">%s</div>'
-                % (render(ref, cfg, narrow=0), render(ref, cfg, narrow=1)))
+        wide, narrow = render(ref, cfg, narrow=0), render(ref, cfg, narrow=1)
+        body = ('<div class="drawing-svg drawing-wide%s">%s</div><div class="drawing-svg drawing-narrow%s">%s</div>'
+                % (_fit(wide), wide, _fit(narrow), narrow))
     else:
-        body = '<div class="drawing-svg">%s</div>' % render(ref, cfg)
+        svg = render(ref, cfg)
+        body = '<div class="drawing-svg%s">%s</div>' % (_fit(svg), svg)
     return '<figure class="drawing" data-drawing="%s">%s%s</figure>' % (html.escape(str(ref).strip()), body, cap)

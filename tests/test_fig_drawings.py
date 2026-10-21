@@ -111,7 +111,7 @@ class Drawings(unittest.TestCase):
             for starter in figures.DRAWING_STARTERS:
                 figures.cli_new("s_" + starter, starter, cfg=cfg)
             # steps() has a phone layout (narrow=1), so the page gets both versions
-            self.assertIn('<div class="drawing-svg drawing-wide"><svg', drawings.drawing_html("s_pipeline.steps", cfg=cfg))
+            self.assertIn('<div class="drawing-svg drawing-wide drawing-fit"><svg', drawings.drawing_html("s_pipeline.steps", cfg=cfg))
             found = drawings.discover(cfg)
             self.assertEqual(sorted(found), ["s_architecture", "s_blocks", "s_flowchart", "s_pipeline", "s_timeline",
                                              "s_tree"])

@@ -1006,7 +1006,12 @@ def _shapes(ctx, p, sx, sy, rect, boxes, where):
                         out.append('<path class="%s" d="%s"/>' % (_classes(style, "head"), _poly_d(_arrow_head(x0, y0, x1, y1, size))))
             if lab:
                 good = [q for q in pts if q]
-                if good:
+                if good and t == "arrow" and len(good) >= 2:
+                    # an arrow is named at its head, just past the tip, so arrows from one point keep their names apart
+                    (x0, y0), (x1, y1) = good[-2], good[-1]
+                    n = math.hypot(x1 - x0, y1 - y0) or 1.0
+                    labels.append((x1 + 6 * (x1 - x0) / n, y1 + 6 * (y1 - y0) / n, str(lab), 2))
+                elif good:
                     q = good[len(good) // 2] if len(good) > 2 else ((good[0][0] + good[-1][0]) / 2, (good[0][1] + good[-1][1]) / 2)
                     labels.append((q[0], q[1], str(lab), 2))
         elif t == "polygon":

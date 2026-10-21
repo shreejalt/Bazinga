@@ -41,8 +41,8 @@ def compute(angle=30, stretch=1.5, _narrow=0):
         {"type": "line", "points": circle, "style": "muted dashed"},
         {"type": "polygon", "points": [apply(p) for p in square], "style": "main"},
         {"type": "line", "points": [apply(p) for p in circle], "style": "second"},
-        {"type": "arrow", "x1": 0, "y1": 0, "x2": e1[0], "y2": e1[1], "style": "main", "label": "M e₁"},
-        {"type": "arrow", "x1": 0, "y1": 0, "x2": e2[0], "y2": e2[1], "style": "third", "label": "M e₂"},
+        {"type": "arrow", "x1": 0, "y1": 0, "x2": e1[0], "y2": e1[1], "style": "main", "label": "M·e1"},
+        {"type": "arrow", "x1": 0, "y1": 0, "x2": e2[0], "y2": e2[1], "style": "third", "label": "M·e2"},
         {"type": "point", "x": 0, "y": 0, "r": 3, "style": "ink"},
     ]
     return {
