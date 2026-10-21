@@ -49,6 +49,10 @@ _cache = {}
 
 def _load(module, cfg=None):
     p = _drawings_dir(cfg) / (module + ".py")
+    if not p.is_file() and module.startswith("starter_"):   # ::drawing starter_<starter>.fn shows a starter as it is
+        from tessera.figures import STARTER_DIR, DRAWING_STARTERS
+        if module[len("starter_"):] in DRAWING_STARTERS:
+            p = STARTER_DIR / "drawings" / (module[len("starter_"):] + ".py")
     if not p.is_file():
         raise DrawingError("there is no drawings/%s.py. Create it from a starter: "
                            "python -m tessera figure new %s --from pipeline" % (module, module))

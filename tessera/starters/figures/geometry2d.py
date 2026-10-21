@@ -9,7 +9,7 @@ Here: a 2x2 matrix acting on the unit square and the unit circle.
 
 import math
 
-TITLE = "What a matrix does to the plane"
+TITLE = "Rotate and stretch"
 CAPTION = "The matrix rotates by the angle and stretches along x. The unit square becomes the shaded shape."
 REQUIRES = []
 

@@ -37,7 +37,10 @@ NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 BUDGET_MS = 30.0
 STARTER_DIR = Path(__file__).parent / "starters"
 STARTERS = ("slider_plot", "compare_bars", "heatmap", "geometry2d", "animation", "scatter_fit", "distribution",
-            "matrix_transform", "step_through")
+            "matrix_transform", "step_through", "data_lines", "linked_panels", "sampling", "vector_field")
+# ::figure starter_<name> shows a starter as it is (the template gallery uses this); a figures/ file of the same
+# name wins.
+STARTER_PREFIX = "starter_"
 DRAWING_STARTERS = ("pipeline", "blocks", "architecture", "flowchart", "timeline", "tree")
 
 
@@ -66,6 +69,14 @@ def _figures_dir(cfg=None):
     return _root(cfg) / "figures"
 
 
+def _path(name, cfg=None):
+    """figures/<name>.py, or the starter itself for ``starter_<starter>`` when figures/ has no such file."""
+    p = _figures_dir(cfg) / (name + ".py")
+    if not p.is_file() and name.startswith(STARTER_PREFIX) and name[len(STARTER_PREFIX):] in STARTERS:
+        return STARTER_DIR / "figures" / (name[len(STARTER_PREFIX):] + ".py")
+    return p
+
+
 def discover(cfg=None):
     """{name: path} for figures/*.py not starting with '_'."""
     d = _figures_dir(cfg)
@@ -85,7 +96,7 @@ def load(name, cfg=None, path=None):
     if not isinstance(name, str) or not NAME_RE.match(name):
         raise FigureError("%r is not a valid figure name: use lowercase letters, digits and _ "
                           "(for example softmax_temperature)" % (name,))
-    p = Path(path) if path else _figures_dir(cfg) / (name + ".py")
+    p = Path(path) if path else _path(name, cfg)
     if not p.is_file():
         known = sorted(discover(cfg))
         hint = _did_you_mean(name, known)
@@ -399,12 +410,12 @@ def write_assets(cfg, used, out):
     dest = out / "figures"
     dest.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(Path(plot.__file__), dest / "_plot.py")
-    found = discover(cfg)
     for name in sorted(set(used or ())):
-        if name not in found:
+        src = _path(name, cfg)
+        if not src.is_file():
             raise FigureError("figure %r is used on a page but figures/%s.py does not exist." % (name, name))
         load(name, cfg)  # contract check
-        shutil.copyfile(found[name], dest / (name + ".py"))
+        shutil.copyfile(src, dest / (name + ".py"))
     return dest
 
 
@@ -558,6 +569,33 @@ def cli_new(name, starter="slider_plot", cfg=None, kind="figure"):
         if problems:
             raise FigureError("the new figure fails its test: " + "; ".join(problems[:3]))
     return dest
+
+
+def _starter_meta(path):
+    """TITLE and CAPTION of a starter, read without running it."""
+    import ast
+    out = {}
+    for node in ast.parse(Path(path).read_text(encoding="utf-8")).body:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and getattr(node.targets[0], "id", "") in ("TITLE", "CAPTION"):
+            try:
+                out[node.targets[0].id] = ast.literal_eval(node.value)
+            except ValueError:
+                pass
+    return out
+
+
+def cli_starters(out=None):
+    """Print every starter with what it draws and the command that copies it."""
+    out = out or sys.stdout
+    for kind, pool, sub, place in (("Figures (figures/)", STARTERS, "figures", "::figure my_name"),
+                                   ("Drawings from code (drawings/)", DRAWING_STARTERS, "drawings", "::drawing my_name.<function>")):
+        print(kind, file=out)
+        for s in pool:
+            meta = _starter_meta(STARTER_DIR / sub / (s + ".py"))
+            print("  %-17s %s" % (s, meta.get("TITLE", "")), file=out)
+        print("  copy one:  python -m tessera figure new my_name --from <starter>   then write  %s\n" % place, file=out)
+    print("See them all, live: the \"Templates for Figures and Diagrams\" page of the example site.", file=out)
+    return 0
 
 
 def cli_test(name=None, cfg=None, out=None):

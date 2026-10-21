@@ -125,6 +125,12 @@ Every part of it carries a comment, so it is a fair way to learn the figure's co
 | A distribution | a bell curve with a shaded band |
 | A matrix moving the plane | four sliders, a transformed grid, the determinant |
 | Stepping through an algorithm | bubble sort, one comparison per step |
+| Your own data as lines | a pasted table, one series brought forward, smoothing |
+| Two panels together | a curve with its tangent, and its slope beside it |
+| Data piling up | a die rolled again and again, with Play |
+| A field of arrows | a pendulum's path through the arrows, with Play |
+
+[[read:templates]] shows every one of them working, with the line that copies it.
 
 This one is the noisy data example, copied as it is:
 

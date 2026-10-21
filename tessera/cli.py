@@ -6,7 +6,7 @@
                                       "Write" button (local only; --no-studio leaves it out)
     studio                            the local editor (127.0.0.1 only)
     check [file ...]                  run the checks; exit code 1 when there are errors
-    figure new <name> --from <starter|builder[:type]> | figure test [name] | figure preview <name> | figure list
+    figure new <name> --from <starter|builder[:type]> | figure starters | figure test [name] | figure preview <name> | figure list
     cite <arxiv-id|doi> [--key KEY]   add a reference to content/references.yml
     math "<latex>" [--display] [--html FILE]
                                       check one formula: the MathML, or what is wrong, where, and what to write
@@ -156,6 +156,8 @@ def cmd_figure(args, cfg) -> int:
         return 0
     if args.action == "list":
         return figs.cli_list(cfg)
+    if args.action == "starters":
+        return figs.cli_starters()
     if args.action == "preview":
         if not args.name:
             print("usage: python -m tessera figure preview <name>", file=sys.stderr)
@@ -270,7 +272,7 @@ def parser() -> argparse.ArgumentParser:
     p.set_defaults(fn=cmd_math)
 
     p = sub.add_parser("figure", help="new figure (from a starter or the builder), test, preview or list figures")
-    p.add_argument("action", choices=["new", "test", "preview", "list"])
+    p.add_argument("action", choices=["new", "test", "preview", "list", "starters"])
     p.add_argument("name", nargs="?")
     p.add_argument("--from", dest="starter", default="slider_plot",
                    help="a starter (slider_plot, scatter_fit, distribution, …) or builder / builder:<type> for the form")
