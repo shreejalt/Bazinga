@@ -11,7 +11,7 @@ import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from tessera import cli, figbuilder, figures, plot
+from bazinga import cli, figbuilder, figures, plot
 
 ROOT = Path(__file__).resolve().parent.parent
 

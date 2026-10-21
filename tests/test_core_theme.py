@@ -16,13 +16,13 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_core_support import cleanup, copy_example, make_site, post  # noqa: E402
 
-from tessera import build, config, serve  # noqa: E402
+from bazinga import build, config, serve  # noqa: E402
 
 
 class ExampleTheme(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.tmp = Path(tempfile.mkdtemp(prefix="tessera-theme-"))
+        cls.tmp = Path(tempfile.mkdtemp(prefix="bazinga-theme-"))
         copy_example(cls.tmp)
         cls.cfg = config.load(cls.tmp)
         cls.result = build.build(cls.cfg, quiet=True)
@@ -53,7 +53,7 @@ class ExampleTheme(unittest.TestCase):
         cv = self.html("cv/index.html")
         self.assertEqual(cv.count('<li class="jobrow">'), 3)
         self.assertIn('id="skills"', cv)
-        self.assertIn('href="/projects/tessera/"', cv)                           # a role's page and open source
+        self.assertIn('href="/projects/bazinga/"', cv)                           # a role's page and open source
         self.assertIn('href="/topics/computer-vision/"', cv)
         self.assertIn('aria-current="true">CV</a>', cv)
 
@@ -104,7 +104,7 @@ class ExampleTheme(unittest.TestCase):
         for path in self.out.rglob("*"):
             if path.suffix in (".html", ".js", ".json", ".xml", ".txt", ".md"):
                 text = path.read_text(encoding="utf-8", errors="ignore")
-                self.assertNotIn("__tessera", text, path)
+                self.assertNotIn("__bazinga", text, path)
                 self.assertNotIn(">Write</a>", text, path)
                 self.assertNotIn("Edit this page", text, path)
 
@@ -146,8 +146,8 @@ class LocalWriteButton(unittest.TestCase):
     def test_injected_only_with_the_studio(self):
         self.assertEqual(serve.inject_local(self.PAGE, False), self.PAGE)
         html = serve.inject_local(self.PAGE, True).decode()
-        self.assertIn('<a class="cta write" href="/__tessera/write">Write</a>', html)
-        self.assertIn('href="/__tessera/write?page=read:welcome">Edit this page</a>', html)
+        self.assertIn('<a class="cta write" href="/__bazinga/write">Write</a>', html)
+        self.assertIn('href="/__bazinga/write?page=read:welcome">Edit this page</a>', html)
 
     def test_redirect_goes_to_the_studio_with_its_token(self):
         root = make_site({"posts/a": post("A")})
@@ -163,7 +163,7 @@ class LocalWriteButton(unittest.TestCase):
                 def redirect_request(self, *a, **k):
                     return None
             opener = urllib.request.build_opener(NoRedirect)
-            base = f"http://127.0.0.1:{state.port}/__tessera/write"
+            base = f"http://127.0.0.1:{state.port}/__bazinga/write"
             with self.assertRaises(urllib.error.HTTPError) as ctx:
                 opener.open(base + "?page=post:a")
             self.assertEqual(ctx.exception.code, 302)

@@ -1,7 +1,7 @@
-"""tessera.diagram_text: reading the text (every feature) and the problems it reports (line + hint)."""
+"""bazinga.diagram_text: reading the text (every feature) and the problems it reports (line + hint)."""
 import unittest
 
-from tessera import diagram_text as dt
+from bazinga import diagram_text as dt
 
 
 def names(g):

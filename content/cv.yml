@@ -1,6 +1,6 @@
 # The CV page (/cv/). Replace every example below with your own record; the page lays it out the same way.
 # Optional per role: `tags` (topic slugs from content/topics.yml: they link to the topic pages), `pages` (ids of pages
-# on this site about that work, e.g. project:tessera), `used` (the tools and methods the role's lines name), and
+# on this site about that work, e.g. project:bazinga), `used` (the tools and methods the role's lines name), and
 # `link` ({label, url}: one more page or address for the role). The build refuses unknown tags and page ids.
 
 contact:
@@ -19,7 +19,7 @@ experience:
   - Cut the time from a labelled batch to a deployed model from days to hours with scheduled, tested jobs.
   - Write the internal notes that later become the explainers on this site.
   tags: [computer-vision, training, tools]
-  pages: [project:tessera]
+  pages: [project:bazinga]
   used: [PyTorch, Docker, evaluation dashboards]
 - org: Sample Analytics
   role: Data Scientist
@@ -69,4 +69,4 @@ skills:              # items: a comma-separated list
 
 open_source:         # text, and optionally page: the id of the page on this site about it
 - text: A template for technical writing with real equations, interactive figures and a map of the site
-  page: project:tessera
+  page: project:bazinga

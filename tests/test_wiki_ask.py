@@ -8,7 +8,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_wiki_fixtures import make_site  # noqa: E402
 
-from tessera import ask_server, wiki  # noqa: E402
+from bazinga import ask_server, wiki  # noqa: E402
 
 ENV = {"LLM_API_KEY": "k-test", "LLM_MODEL": "m/one", "ASK_PER_VISITOR": "2", "ASK_DAILY_CAP": "3"}
 

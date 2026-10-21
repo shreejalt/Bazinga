@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "python3 -m pip install -r requirements.txt",
-  "buildCommand": "python3 -m unittest discover tests && python3 -m tessera build",
+  "buildCommand": "python3 -m unittest discover tests && python3 -m bazinga build",
   "outputDirectory": "_site",
   "trailingSlash": true,
   "functions": {

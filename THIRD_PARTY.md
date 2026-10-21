@@ -1,7 +1,7 @@
 # Third-party software and assets
 
-Tessera's own code is MIT-licensed (see `LICENSE`). It installs, loads or links to the following, each under its own
-licence. Nothing below is copied into this repository; versions are pinned in `requirements.txt` and `tessera/vendor.py`.
+Bazinga's own code is MIT-licensed (see `LICENSE`). It installs, loads or links to the following, each under its own
+licence. Nothing below is copied into this repository; versions are pinned in `requirements.txt` and `bazinga/vendor.py`.
 
 | Component | Used for | Licence |
 |---|---|---|

@@ -14,8 +14,8 @@ import threading
 import unittest
 from pathlib import Path
 
-from tessera.studio import publish
-from tessera.studio.server import StudioServer
+from bazinga.studio import publish
+from bazinga.studio.server import StudioServer
 
 HAS_GIT = shutil.which("git") is not None
 FAKE_BUILD = [sys.executable, "-c", "import pathlib; pathlib.Path('_site').mkdir(exist_ok=True); "
@@ -71,7 +71,7 @@ class Pipeline(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def cfg(self):
-        from tessera import config
+        from bazinga import config
         config.set_root(self.root)
         return config.load(self.root)
 
@@ -212,7 +212,7 @@ class Pipeline(unittest.TestCase):
         self.assertFalse((self.root / "pwned").exists())
 
     def test_rename_stages_the_old_file_removal(self):
-        from tessera.studio.api import Studio
+        from bazinga.studio.api import Studio
         studio = Studio(self.root)
         res = studio.rename_page({"id": "post:hello", "slug": "hello-world"})
         self.assertEqual(res["id"], "post:hello-world")
@@ -225,10 +225,10 @@ class Pipeline(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("git"), "git")
     def test_real_build(self):
-        """The real `python -m tessera build` in the temporary site (when the core build is present)."""
+        """The real `python -m bazinga build` in the temporary site (when the core build is present)."""
         try:
-            import tessera.build  # noqa: F401
-            import tessera.cli  # noqa: F401
+            import bazinga.build  # noqa: F401
+            import bazinga.cli  # noqa: F401
         except ImportError:
             self.skipTest("the core build is not available yet")
         res = publish.run(self.cfg(), "post:hello", publish.Options(dry_run=True), self.emit)

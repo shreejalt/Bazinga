@@ -1,4 +1,4 @@
-# Tessera
+# Bazinga
 
 A template for a personal site and technical blog. You write posts in Markdown. Equations render properly,
 diagrams are drawn from a few lines of text, and figures have sliders readers can move. The whole site also works as
@@ -11,7 +11,7 @@ You need Python 3.11 or newer. There is no Node and no bundler.
 ```bash
 git clone https://github.com/<you>/<your-site>.git && cd <your-site>    # or GitHub: "Use this template"
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-.venv/bin/python -m tessera serve
+.venv/bin/python -m bazinga serve
 ```
 
 Open http://127.0.0.1:8000. You see the example site, and it rebuilds whenever you save a file.
@@ -56,7 +56,7 @@ $$
 | `$x^2$` and `$$ … $$` | an equation in a sentence, or one on its own line |
 | `$$ … $$ {#eq:name}` and then `[eq:name]` | a numbered equation, and a reference to it |
 | `[[read:slug]]` | a link to another post, which also adds a line on the map |
-| `[@Key]` | a numbered citation. `python -m tessera cite 1706.03762` adds a paper by its arXiv id or DOI |
+| `[@Key]` | a numbered citation. `python -m bazinga cite 1706.03762` adds a paper by its arXiv id or DOI |
 | a ```` ```diagram ```` block | a diagram (see 5) |
 | `::figure name` | an interactive figure (see 6) |
 | `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`, `> [!KEY]` | a coloured box |
@@ -72,7 +72,7 @@ the fix, for example: `\begin{align} is not supported here; write \begin{aligned
 
 - In the Studio, **Equation…** opens a helper with a palette and a live preview. It can also insert a ready-made
   equation (a fraction, a sum, a matrix, cases).
-- From a terminal, `python -m tessera math "\frac{a}{b}"` checks a single formula.
+- From a terminal, `python -m bazinga math "\frac{a}{b}"` checks a single formula.
 - `content/reads/writing-math.md` is the full guide.
 
 ## 5. Diagrams: no code needed
@@ -140,9 +140,9 @@ words and numbers. Every line of each template has a comment.
 | `geometry2d`, `matrix_transform` | shapes and a matrix moving the plane |
 
 ```bash
-python -m tessera figure starters                           # list them
-python -m tessera figure new my_plot --from data_lines      # copy one to figures/my_plot.py
-python -m tessera figure test my_plot                       # runs it at every setting; fails on errors or if slow
+python -m bazinga figure starters                           # list them
+python -m bazinga figure new my_plot --from data_lines      # copy one to figures/my_plot.py
+python -m bazinga figure test my_plot                       # runs it at every setting; fails on errors or if slow
 ```
 
 In the Studio it's **Figure… → New figure → Start from an example**. The page `content/reads/templates.md`
@@ -168,12 +168,12 @@ def compute(t=1.0, _narrow=0):
 
 In the Studio, **Publish** checks the post, builds the site, updates the wiki files, commits the post and pushes it.
 Your host then deploys it. **Schedule** publishes on a later date, and **Unpublish** turns a post back into a draft.
-From a terminal: `python -m tessera publish -- content/reads/my-post.md`.
+From a terminal: `python -m bazinga publish -- content/reads/my-post.md`.
 
 Publishing works only on your own computer. The Studio listens on `127.0.0.1` and needs a new key each time it starts.
 None of it is part of the built site, so the live site cannot change anything.
 
-To check everything without publishing, run `python -m tessera check`.
+To check everything without publishing, run `python -m bazinga check`.
 
 ## 8. The wiki, the map and Ask
 
@@ -191,7 +191,7 @@ A language model is optional. To use one, set `llm:` in `site.yml` and put the k
 committed. Any OpenAI-compatible service works, including a local one through Ollama. You then get two extras:
 
 - **Ask** can also give a written answer, through `api/ask.py` on Vercel.
-- `python -m tessera wiki ingest|lint|highlights` suggests links, topics and summaries. The suggestions are written
+- `python -m bazinga wiki ingest|lint|highlights` suggests links, topics and summaries. The suggestions are written
   to `proposals/` for you to accept or reject, and never go straight onto the site.
 
 ## 9. Deploy
@@ -201,7 +201,7 @@ committed. Any OpenAI-compatible service works, including a local one through Ol
 | Vercel | Import the repository. `vercel.json` runs the tests and the build. Written answers on Ask need the key set in the project. |
 | Netlify | Import the repository (`netlify.toml`). |
 | GitHub Pages | Settings → Pages → Source: GitHub Actions (`.github/workflows/pages.yml`). |
-| Anywhere | `python -m tessera build`, then upload `_site/`. |
+| Anywhere | `python -m bazinga build`, then upload `_site/`. |
 
 ## Folders
 
@@ -209,10 +209,10 @@ committed. Any OpenAI-compatible service works, including a local one through Ol
 site.yml      settings and home page        content/   your posts, cv.yml, topics.yml, references.yml
 figures/      interactive figures           drawings/  diagrams made with code (optional)
 static/       images and files              wiki/      generated wiki files
-tessera/      the engine, theme and Studio  tests/     run before every deploy
+bazinga/      the engine, theme and Studio  tests/     run before every deploy
 ```
 
-The full design is in `docs/DESIGN.md`. To change the theme, copy a file from `tessera/theme/` to the same path under
+The full design is in `docs/DESIGN.md`. To change the theme, copy a file from `bazinga/theme/` to the same path under
 `theme/` and edit it there.
 
 ## Licence

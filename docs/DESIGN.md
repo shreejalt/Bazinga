@@ -1,30 +1,30 @@
-# Tessera — design spec
+# Bazinga — design spec
 
-Tessera is an open-source template for technical blogs and personal sites. Its parts:
+Bazinga is an open-source template for technical blogs and personal sites. Its parts:
 - **Posts** are Markdown, with real equations rendered at build time and interactive figures written as small Python files. The same Python runs at build time and again in the reader's browser.
 - **The site is kept as an LLM wiki:** a catalog, a log, a knowledge-graph map, topic hubs and series, plus an **Ask** box on every page.
 - **The Studio**, which runs on localhost only, is where authors write, check and **publish** like on Medium.
 
-The name means one tile of a mosaic: every post is a tile and the map shows the mosaic. Change it in `site.yml`.
+The name is Sheldon's catchphrase from The Big Bang Theory. Change it in `site.yml`.
 
 This file is the contract between the parts. Every builder reads it first. `docs/research.md` holds the sources.
 
 ## Principles
 
-1. **One Python file, three places.** A figure's `compute()` runs at build time (static SVG in the HTML), in the browser on Pyodide (when the reader moves a control), and in the Studio (live preview). The SVG renderer (`tessera/plot.py`) is Python too, so the browser gets the *same* SVG the build made.
+1. **One Python file, three places.** A figure's `compute()` runs at build time (static SVG in the HTML), in the browser on Pyodide (when the reader moves a control), and in the Studio (live preview). The SVG renderer (`bazinga/plot.py`) is Python too, so the browser gets the *same* SVG the build made.
 2. **Works without JavaScript.** Every page, equation, figure (at its defaults) and drawing is static HTML/SVG/MathML. JS only adds interaction, the map's hover, and Ask.
 3. **Authors write Markdown, not HTML.** Everything has a short syntax and a Studio button. Errors are caught and explained with the line number, never silently rendered wrong.
 4. **Models propose, people publish.** LLM features (optional, any OpenAI-compatible endpoint, a local Ollama included) write proposals; nothing a model writes reaches the site without the author accepting it.
-5. **Publishing happens only on the author's machine.** The Studio is not part of the built site. No file of `tessera/studio/` is ever copied to `_site/`, and a test enforces this. The Studio:
+5. **Publishing happens only on the author's machine.** The Studio is not part of the built site. No file of `bazinga/studio/` is ever copied to `_site/`, and a test enforces this. The Studio:
    - binds to 127.0.0.1;
    - checks Host and Origin;
    - requires a per-launch token.
 
    The deployed site can only *answer* (Ask). It cannot write.
-6. **Standard library first.** The runtime dependencies are Markdown, PyYAML, Jinja2, latex2mathml and Pygments. Python ≥ 3.11. No Node needed. CDN assets are pinned to exact versions in one place (`tessera/vendor.py`).
+6. **Standard library first.** The runtime dependencies are Markdown, PyYAML, Jinja2, latex2mathml and Pygments. Python ≥ 3.11. No Node needed. CDN assets are pinned to exact versions in one place (`bazinga/vendor.py`).
 7. **Customisable without forking the engine.**
    - `site.yml` covers names, nav, colours, fonts, kinds, LLM provider and deploy command.
-   - A `theme/` folder in the site root overrides any template or asset of `tessera/theme/` by the same path.
+   - A `theme/` folder in the site root overrides any template or asset of `bazinga/theme/` by the same path.
 
 ## Repository layout (the template repo)
 
@@ -35,13 +35,13 @@ THIRD_PARTY.md       Pyodide (MPL-2.0), CodeMirror (MIT), fonts (OFL), latex2mat
 AGENTS.md            the wiki schema for coding agents (Karpathy's LLM-wiki "schema" layer): how pages, index, log work
 site.yml             all configuration (see below)
 requirements.txt
-tessera/             the engine (a Python package, run as `python -m tessera <command>`)
+bazinga/             the engine (a Python package, run as `python -m bazinga <command>`)
   __init__.py  __main__.py  cli.py
   config.py          load + validate site.yml, defaults, paths (ROOT = cwd)
   content.py         load pages from content/<kind>/*.md: front matter, ids, status, dates, series
   markdown.py        Markdown → HTML: math, [[links]], [@KEY] cites, ::figure, ::drawing, callouts, footnotes, code
   mathml.py          LaTeX → MathML with pre/post-processing and validation (MathError with line + hint)
-  checks.py          all checks on a page (used by build, `tessera check`, the Studio)
+  checks.py          all checks on a page (used by build, `bazinga check`, the Studio)
   graph.py           the site graph: nodes, edges, backlinks, related, series order, topic hubs, map layout
   figures.py         discover figures/*.py, validate the contract, run compute at build, write data + static SVG
   plot.py            figure spec → SVG (runs at build AND in the browser; stdlib only)
@@ -50,7 +50,7 @@ tessera/             the engine (a Python package, run as `python -m tessera <co
   wiki.py            generated wiki files: wiki/index.md, wiki/log.md, passages, llms.txt, llms-full.txt, page .md copies
   retrieve.py        BM25 + graph answer (runs at build tests, in the browser on Pyodide, and in api/ask.py; stdlib only)
   llm.py             OpenAI-compatible client + the proposal operations (ingest, lint, highlights, describe, equation, figure)
-  ask_server.py      the "written answer" handler, shared by api/ask.py (Vercel) and `tessera serve`
+  ask_server.py      the "written answer" handler, shared by api/ask.py (Vercel) and `bazinga serve`
   seo.py             sitemap.xml, robots.txt, feed.xml, JSON-LD, Open Graph, canonical
   build.py           orchestrates a full build into _site/
   serve.py           dev server: build + watch + reload + /api/ask locally
@@ -66,7 +66,7 @@ tessera/             the engine (a Python package, run as `python -m tessera <co
     publish.py       the publish pipeline
     static/          index.html, studio.css, studio.js, editor.js (CodeMirror 6 via import map), panels/*.js
   starters/          post.md, figures/{slider_plot,compare_bars,heatmap,geometry2d,animation}.py, drawings/{pipeline,blocks}.py
-api/ask.py           Vercel Python function: thin wrapper over tessera.ask_server
+api/ask.py           Vercel Python function: thin wrapper over bazinga.ask_server
 content/
   posts/*.md         example posts (one showcase post that uses every feature)
   projects/*.md
@@ -86,7 +86,7 @@ vercel.json  netlify.toml  .github/workflows/pages.yml (GitHub Pages)
 
 ```yaml
 site:
-  name: "Tessera"
+  name: "Bazinga"
   author: "Your Name"
   tagline: "Notes on things I am learning"
   description: "≤155 characters for search engines"
@@ -179,7 +179,7 @@ Rules:
   - `\big…` sizes are kept as stretchy fences.
   - `\arg`, `\argmax` and `\operatorname*` take limits underneath in display; `\log` and the like get TeX spacing.
   - `\tag` and `\label` become the equation number.
-- **Validation:** the output must be MathML Core: no leaked `\commands`, no `mfenced` or `linebreak=`. `tests/fixtures/math_corpus.yml` (254 snippets) is the contract. `python -m tessera math "<latex>"` shows the result or the error with a caret.
+- **Validation:** the output must be MathML Core: no leaked `\commands`, no `mfenced` or `linebreak=`. `tests/fixtures/math_corpus.yml` (254 snippets) is the contract. `python -m bazinga math "<latex>"` shows the result or the error with a caret.
 - **Mobile:** display math sits in `<div class="math-display">`, which scrolls horizontally on phones.
 
 ## Interactive figures (figures/<name>.py)
@@ -238,7 +238,7 @@ def compute(t=1.0, k=0, log=0, _narrow=0):    # pure: same inputs → same spec;
 
 ## Drawings (drawings/<module>.py)
 
-Each function returns an SVG string built with `tessera.draw`. The kit has:
+Each function returns an SVG string built with `bazinga.draw`. The kit has:
 - `Diagram(width, height)`;
 - `box(x, y, w, h, text, style)`, `arrow(a, b, label)`, `row(...)` / `column(...)` / `grid(...)` layouts, `group(label, items)`, `note(text)`;
 - `.svg()`.
@@ -264,7 +264,7 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
   - `_site/<kind>/<slug>/index.md` is a Markdown copy of each page, with `<link rel="alternate" type="text/markdown">`.
   - `_site/data/passages.json` holds one passage per section (h2/h3) of every page, as plain text: `{id, title, url, section, anchor, text}`.
   - `_site/data/graph.json` holds the nodes (id, title, url, kind, summary, topics, x, y), the edges and the rings.
-- **LLM operations** (`llm.py`, CLI `tessera wiki <op>`, and Studio buttons). They write `proposals/<op>-<slug>.md` (or JSON for the Studio) and never edit content:
+- **LLM operations** (`llm.py`, CLI `bazinga wiki <op>`, and Studio buttons). They write `proposals/<op>-<slug>.md` (or JSON for the Studio) and never edit content:
   - `ingest <page>` proposes topics, builds_on, `[[links]]` to add (with the sentence they fit in), a summary, a description, three questions the page answers, and series membership.
   - `lint` runs fixed rules (orphans, one-way links, thin topics, pages without figures, stale `updated`) and, with a model, flags contradictions between pages that share a topic.
   - `highlights <series>` writes 3–4 highlights per part from the part's own text; numbers must appear in the page or the line is rejected.
@@ -273,11 +273,11 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
   - `figure "<description>"` drafts a figure module from the closest starter. The Studio runs it through the contract test before showing it.
 - **Ask** (`retrieve.py`, the same code everywhere):
   - **The browser box:** the `/ask/` page and the floating "Ask" button on every page (which takes the current page as context). It runs `retrieve.answer(question, passages, graph, page=None)` on Pyodide. That does BM25 over the passages, boosted for the current page and its graph neighbours, and returns the top passages, the pages they come from, and a short extractive answer. The quick answer needs no server.
-  - **A "Written answer" button** appears when `/api/ask/` says it is on. It POSTs `{q, page}` to `api/ask.py`, which picks passages with the same `retrieve` code and asks the configured model to answer **only** from them with numbered citations. It has per-IP and daily limits and stores nothing. Locally, `tessera serve` serves the same endpoint.
+  - **A "Written answer" button** appears when `/api/ask/` says it is on. It POSTs `{q, page}` to `api/ask.py`, which picks passages with the same `retrieve` code and asks the configured model to answer **only** from them with numbered citations. It has per-IP and daily limits and stores nothing. Locally, `bazinga serve` serves the same endpoint.
 
 ## The Studio (local only)
 
-`tessera studio` (or `python -m tessera studio`):
+`bazinga studio` (or `python -m bazinga studio`):
 - picks a free port on **127.0.0.1**;
 - prints `http://127.0.0.1:<port>/?token=<random>` and opens the browser;
 - swaps the token for a `SameSite=Strict`, HttpOnly cookie.
@@ -342,15 +342,15 @@ The look is calm and editorial: a reading column of about 720 px, a generous ser
 ## CLI (cli.py)
 
 ```
-python -m tessera new "Title" [--kind posts]       new draft from the starter
-python -m tessera build [--drafts]                 build _site/ (drafts only with --drafts, for previews)
-python -m tessera serve [--port 8000]              build, watch, live-reload, /api/ask locally
-python -m tessera studio                           the local editor (127.0.0.1 only)
-python -m tessera check [file ...]                 run the checks; exit 1 on errors
-python -m tessera figure new <name> --from slider_plot | figure test [name]
-python -m tessera cite <arxiv-id|doi> [--key KEY]  add a reference
-python -m tessera wiki index|ingest|lint|highlights|describe [args]
-python -m tessera publish <file>                   the Studio's publish pipeline, from the terminal
+python -m bazinga new "Title" [--kind posts]       new draft from the starter
+python -m bazinga build [--drafts]                 build _site/ (drafts only with --drafts, for previews)
+python -m bazinga serve [--port 8000]              build, watch, live-reload, /api/ask locally
+python -m bazinga studio                           the local editor (127.0.0.1 only)
+python -m bazinga check [file ...]                 run the checks; exit 1 on errors
+python -m bazinga figure new <name> --from slider_plot | figure test [name]
+python -m bazinga cite <arxiv-id|doi> [--key KEY]  add a reference
+python -m bazinga wiki index|ingest|lint|highlights|describe [args]
+python -m bazinga publish <file>                   the Studio's publish pipeline, from the terminal
 ```
 
 ## Tests (tests/, unittest, must pass before a deploy)
@@ -371,7 +371,7 @@ The tests cover:
 
 ## Deploy
 
-- **Vercel:** `vercel.json` runs `pip install -r requirements.txt && python -m unittest discover tests && python -m tessera build`. `api/ask.py` is the function.
+- **Vercel:** `vercel.json` runs `pip install -r requirements.txt && python -m unittest discover tests && python -m bazinga build`. `api/ask.py` is the function.
 - **Netlify:** `netlify.toml` gives the same build; Ask's written answers are off (static only), unless the author adds a Netlify function.
 - **GitHub Pages:** `.github/workflows/pages.yml` builds on push and daily (for scheduled posts) and deploys `_site`. Written answers are off.
 - **Any static host:** upload `_site/`.
@@ -383,9 +383,9 @@ each page as a paper sheet; STIX Two Text and Courier Prime; reads and papers in
 series strip, Summary, contents with page numbers, numbered sections, Connections with the links figure, Related / Go
 deeper / Go broader, Papers, older/newer). Kinds carry a `role` (read, paper, project, external). The home page, the CV
 (`content/cv.yml`), lists (ten rows a page, filter), series, topics with live figures, Explore and Ask follow it too.
-`tessera/mapview.py` (standard library) computes the map layout, every page's view (related, reading order, the hover
+`bazinga/mapview.py` (standard library) computes the map layout, every page's view (related, reading order, the hover
 motion), the links figure and the series finder; the build writes `/data/site.js`, `/data/map.json`,
 `/data/mapdata.json`, `/data/series.json` and `/data/view/<id>.json`, and ships the module as `/figures/_mapview.py`
-for the Explore page's "chain between" and "in reading order". There is no dark mode. `tessera serve` starts the Studio
+for the Explore page's "chain between" and "in reading order". There is no dark mode. `bazinga serve` starts the Studio
 and adds a Write button (and Edit this page) at the theme's `<!-- local-tools -->` mark as it serves; builds never
 contain them.

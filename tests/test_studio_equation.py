@@ -11,12 +11,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tessera.mathml import check
-from tessera.studio.api import Studio
-from tessera.studio.security import Refused
+from bazinga.mathml import check
+from bazinga.studio.api import Studio
+from bazinga.studio.security import Refused
 
 ROOT = Path(__file__).resolve().parent.parent
-STATIC = ROOT / "tessera" / "studio" / "static"
+STATIC = ROOT / "bazinga" / "studio" / "static"
 EQUATION = (STATIC / "panels" / "equation.js").read_text(encoding="utf-8")
 TIPS = (STATIC / "mathtips.js").read_text(encoding="utf-8")
 BOX = "□"

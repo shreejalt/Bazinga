@@ -1,4 +1,4 @@
-"""tessera.figures: the module contract, error messages, HTML, assets, CLI hooks."""
+"""bazinga.figures: the module contract, error messages, HTML, assets, CLI hooks."""
 
 import html
 import io
@@ -13,7 +13,7 @@ import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
 from pathlib import Path
 
-from tessera import figures
+from bazinga import figures
 
 GOOD = '''
 TITLE = "Good"
@@ -186,7 +186,7 @@ class Html(unittest.TestCase):
         h = figures.figure_html("good", cfg=self.site.cfg)
         self.assertEqual(unbalanced(h), [])
         self.assertTrue(h.startswith('<figure class="fig" data-figure="good"'))
-        data = json.loads(html.unescape(re.search(r'data-tessera="([^"]*)"', h).group(1)))
+        data = json.loads(html.unescape(re.search(r'data-bazinga="([^"]*)"', h).group(1)))
         self.assertRegex(data["module"], r"^figures/good\.py\?v=[0-9a-f]{10}$")
         self.assertRegex(data["plot"], r"^figures/_plot\.py\?v=[0-9a-f]{10}$")
         self.assertEqual(data["values"], {"a": 1.0, "k": 0, "s": 0})

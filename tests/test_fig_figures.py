@@ -7,7 +7,7 @@ import types
 import unittest
 from pathlib import Path
 
-from tessera import figures
+from bazinga import figures
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -45,7 +45,7 @@ class Starters(unittest.TestCase):
             self.assertTrue((out / "figures" / "starter_sampling.py").is_file())
             with self.assertRaises(figures.FigureError):
                 figures.figure_html("starter_nothing", cfg=cfg)
-            from tessera import drawings
+            from bazinga import drawings
             self.assertIn("<svg", drawings.drawing_html("starter_tree.taxonomy", cfg=cfg))
         finally:
             shutil.rmtree(tmp, ignore_errors=True)

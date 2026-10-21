@@ -2,13 +2,13 @@
 title: "Making Interactive Figures"
 date: 2026-10-20
 summary: "How a figure you can move is made: drawn when the site is built, redrawn in the reader's browser when they touch a control. Three ways to make one (a form, an example, or code), what a figure file holds, how it is tested, and the mistakes worth avoiding."
-description: "How to make interactive figures in Tessera: the no-code form, the examples, the figure file part by part, testing, speed and common mistakes."
+description: "How to make interactive figures in Bazinga: the no-code form, the examples, the figure file part by part, testing, speed and common mistakes."
 topics: [visualization, tools]
 series: {name: "Getting started", part: 3}
 builds_on: [read:welcome]
 ---
 
-A figure in Tessera is a picture with controls under it. Move a slider and the picture follows. This guide shows how
+A figure in Bazinga is a picture with controls under it. Move a slider and the picture follows. This guide shows how
 one is made, from the form in the Studio that needs no code at all to the small code file behind every figure, and
 how to keep figures quick and correct.
 

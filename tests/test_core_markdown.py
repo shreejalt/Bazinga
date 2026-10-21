@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from tessera import config, content
-from tessera.markdown import references
+from bazinga import config, content
+from bazinga.markdown import references
 
 from test_core_support import REPO, post, render_text  # noqa: E402
 

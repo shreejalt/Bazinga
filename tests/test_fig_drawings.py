@@ -1,4 +1,4 @@
-"""tessera.draw and tessera.drawings: the kit, the example drawing, the starters, the errors."""
+"""bazinga.draw and bazinga.drawings: the kit, the example drawing, the starters, the errors."""
 
 import shutil
 import tempfile
@@ -7,7 +7,7 @@ import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from tessera import draw, drawings, figures
+from bazinga import draw, drawings, figures
 
 ROOT = Path(__file__).resolve().parent.parent
 

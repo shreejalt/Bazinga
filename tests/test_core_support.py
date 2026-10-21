@@ -4,8 +4,8 @@ import tempfile
 import textwrap
 from pathlib import Path
 
-from tessera import config, content
-from tessera.markdown import SiteIndex, render
+from bazinga import config, content
+from bazinga.markdown import SiteIndex, render
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -32,7 +32,7 @@ Kingma14: {title: "Adam", authors: [Diederik P. Kingma, Jimmy Ba], year: 2014, a
 
 def make_site(pages: dict | None = None, site_yml: str = SITE_YML) -> Path:
     """A site in a temp folder. ``pages`` maps 'posts/slug' to the file text. Returns the root (caller removes it)."""
-    root = Path(tempfile.mkdtemp(prefix="tessera-core-"))
+    root = Path(tempfile.mkdtemp(prefix="bazinga-core-"))
     (root / "site.yml").write_text(site_yml)
     (root / "content" / "posts").mkdir(parents=True)
     (root / "content" / "topics.yml").write_text(TOPICS)

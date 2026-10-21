@@ -1,4 +1,4 @@
-"""Text diagrams in the rest of Tessera: ```diagram blocks in Markdown (with the file's line on a problem), the code
+"""Text diagrams in the rest of Bazinga: ```diagram blocks in Markdown (with the file's line on a problem), the code
 route (draw.flow, draw.timeline, draw.tree), the theme's stylesheet, and the Studio's diagram panel and its API."""
 import http.client
 import json
@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from tessera import diagram_text as dt, draw  # noqa: E402
+from bazinga import diagram_text as dt, draw  # noqa: E402
 
 from test_core_support import render_text  # noqa: E402
 
@@ -130,16 +130,16 @@ class CodeRoute(unittest.TestCase):
 
 class Theme(unittest.TestCase):
     def test_stylesheet_uses_the_theme(self):
-        css = (ROOT / "tessera" / "theme" / "assets" / "css" / "diagram.css").read_text(encoding="utf-8")
+        css = (ROOT / "bazinga" / "theme" / "assets" / "css" / "diagram.css").read_text(encoding="utf-8")
         for var in ("--paper", "--ink", "--blue", "--ref", "--fig-c1", "--mono"):
             self.assertIn(var, css)
         self.assertIn("vector-effect:non-scaling-stroke", css)
         self.assertNotRegex(css, r"(?i)python|pyodide")
-        base = (ROOT / "tessera" / "theme" / "templates" / "base.html").read_text(encoding="utf-8")
+        base = (ROOT / "bazinga" / "theme" / "templates" / "base.html").read_text(encoding="utf-8")
         self.assertIn("css/diagram.css", base)
 
     def test_every_style_and_shape_has_a_rule(self):
-        css = (ROOT / "tessera" / "theme" / "assets" / "css" / "diagram.css").read_text(encoding="utf-8")
+        css = (ROOT / "bazinga" / "theme" / "assets" / "css" / "diagram.css").read_text(encoding="utf-8")
         for style in dt.STYLES:
             self.assertIn(".s-" + style, css)
         for cls in ("dg-node", "dg-edge", "dg-tip", "dg-halo", "dg-frame", "dg-frame-title", "dg-anno", "dg-lid"):
@@ -149,7 +149,7 @@ class Theme(unittest.TestCase):
 class StudioPanel(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from tessera.studio.server import StudioServer
+        from bazinga.studio.server import StudioServer
         from test_studio_security import make_site
         cls.tmp = Path(tempfile.mkdtemp(prefix="studio-diagram-"))
         cls.root = cls.tmp / "site"
@@ -222,7 +222,7 @@ class StudioPanel(unittest.TestCase):
         conn.close()
 
     def test_panel_files(self):
-        static = ROOT / "tessera" / "studio" / "static"
+        static = ROOT / "bazinga" / "studio" / "static"
         js = (static / "panels" / "diagram.js").read_text(encoding="utf-8")
         self.assertIn("/api/diagram/render", js)
         self.assertIn("/api/diagram/examples", js)

@@ -8,8 +8,8 @@ import textwrap
 from pathlib import Path
 from types import SimpleNamespace
 
-from tessera import config, content
-from tessera.graph import build_graph
+from bazinga import config, content
+from bazinga.graph import build_graph
 
 TOPICS = {
     "attention": {"slug": "attention", "label": "Attention"},
@@ -131,10 +131,10 @@ REFERENCES = {
 
 def make_site(root=None):
     """Write the fixture site to a temp dir and return (cfg, pages, rendered, site, graph)."""
-    root = Path(root or tempfile.mkdtemp(prefix="tessera-wiki-"))
+    root = Path(root or tempfile.mkdtemp(prefix="bazinga-wiki-"))
     (root / "site.yml").write_text(textwrap.dedent("""
         site: {name: "Fixture", author: "Ada", description: "Notes on attention and other things.", origin: "https://ex.org"}
-        llm: {base_url: "http://127.0.0.1:9/v1", model: "a/one, b/two", key_env: "TESSERA_TEST_KEY"}
+        llm: {base_url: "http://127.0.0.1:9/v1", model: "a/one, b/two", key_env: "BAZINGA_TEST_KEY"}
         """), encoding="utf-8")
     (root / "content").mkdir(parents=True, exist_ok=True)
     import yaml
@@ -158,7 +158,7 @@ def make_site(root=None):
 
 
 def make_state(cfg, pages, rendered, site, graph):
-    from tessera.llm import State
+    from bazinga.llm import State
     return State(pages, rendered, graph, TOPICS, site)
 
 

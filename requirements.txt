@@ -1,4 +1,4 @@
-# Tessera's runtime dependencies (Python 3.11 or newer). Install with: python -m pip install -r requirements.txt
+# Bazinga's runtime dependencies (Python 3.11 or newer). Install with: python -m pip install -r requirements.txt
 Markdown==3.10
 PyYAML==6.0.3
 Jinja2==3.1.6

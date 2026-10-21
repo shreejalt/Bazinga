@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-STATIC = ROOT / "tessera" / "studio" / "static"
+STATIC = ROOT / "bazinga" / "studio" / "static"
 FILES = sorted(STATIC.rglob("*.js"))
 
 
@@ -38,7 +38,7 @@ class Scripts(unittest.TestCase):
                     self.assertEqual(r.returncode, 0, r.stderr)
 
     def test_imports_are_relative_or_in_the_import_map(self):
-        from tessera.studio.server import importmap
+        from bazinga.studio.server import importmap
         mapped = set(importmap()["imports"])
         for f in FILES:
             for spec in re.findall(r'(?:from|import)\s*\(?\s*"([^"]+)"', f.read_text(encoding="utf-8")):
@@ -46,7 +46,7 @@ class Scripts(unittest.TestCase):
                     self.assertTrue(spec.startswith("./") or spec.startswith("../") or spec in mapped, spec)
 
     def test_import_map_is_pinned(self):
-        from tessera.studio.server import IMPORTMAP, importmap
+        from bazinga.studio.server import IMPORTMAP, importmap
         for m in (IMPORTMAP, importmap()):
             for name, url in m["imports"].items():
                 with self.subTest(name=name):

@@ -7,7 +7,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-JS = ROOT / "tessera" / "theme" / "assets" / "js"
+JS = ROOT / "bazinga" / "theme" / "assets" / "js"
 FILES = [JS / "figure.js", JS / "pyworker.js"]
 
 

@@ -1,8 +1,8 @@
 """How a ```diagram block becomes a drawing (used in the guide, content/reads/drawing-diagrams.md)."""
 
-from tessera import draw
+from bazinga import draw
 
-# (step, what it does): the stages of tessera/diagram_text.py, in order
+# (step, what it does): the stages of bazinga/diagram_text.py, in order
 STAGES = [
     ("Read", "names, arrows, groups"),
     ("Layers", "a column per step"),

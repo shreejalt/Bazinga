@@ -1,4 +1,4 @@
-"""The Studio is never part of the built site: building the example site copies no file of tessera/studio/ into
+"""The Studio is never part of the built site: building the example site copies no file of bazinga/studio/ into
 _site/, and nothing in _site/ refers to the Studio's addresses."""
 
 import hashlib
@@ -11,8 +11,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-STUDIO = ROOT / "tessera" / "studio"
-SKIP = {".git", ".venv", "venv", "_site", "tessera", "node_modules", ".studio", "__pycache__", "proposals", ".worktrees"}
+STUDIO = ROOT / "bazinga" / "studio"
+SKIP = {".git", ".venv", "venv", "_site", "bazinga", "node_modules", ".studio", "__pycache__", "proposals", ".worktrees"}
 
 
 def studio_hashes() -> dict:
@@ -27,8 +27,8 @@ class NotInSite(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
-            import tessera.build  # noqa: F401
-            import tessera.cli  # noqa: F401
+            import bazinga.build  # noqa: F401
+            import bazinga.cli  # noqa: F401
         except ImportError as exc:
             raise unittest.SkipTest(f"the core build is not available yet ({exc})")
         cls.tmp = Path(tempfile.mkdtemp(prefix="studio-site-"))
@@ -44,7 +44,7 @@ class NotInSite(unittest.TestCase):
                 shutil.copy2(item, dest)
         env = dict(os.environ, PYTHONPATH=str(ROOT))
         for args in (["build"], ["build", "--drafts"]):
-            proc = subprocess.run([sys.executable, "-m", "tessera", *args], cwd=cls.site, env=env,
+            proc = subprocess.run([sys.executable, "-m", "bazinga", *args], cwd=cls.site, env=env,
                                   capture_output=True, text=True, timeout=600)
             if proc.returncode != 0:
                 raise AssertionError(f"build {' '.join(args)} failed:\n{proc.stdout[-2000:]}\n{proc.stderr[-2000:]}")
@@ -76,7 +76,7 @@ class NotInSite(unittest.TestCase):
             if p.suffix not in (".html", ".js", ".json", ".xml", ".txt", ".md", ".css"):
                 continue
             text = p.read_text(encoding="utf-8", errors="replace")
-            for needle in ("/_studio/", "tessera_studio_", "/api/publish", "/api/page/save"):
+            for needle in ("/_studio/", "bazinga_studio_", "/api/publish", "/api/page/save"):
                 self.assertNotIn(needle, text, p.relative_to(self.site))
 
 

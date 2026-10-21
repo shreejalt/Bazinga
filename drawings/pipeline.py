@@ -1,6 +1,6 @@
 """How a post goes from a Markdown file to the live site."""
 
-from tessera.draw import Diagram
+from bazinga.draw import Diagram
 
 STEPS = [
     ("Write", "Markdown, equations, figures"),

@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from tessera.studio import cite, history, pages
-from tessera.studio.api import Studio
-from tessera.studio.security import Refused
+from bazinga.studio import cite, history, pages
+from bazinga.studio.api import Studio
+from bazinga.studio.security import Refused
 
 DOC = """---
 title: "Attention, Step by Step"
@@ -168,8 +168,8 @@ class Site(unittest.TestCase):
         text = (self.root / "content/topics.yml").read_text()
         self.assertTrue(text.startswith("# my topics\n"))
         self.studio.topic_add({"label": "Optics"})
-        from tessera import content
-        from tessera import config
+        from bazinga import content
+        from bazinga import config
         topics = content.load_topics(config.load(self.root))
         self.assertIn("signal-processing", topics)
         self.assertIn("optics", topics)

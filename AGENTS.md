@@ -39,37 +39,37 @@ Run everything from the site root with the project's Python (`.venv/bin/python` 
 
 **Query** — answer a question from the wiki, with citations:
 1. Read `wiki/index.md`; open the pages it points to.
-2. Or search the sections: `python -m tessera wiki query "why divide by the square root of d"` (no model needed;
+2. Or search the sections: `python -m bazinga wiki query "why divide by the square root of d"` (no model needed;
    prints the best sentences and the sections they come from).
 3. Answer only from the pages; cite page URLs with `#section` anchors. Answers are not filed back as pages unless the
    author asks for a new page.
 
 **Ingest** — connect a new or changed page:
-1. `python -m tessera check content/reads/<slug>.md` — fix every error first.
-2. `python -m tessera wiki ingest read:<slug>` — the model proposes topics, builds_on, `[[links]]` to add (each with
+1. `python -m bazinga check content/reads/<slug>.md` — fix every error first.
+2. `python -m bazinga wiki ingest read:<slug>` — the model proposes topics, builds_on, `[[links]]` to add (each with
    the exact sentence it belongs in), a summary, a description, three questions the page answers, and a series.
    Everything is checked against the real ids, topics and the page's own text; what fails is listed as dropped.
 3. Read `proposals/ingest-<slug>.md` with the author. Apply only what they accept, by hand, in the page's front
    matter or body.
-4. Build (`python -m tessera build`): `wiki/index.md` is rewritten when it changed.
+4. Build (`python -m bazinga build`): `wiki/index.md` is rewritten when it changed.
 
 **Lint** — keep the wiki healthy:
-- `python -m tessera wiki lint` — fixed rules: orphans (no links, shared sources or series), one-way links between
+- `python -m bazinga wiki lint` — fixed rules: orphans (no links, shared sources or series), one-way links between
   pages on the same topic, thin topics (fewer than two pages), pages without figures or drawings, odd `updated`
   dates, broken `[[ids]]`.
-- `python -m tessera wiki lint --model` — also asks the model for contradictions between pages that share a topic;
+- `python -m bazinga wiki lint --model` — also asks the model for contradictions between pages that share a topic;
   a claim is kept only if it is quoted from the pages.
 - Result: `proposals/lint-site.md`.
 
 **Other proposals** (all need `llm.model` in `site.yml` and the key in the env var named by `llm.key_env`, or in
 `.env.local`, which is git-ignored):
-- `python -m tessera wiki highlights "<series name>"` — 3–4 highlights per part; a line with a number that is not in
+- `python -m bazinga wiki highlights "<series name>"` — 3–4 highlights per part; a line with a number that is not in
   its page is dropped. Accepted lines go to `content/series/<slug>.yml`.
-- `python -m tessera wiki describe read:<slug>` — a description of at most 155 characters in the page's own words.
-- `python -m tessera wiki equation "<words>"` — LaTeX for an equation described in words.
-- `python -m tessera wiki figure "<description>"` — a draft figure module from the closest starter; test it with
-  `python -m tessera figure test <name>` after copying it to `figures/`.
-- `python -m tessera wiki index` rewrites the catalog without a full build; `python -m tessera wiki log <op> "<subject>"`
+- `python -m bazinga wiki describe read:<slug>` — a description of at most 155 characters in the page's own words.
+- `python -m bazinga wiki equation "<words>"` — LaTeX for an equation described in words.
+- `python -m bazinga wiki figure "<description>"` — a draft figure module from the closest starter; test it with
+  `python -m bazinga figure test <name>` after copying it to `figures/`.
+- `python -m bazinga wiki index` rewrites the catalog without a full build; `python -m bazinga wiki log <op> "<subject>"`
   adds a log entry by hand.
 
 ## Rules

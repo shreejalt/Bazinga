@@ -1,4 +1,4 @@
-# LaTeX people write in ML and maths blogs, and what Tessera must do with each.
+# LaTeX people write in ML and maths blogs, and what Bazinga must do with each.
 #
 #   tex:     the formula as written (YAML single quotes: backslashes are literal, '' is a quote)
 #   display: true for $$ … $$ (default false: inline $ … $)

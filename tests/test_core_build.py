@@ -13,7 +13,7 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_core_support import cleanup, copy_example, make_site, post  # noqa: E402
 
-from tessera import build, config, content, seo  # noqa: E402
+from bazinga import build, config, content, seo  # noqa: E402
 
 FUTURE = (date.today() + timedelta(days=30)).isoformat()
 
@@ -73,7 +73,7 @@ class Content(unittest.TestCase):
     def test_scheduled_goes_public_on_its_date(self):
         page = self.parse(post(date=FUTURE))
         later = date.today() + timedelta(days=31)
-        with mock.patch("tessera.content.today", return_value=later):
+        with mock.patch("bazinga.content.today", return_value=later):
             self.assertTrue(page.public)
 
     def test_problems_carry_lines(self):
@@ -184,7 +184,7 @@ class Builds(unittest.TestCase):
 
 class ExampleSite(unittest.TestCase):
     def test_example_site_builds_end_to_end(self):
-        tmp = Path(tempfile.mkdtemp(prefix="tessera-example-"))
+        tmp = Path(tempfile.mkdtemp(prefix="bazinga-example-"))
         try:
             copy_example(tmp)
             cfg = config.load(tmp)
@@ -212,13 +212,13 @@ class ExampleSite(unittest.TestCase):
                 for html in out.rglob("*.html"):
                     visible = html.read_text().split("<body", 1)[1]
                     visible = visible.split("<script", 1)[0]
-                    self.assertNotIn(name, visible.replace("tessera-pyodide", ""), f"{name} in {html}")
+                    self.assertNotIn(name, visible.replace("bazinga-pyodide", ""), f"{name} in {html}")
             self.assertFalse(any("studio" in str(p.relative_to(out)).lower() for p in out.rglob("*")))
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 
     def test_preview_html_shows_drafts_and_their_problems(self):
-        tmp = Path(tempfile.mkdtemp(prefix="tessera-preview-"))
+        tmp = Path(tempfile.mkdtemp(prefix="bazinga-preview-"))
         try:
             copy_example(tmp)
             cfg = config.load(tmp)

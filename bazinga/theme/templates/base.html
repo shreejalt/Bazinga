@@ -1,0 +1,75 @@
+<!doctype html>
+{#- The frame of every page: the rail (brand, sections, buttons, date) on a paper ground, and the page as a sheet.
+    Blocks: head, bodyclass, cta (rail buttons), tiny (the rail's last line), content, scripts. -#}
+<html lang="{{ site.language or 'en' }}" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ page_title }}</title>
+{% if description %}<meta name="description" content="{{ description }}">
+{% endif %}
+<link rel="canonical" href="{{ canonical }}">
+{% for prop, value in og.items() %}
+<meta {% if prop.startswith('twitter:') %}name{% else %}property{% endif %}="{{ prop }}" content="{{ value }}">
+{% endfor %}
+<meta name="author" content="{{ author }}">
+<meta name="color-scheme" content="light">
+<meta name="bazinga-pyodide" content="{{ vendor.pyodide_index }}">
+<meta name="bazinga-root" content="/">
+{% if drafts %}<meta name="robots" content="noindex">
+{% endif %}
+<script type="application/ld+json">{{ jsonld|safe }}</script>
+{% if site.avatar %}<link rel="icon" href="/{{ site.avatar }}">
+{% else %}<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FBF7EC'/%3E%3Ctext x='16' y='22' font-family='Courier New,monospace' font-weight='700' font-size='17' text-anchor='middle' fill='{{ theme.accent|replace('#', '%23') }}'%3E{{ (author or site.name)[:1]|e }}%3C/text%3E%3C/svg%3E">
+{% endif %}
+{% for origin in vendor.font_preconnect %}
+<link rel="preconnect" href="{{ origin }}"{% if 'gstatic' in origin %} crossorigin{% endif %}>
+{% endfor %}
+{% for url in font_urls %}
+<link rel="stylesheet" href="{{ url }}">
+{% endfor %}
+<link rel="stylesheet" href="{{ asset('css/tokens.css') }}">
+<style>:root{ {{- theme_css|safe -}} }</style>
+{% if has_asset('css/figure.css') %}<link rel="stylesheet" href="{{ asset('css/figure.css') }}">
+{% endif %}
+<link rel="stylesheet" href="{{ asset('css/math.css') }}">
+<link rel="stylesheet" href="{{ asset('css/pygments.css') }}">
+<link rel="stylesheet" href="{{ asset('css/site.css') }}">
+{% if has_asset('css/diagram.css') %}<link rel="stylesheet" href="{{ asset('css/diagram.css') }}">
+{% endif %}
+{% if has_asset('css/wiki.css') %}<link rel="stylesheet" href="{{ asset('css/wiki.css') }}">
+{% endif %}
+{% if has_feed %}<link rel="alternate" type="application/atom+xml" title="{{ site.name }}" href="/feed.xml">
+{% endif %}
+{% if markdown_url %}<link rel="alternate" type="text/markdown" href="{{ markdown_url }}">
+{% endif %}
+{% if features.llms_txt %}<link rel="describedby" type="text/markdown" href="/llms.txt">
+{% endif %}
+<script src="{{ site_data }}"></script>
+<script src="{{ asset('js/site.js') }}"></script>
+{% if has_asset('js/figure.js') %}<script src="{{ asset('js/figure.js') }}" defer></script>
+{% endif %}
+{% block head %}{% endblock %}
+</head>
+<body class="{% block bodyclass %}{% endblock %}"{% if body_page_id %} data-page="{{ body_page_id }}" data-title="{{ body_page_title }}"{% endif %}>
+<a class="skip" href="#main">Skip to the content</a>
+<div class="shell">
+<aside class="rail">
+  <a class="brand" href="/">{{ site.name }}</a>
+  <nav aria-label="Sections">
+    {% for href, label in rail_nav %}<a href="{{ href }}"{% if (here and href == here) or (not here and loop.first) %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+  <div class="sep"></div>
+  <!-- local-tools -->
+  {% if not here %}{% block cta %}<a class="cta" href="/">Home</a>{% endblock %}{% endif %}
+  <p class="tiny">{% block tiny %}Updated {{ updated }}{% endblock %}</p>
+</aside>
+<main class="sheet" id="main" tabindex="-1">
+{% block content %}{% endblock %}
+</main>
+</div>
+{% block scripts %}{% endblock %}
+{% if features.ask and has_asset('js/ask.js') %}<script src="{{ asset('js/ask.js') }}" defer></script>
+{% endif %}
+</body>
+</html>

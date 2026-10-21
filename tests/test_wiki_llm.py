@@ -8,7 +8,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_wiki_fixtures import make_site, make_state  # noqa: E402
 
-from tessera import llm  # noqa: E402
+from bazinga import llm  # noqa: E402
 
 
 class FakeAPI:
@@ -59,19 +59,19 @@ class LLMTest(unittest.TestCase):
         self.site = make_site()
         self.cfg = self.site[0]
         self.cfg["llm"]["base_url"] = self.api.url
-        os.environ["TESSERA_TEST_KEY"] = "test-key-not-real"
+        os.environ["BAZINGA_TEST_KEY"] = "test-key-not-real"
         self.state = make_state(*self.site)
 
     def tearDown(self):
-        os.environ.pop("TESSERA_TEST_KEY", None)
+        os.environ.pop("BAZINGA_TEST_KEY", None)
 
     def test_configured_and_key_from_env_file(self):
         self.assertTrue(llm.configured(self.cfg))
-        os.environ.pop("TESSERA_TEST_KEY")
+        os.environ.pop("BAZINGA_TEST_KEY")
         self.assertTrue(llm.configured(self.cfg))            # a local endpoint needs no key
         self.cfg["llm"]["base_url"] = "https://api.example.com/v1"
         self.assertFalse(llm.configured(self.cfg))
-        (self.cfg.root / ".env.local").write_text("# local\nexport TESSERA_TEST_KEY='from-file'\n")
+        (self.cfg.root / ".env.local").write_text("# local\nexport BAZINGA_TEST_KEY='from-file'\n")
         self.assertEqual(llm.api_key(self.cfg), "from-file")
         self.assertEqual(llm.models(self.cfg), ["a/one", "b/two"])
 
@@ -182,7 +182,7 @@ class LLMTest(unittest.TestCase):
         self.assertTrue(any("numpy" in p for p in probs))
 
     def test_cli_without_model(self):
-        os.environ.pop("TESSERA_TEST_KEY")
+        os.environ.pop("BAZINGA_TEST_KEY")
         self.cfg["llm"]["base_url"] = "https://api.example.com/v1"
         import io
         from contextlib import redirect_stdout

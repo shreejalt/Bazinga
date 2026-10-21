@@ -9,10 +9,10 @@ import threading
 import unittest
 from pathlib import Path
 
-from tessera import figbuilder
-from tessera.studio.api import Studio
-from tessera.studio.security import Refused
-from tessera.studio.server import ROUTES_GET, ROUTES_POST, StudioServer
+from bazinga import figbuilder
+from bazinga.studio.api import Studio
+from bazinga.studio.security import Refused
+from bazinga.studio.server import ROUTES_GET, ROUTES_POST, StudioServer
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -21,7 +21,7 @@ def make_site(root):
     shutil.copy(ROOT / "site.yml", root / "site.yml")
     (root / "content" / "reads").mkdir(parents=True)
     (root / "figures").mkdir()
-    shutil.copy(ROOT / "tessera" / "starters" / "figures" / "slider_plot.py", root / "figures" / "wave.py")
+    shutil.copy(ROOT / "bazinga" / "starters" / "figures" / "slider_plot.py", root / "figures" / "wave.py")
     (root / "content" / "reads" / "p.md").write_text('---\ntitle: "A page"\n---\n\n::figure wave\n', encoding="utf-8")
 
 
@@ -65,7 +65,7 @@ class Handlers(unittest.TestCase):
         self.assertFalse((self.root / "figures" / "damped.py").exists())          # nothing saved yet
         status, html = self.studio.draft_frame("damped", {})
         self.assertEqual(status, 200)
-        self.assertIn('<meta name="tessera-root" content="/_draft/">', html)
+        self.assertIn('<meta name="bazinga-root" content="/_draft/">', html)
         self.assertIn('data-figure="damped"', html)
         self.assertEqual(self.studio.draft_file("/_draft/figures/damped.py").name, "damped.py")
         self.assertEqual(self.studio.draft_file("/_draft/figures/_plot.py").name, "plot.py")
@@ -169,7 +169,7 @@ class OverHttp(unittest.TestCase):
         frame = json.loads(data)["frame"]
         status, ctype, html = self.request("GET", frame)
         self.assertEqual(status, 200)
-        self.assertIn(b"tessera-root", html)
+        self.assertIn(b"bazinga-root", html)
         status, ctype, code = self.request("GET", "/_draft/figures/circle.py")
         self.assertEqual(status, 200)
         self.assertIn(figbuilder.MARK.encode(), code)

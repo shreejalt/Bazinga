@@ -2,14 +2,14 @@
 title: "Drawing Diagrams"
 date: 2026-10-20
 summary: "How to draw a diagram by writing it as text in a post: boxes and arrows, shapes, labels, groups, flowcharts, timelines and trees, laid out and drawn when the site is built. Also when a small code file is the better tool, and the habits that keep a diagram readable."
-description: "How to draw diagrams in Tessera by writing them as text: arrows, shapes, labels, groups, flowcharts, timelines, trees, and diagrams from code."
+description: "How to draw diagrams in Bazinga by writing them as text: arrows, shapes, labels, groups, flowcharts, timelines, trees, and diagrams from code."
 topics: [writing, visualization]
 series: {name: "Getting started", part: 4}
 builds_on: [read:welcome]
 ---
 
 I used to draw every diagram in a drawing program, export a picture, and paste it in. Then I changed one word in the
-text and the picture was wrong, and the source was a file I could no longer find. So in Tessera a diagram is
+text and the picture was wrong, and the source was a file I could no longer find. So in Bazinga a diagram is
 written in the post itself, as text: you name the boxes and join them with arrows, and the build lays them out and
 draws them in the page's own paper, ink and blue. Nothing runs in the reader's browser, the drawing stays sharp at any
 zoom, and changing a word is changing a word.
@@ -338,7 +338,7 @@ loop, or when a layout needs exact positions. A drawing is a function in `drawin
 same layout is one call away, so you still say only what connects to what:
 
 ```python
-from tessera import draw
+from bazinga import draw
 
 STAGES = [("Read", "names, arrows, groups"), ("Layers", "a column per step"), ...]
 

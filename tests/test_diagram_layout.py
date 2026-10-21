@@ -1,4 +1,4 @@
-"""tessera.diagram_text layout: deterministic, no overlaps, arrows clear of boxes, groups around their members,
+"""bazinga.diagram_text layout: deterministic, no overlaps, arrows clear of boxes, groups around their members,
 labels free, a phone version, accessible SVG, and fast."""
 import os
 import random
@@ -11,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from tessera import diagram_text as dt  # noqa: E402
+from bazinga import diagram_text as dt  # noqa: E402
 
 from diagram_checks import problems  # noqa: E402
 

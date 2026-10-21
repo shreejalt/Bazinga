@@ -1,6 +1,6 @@
 """Vercel Python function for /api/ask/: the "written answer".
 
-A thin wrapper over ``tessera.ask_server.handle``. It reads ``site.yml`` for the ``llm:`` and ``ask:`` defaults, the
+A thin wrapper over ``bazinga.ask_server.handle``. It reads ``site.yml`` for the ``llm:`` and ``ask:`` defaults, the
 key from the environment variable named by ``llm.key_env`` (set it in the Vercel project, never in a file), and the
 passages from the deployed ``/data/passages.json`` (``SITE_URL`` or the request's own host). Nothing is stored.
 """
@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tessera import ask_server  # noqa: E402
+from bazinga import ask_server  # noqa: E402
 
 _cache = {"data": None, "at": 0.0, "cfg": None}
 CACHE_SECONDS = 600
@@ -63,7 +63,7 @@ def _loader(host):
 
 
 def _fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "tessera-ask"})
+    req = urllib.request.Request(url, headers={"User-Agent": "bazinga-ask"})
     with urllib.request.urlopen(req, timeout=10) as r:
         return json.loads(r.read().decode("utf-8"))
 

@@ -1,14 +1,14 @@
 ---
-title: "Writing Equations in Tessera"
+title: "Writing Equations in Bazinga"
 date: 2026-10-20
 summary: "How to write maths that renders the same in every browser: the basics, numbering and references, several lines, matrices and cases, the patterns you will use most, the messages you may see and how to fix them, and the equation helper."
-description: "How to write equations in Tessera: inline and displayed maths, numbering, matrices and cases, common patterns, error messages and their fixes."
+description: "How to write equations in Bazinga: inline and displayed maths, numbering, matrices and cases, common patterns, error messages and their fixes."
 topics: [writing, tools]
 series: {name: "Getting started", part: 2}
 builds_on: [read:welcome]
 ---
 
-Tessera turns the LaTeX in your posts into MathML when the site is built. Browsers draw MathML themselves, so
+Bazinga turns the LaTeX in your posts into MathML when the site is built. Browsers draw MathML themselves, so
 equations appear at once, with no script and no flash of raw code; they scale with the text, and screen readers can
 read them. You do not need to know much LaTeX: the patterns below cover most posts, the Studio's equation helper
 builds the rest from buttons, and when something is wrong the message says where and what to write instead.
@@ -94,7 +94,7 @@ These are the updates of the Adam optimiser [@Kingma14], where $\hat{m}_t$ and $
 by $1 - \beta_1^t$ and $1 - \beta_2^t$.
 
 `gather` centres each row, and `multline` indents the rows after the first. If you forget the block and just write
-rows with `\\` in a displayed equation, Tessera wraps them for you (lined up at `&` if there is one). Spacing such as
+rows with `\\` in a displayed equation, Bazinga wraps them for you (lined up at `&` if there is one). Spacing such as
 `\\[4pt]` is accepted and ignored.
 
 ## Matrices and cases
@@ -157,7 +157,7 @@ $$
 
 ## What browsers draw
 
-All current browsers draw MathML: Chrome and Edge since version 109, Firefox, and Safari. Tessera writes only the
+All current browsers draw MathML: Chrome and Edge since version 109, Firefox, and Safari. Bazinga writes only the
 part of MathML they all share, and turns the rest into something they draw the same way:
 
 - Bold, script, blackboard and fraktur letters (`\mathbf`, `\mathcal`, `\mathbb`, `\mathfrak`) become the Unicode
@@ -175,7 +175,7 @@ and Windows machines have none.
 
 ## Messages you may see, and the fixes
 
-A formula never breaks silently. A production build stops, and a preview, `python -m tessera check` and the Studio
+A formula never breaks silently. A production build stops, and a preview, `python -m bazinga check` and the Studio
 show the file, the line and the column, what is wrong and what to write instead. The ones you are most likely to meet:
 
 | Message | What to write instead |
@@ -199,7 +199,7 @@ show the file, the line and the column, what is wrong and what to write instead.
 To try a formula on its own, without a page:
 
 ```text
-python -m tessera math "x^10 + \alpah"
+python -m bazinga math "x^10 + \alpah"
 line 1, column 2: ^10 raises only the 1; the rest stays on the line.
     x^10 + \alpah
      ^^^

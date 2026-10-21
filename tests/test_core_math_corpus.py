@@ -10,7 +10,7 @@ from pathlib import Path
 
 import yaml
 
-from tessera.mathml import MathError, split_tag_label, to_mathml
+from bazinga.mathml import MathError, split_tag_label, to_mathml
 
 CORPUS = Path(__file__).parent / "fixtures" / "math_corpus.yml"
 NS = "{http://www.w3.org/1998/Math/MathML}"

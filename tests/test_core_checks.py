@@ -13,7 +13,7 @@ from unittest import mock
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_core_support import REPO, cleanup, make_site, post  # noqa: E402
 
-from tessera import checks, cite, cli, config, content, vendor  # noqa: E402
+from bazinga import checks, cite, cli, config, content, vendor  # noqa: E402
 
 
 def issues_for(text, others=None, name="t"):
@@ -145,7 +145,7 @@ class CommandLine(unittest.TestCase):
             cleanup(root)
 
     def test_passthrough_keeps_options(self):
-        with mock.patch("tessera.cli._module") as module:
+        with mock.patch("bazinga.cli._module") as module:
             module.return_value.main = mock.Mock(return_value=0)
             self.run_cli("studio", "--port", "9999", "--no-browser")
             argv = module.return_value.main.call_args[0][0]
@@ -166,7 +166,7 @@ class Vendor(unittest.TestCase):
 @unittest.skipUnless(shutil.which("node"), "node is not installed")
 class Scripts(unittest.TestCase):
     def test_site_js_syntax(self):
-        path = REPO / "tessera" / "theme" / "assets" / "js" / "site.js"
+        path = REPO / "bazinga" / "theme" / "assets" / "js" / "site.js"
         proc = subprocess.run(["node", "--check", str(path)], capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stderr)
 

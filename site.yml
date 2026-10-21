@@ -1,5 +1,5 @@
 # Site configuration. Everything here is optional: anything you leave out keeps its default (docs/DESIGN.md lists them).
-# `python -m tessera serve` reloads by itself after you save. Replace every "Your Name" / example value with your own;
+# `python -m bazinga serve` reloads by itself after you save. Replace every "Your Name" / example value with your own;
 # the home page (home:) and the CV (content/cv.yml) are the two places with personal details.
 
 site:
@@ -101,7 +101,7 @@ home:
         - Built and maintain the training and evaluation pipeline for the team's vision models.
         - Cut the time from a labelled batch to a deployed model from days to hours.
         - Write the internal notes that later become the explainers on this site.
-      pages: [project:tessera]
+      pages: [project:bazinga]
     - period: Jun 2021 – Dec 2023
       role: Data Scientist
       org: Sample Analytics
@@ -170,7 +170,7 @@ ask:
   per_visitor: 5                        # written answers per visitor (IP) per day
   daily_cap: 300                        # written answers per day for the whole site
 
-# What Publish (Studio or `python -m tessera publish`) does after building, on your machine.
+# What Publish (Studio or `python -m bazinga publish`) does after building, on your machine.
 publish:
   commit: true                          # git add the page and its files, then commit
   push: true                            # git push (Vercel, Netlify or GitHub Pages deploy from the repository)

@@ -2,7 +2,7 @@
 title: "Templates for Figures and Diagrams"
 date: 2026-10-20
 summary: "Every ready-made figure, animation and diagram in one place, working, with the one line that copies it into your site. Pick the one closest to what you want, copy it, and change the words and numbers."
-description: "Ready-made figures, animations and diagrams for Tessera: see each one working and copy it into your site with one line."
+description: "Ready-made figures, animations and diagrams for Bazinga: see each one working and copy it into your site with one line."
 topics: [visualization, tools]
 series: {name: "Getting started", part: 5}
 builds_on: [read:making-figures, read:drawing-diagrams]

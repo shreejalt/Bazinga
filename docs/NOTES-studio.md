@@ -1,15 +1,15 @@
 # Studio: notes from the Studio builder
 
-The Studio is the local-only writing app: `python -m tessera studio`. It is a library of pages, a Markdown editor
+The Studio is the local-only writing app: `python -m bazinga studio`. It is a library of pages, a Markdown editor
 with a live preview of the real page, helpers (equations, figures, drawings, citations, links, images), checks,
-versions, and the publish pipeline. Nothing under `tessera/studio/` is ever copied to `_site/`, and a test enforces
+versions, and the publish pipeline. Nothing under `bazinga/studio/` is ever copied to `_site/`, and a test enforces
 that.
 
 ## Files
 
 ```
-tessera/studio/
-  __init__.py, __main__.py   python -m tessera.studio works too (same as python -m tessera studio)
+bazinga/studio/
+  __init__.py, __main__.py   python -m bazinga.studio works too (same as python -m bazinga studio)
   server.py     ThreadingHTTPServer on 127.0.0.1 (random free port unless --port); main(argv); the guard on every
                 request; the app page with the pinned import map and a strict CSP; the publish log streamed as
                 server-sent events on the POST's own response
@@ -19,13 +19,13 @@ tessera/studio/
                 suggestions, publish); preview assets (/assets, /static, /figures, generated pygments.css);
                 /frame/figure/<name> and /frame/drawing/<ref> (one figure or drawing, styled like the site);
                 draft_gate() for model-written figure code
-  publish.py    the pipeline (publish / unpublish / schedule, dry run) + cli_main for `python -m tessera publish`
+  publish.py    the pipeline (publish / unpublish / schedule, dry run) + cli_main for `python -m bazinga publish`
   pages.py      front matter read/write: unchanged keys keep their text and comments byte for byte; changed keys are
-                patched in place; new drafts from tessera/starters/post.md; rename-safe link rewriting
+                patched in place; new drafts from bazinga/starters/post.md; rename-safe link rewriting
   history.py    snapshots in .studio/history/<kind>/<slug>/ (explicit saves; autosaves at most once a minute; 60 kept)
-  cite.py       arXiv / Crossref lookup (core's tessera.cite when present), keys, append to references.yml
+  cite.py       arXiv / Crossref lookup (core's bazinga.cite when present), keys, append to references.yml
   engine.py     lazy imports of core/figures/wiki modules ("not available yet" instead of a crash); the worker runner
-  worker.py     python -m tessera.studio.worker <op>: figure tests/runs, drawings, wiki log, in a fresh interpreter
+  worker.py     python -m bazinga.studio.worker <op>: figure tests/runs, drawings, wiki log, in a fresh interpreter
                 (fresh imports, timeouts, and a temp copy of the site for dry runs)
   static/       index.html, studio.css, studio.js (routing, theme), lib.js (API, DOM, dialogs, icons), library.js,
                 editor.js, cm.js (CodeMirror: Markdown + maths-aware marks, completion, "/" menu, code editor),
@@ -37,9 +37,9 @@ tests/test_studio_security.py  test_studio_publish.py  test_studio_pages.py  tes
 ## How to run
 
 ```
-python -m tessera studio                    # opens http://127.0.0.1:<port>/?token=...
-python -m tessera studio -- --port 9000 --no-browser
-python -m tessera publish -- content/posts/x.md [--dry-run] [--unpublish] [--schedule 2026-11-01] [--yes]
+python -m bazinga studio                    # opens http://127.0.0.1:<port>/?token=...
+python -m bazinga studio -- --port 9000 --no-browser
+python -m bazinga publish -- content/posts/x.md [--dry-run] [--unpublish] [--schedule 2026-11-01] [--yes]
 ```
 
 (The `--` is needed until core's subcommand pass-through forwards options; see "Requests" below.)
@@ -82,7 +82,7 @@ The suggestion buttons appear only when `llm.configured(cfg)` is true. The UI ne
    stops DNS rebinding. Tested: `evil.com`, `127.0.0.1.nip.io`, `localhost.evil.com`, a wrong port, `[::1]`,
    `0.0.0.0` and a missing Host.
 3. **Token.** `secrets.token_urlsafe(32)` per launch, passed once in the URL.
-   - The server swaps it for `tessera_studio_<port>=…; HttpOnly; SameSite=Strict; Path=/` and 303-redirects to
+   - The server swaps it for `bazinga_studio_<port>=…; HttpOnly; SameSite=Strict; Path=/` and 303-redirects to
      `/`, so the token leaves the address bar.
    - The cookie name carries the port, because cookies are shared across ports.
    - Every route except the token exchange needs the cookie: the app, the API, previews and assets. Comparison is
@@ -119,7 +119,7 @@ The suggestion buttons appear only when `llm.configured(cfg)` is true. The UI ne
 
     Otherwise the author reads the draft first, and saving it, an explicit act, runs the test.
 11. **Not part of the site.** `test_studio_site.py` builds the example site, with and without drafts, and checks:
-    - no file under `_site/` comes from `tessera/studio/`, by path or by content hash;
+    - no file under `_site/` comes from `bazinga/studio/`, by path or by content hash;
     - no page refers to `/_studio/`, the cookie name or the write endpoints.
 
 Known trade-off: the preview iframe is same-origin with the Studio, which the in-place patching and live figure
@@ -132,7 +132,7 @@ The steps, in order:
 1. Checks: errors stop the run; warnings stop it unless accepted.
 2. status, date and updated. A republish keeps `date` and sets `updated`.
 3. Tests of the page's figures, run in the worker.
-4. Build: `python -m tessera build`, streamed.
+4. Build: `python -m bazinga build`, streamed.
 5. Wiki: the build writes `wiki/index.md`; `wiki.append_log` adds `publish | Title`.
 6. Accepted suggestions are reported. They are applied in the editor before the run and saved.
 7. Commit:
@@ -162,7 +162,7 @@ Modes:
 | File | What it covers |
 |---|---|
 | `test_studio_security.py` (33) | Binding; the Host allowlist; token/cookie exchange and attributes; Origin and Sec-Fetch-Site; JSON-only writes; 405 without CORS; no CORS anywhere; CSP; body limit; traversal on ids, code and asset routes; symlink escapes; upload limits and types; atomic write; image sniffing; the draft gate |
-| `test_studio_publish.py` (14) | A temp git repo with a bare remote: commit and push; only the page's files committed; dry run changes nothing; a failing build stops the run and restores the page; errors block; a push failure keeps the commit; unpublish; schedule; republish sets `updated`; nothing to commit is not an error; author from site.yml; the deploy command runs without a shell; a rename stages the old file's removal; a real `python -m tessera build` in a dry run; the SSE stream over HTTP |
+| `test_studio_publish.py` (14) | A temp git repo with a bare remote: commit and push; only the page's files committed; dry run changes nothing; a failing build stops the run and restores the page; errors block; a push failure keeps the commit; unpublish; schedule; republish sets `updated`; nothing to commit is not an error; author from site.yml; the deploy command runs without a shell; a rename stages the old file's removal; a real `python -m bazinga build` in a dry run; the SSE stream over HTTP |
 | `test_studio_pages.py` (17) | Front matter kept byte for byte, comments kept on patch, tricky values round-trip; starter drafts; save conflict (409); rename rewrites `[[links]]` and `builds_on` and moves the history; snapshots and dedupe; topic add; citation parsing, keys, append without reformatting |
 | `test_studio_site.py` (3) | No Studio file in `_site` (production and `--drafts` builds), and no Studio addresses in the built site |
 | `test_studio_js.py` (6) | `node --check` on every Studio script *as a .mjs copy*; imports are relative or in the pinned import map; the map is pinned; no machinery named in visible strings; writes send JSON, no FormData or EventSource |
@@ -216,7 +216,7 @@ Screenshots are in the scratchpad: `scratchpad/studio/*.png`. Among them: 01-lib
 ## Requests to the other builders
 
 - **core, `cli.py`:** `studio` and `publish` use `nargs=argparse.REMAINDER`, which does not capture options that
-  come first. `python -m tessera studio --no-browser` fails with "unrecognized arguments"; it works with `--`.
+  come first. `python -m bazinga studio --no-browser` fails with "unrecognized arguments"; it works with `--`.
   Suggested fix: parse with `parse_known_args()` and forward the extras, or add the options explicitly.
 - **core, `build.preview_html`:** it renders every page on each call. That is fine for the example site; on a large
   site the Studio's preview, which runs about 300 ms after typing stops, would benefit from caching the other pages'
@@ -227,6 +227,6 @@ Screenshots are in the scratchpad: `scratchpad/studio/*.png`. Among them: 01-lib
   hides it). Checking a `.mjs` copy catches it. This affects any test that runs `node --check` on module workers
   (`pyworker.js`, `test_fig_js.py`).
 - **wiki, `llm.check_figure_source`:** it allows any standard-library import (`os`, `subprocess` …). The Studio adds
-  its own stricter gate before running a draft, but `python -m tessera wiki figure` users may want the same.
+  its own stricter gate before running a draft, but `python -m bazinga wiki figure` users may want the same.
 - **content:** the example posts are hard-wrapped at about 120 columns. In the Studio's proportional editor, one line
   per paragraph reads more naturally. This is optional.

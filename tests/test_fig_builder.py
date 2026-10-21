@@ -10,8 +10,8 @@ import types
 import unittest
 from pathlib import Path
 
-from tessera import figbuilder as fb
-from tessera import figures
+from bazinga import figbuilder as fb
+from bazinga import figures
 
 
 class Site:
@@ -170,7 +170,7 @@ class Generated(unittest.TestCase):
                     elif isinstance(node, ast.ImportFrom):
                         imported.add(node.module)
                 self.assertLessEqual(imported, {"math"})
-                self.assertNotIn("tessera", src.split(fb.MARK)[0])
+                self.assertNotIn("bazinga", src.split(fb.MARK)[0])
                 self.assertNotIn("eval(", src)
                 self.assertNotIn("exec(", src)
                 # the file runs on a bare interpreter with only the standard library
@@ -191,7 +191,7 @@ class Generated(unittest.TestCase):
         self.assertTrue(fb.read_spec(edited)["edited"])
         self.assertTrue(fb.read_spec(src + "\nprint(1)\n")["edited"])
         self.assertIsNone(fb.read_spec("TITLE = 'x'\n"))
-        self.assertIsNone(fb.read_spec(src.replace(fb.MARK, "# tessera-builder:{bad")))
+        self.assertIsNone(fb.read_spec(src.replace(fb.MARK, "# bazinga-builder:{bad")))
 
     def test_problems_name_the_field(self):
         spec = fb.default_spec("function")

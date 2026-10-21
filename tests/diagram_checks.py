@@ -1,5 +1,5 @@
 """Geometry checks for laid-out diagrams (used by tests/test_diagram_layout.py)."""
-from tessera import draw
+from bazinga import draw
 
 
 def _hit(a, b, pad=0.0):

@@ -1,4 +1,4 @@
-"""tessera.plot: every panel kind, determinism, escaping, narrow layout, errors."""
+"""bazinga.plot: every panel kind, determinism, escaping, narrow layout, errors."""
 
 import math
 import re
@@ -6,7 +6,7 @@ import time
 import unittest
 import xml.etree.ElementTree as ET
 
-from tessera import plot
+from bazinga import plot
 
 XS = [i / 20 for i in range(101)]
 

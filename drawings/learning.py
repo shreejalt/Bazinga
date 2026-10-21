@@ -1,6 +1,6 @@
 """Diagrams for the "Learning, Visually" series."""
 
-from tessera.draw import Diagram
+from bazinga.draw import Diagram
 
 STEPS = [
     ("Scores", "q · k for every pair"),

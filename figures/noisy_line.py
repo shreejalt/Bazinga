@@ -1,6 +1,6 @@
 """Starter: noisy data and the straight line that fits it best.
 
-Copy it with  python -m tessera figure new my_fit --from scatter_fit  and put  ::figure my_fit  in a post.
+Copy it with  python -m bazinga figure new my_fit --from scatter_fit  and put  ::figure my_fit  in a post.
 
 What it shows
 -------------

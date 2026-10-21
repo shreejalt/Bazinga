@@ -7,7 +7,7 @@ import unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_wiki_fixtures import make_site  # noqa: E402
 
-from tessera import retrieve, wiki  # noqa: E402
+from bazinga import retrieve, wiki  # noqa: E402
 
 
 class TokenizerTest(unittest.TestCase):

@@ -1,14 +1,14 @@
 ---
-title: "Welcome to Tessera"
+title: "Welcome to Bazinga"
 date: 2026-10-20
 summary: "A tour of everything a post can hold: equations that render without scripts, numbered and referenced; citations; links between pages; callouts, footnotes, tables and code; and figures you can move."
-description: "A tour of Tessera's Markdown: equations, citations, page links, callouts, footnotes, tables, code, and interactive figures."
+description: "A tour of Bazinga's Markdown: equations, citations, page links, callouts, footnotes, tables, code, and interactive figures."
 topics: [writing, tools, visualization]
 series: {name: "Getting started", part: 1}
 cites: [Vaswani17]
 ---
 
-Tessera is a template for technical writing. You write Markdown; the build turns it into pages with real equations,
+Bazinga is a template for technical writing. You write Markdown; the build turns it into pages with real equations,
 a numbered reference list, interactive figures and a map of how your pages connect. This post uses every feature
 once. Each section shows **what you type** in a code block, then **what you get** right under it.
 
@@ -141,7 +141,7 @@ with a temperature is also how knowledge distillation works [@Hinton15, sec. 2].
 Transformers are built from attention [@Vaswani17], and a softmax with a temperature is also how knowledge
 distillation works [@Hinton15, sec. 2].
 
-Add a paper with `python -m tessera cite 1706.03762` (an arXiv id or a DOI) and the entry is written for you.
+Add a paper with `python -m bazinga cite 1706.03762` (an arXiv id or a DOI) and the entry is written for you.
 
 Link another page by its id: the kind and the file name. The build checks that the page exists, keeps the title up
 to date, and records the link in the map.

@@ -9,8 +9,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from tessera import cli  # noqa: E402
-from tessera.mathml import MathError, check, looks_like_money, to_mathml  # noqa: E402
+from bazinga import cli  # noqa: E402
+from bazinga.mathml import MathError, check, looks_like_money, to_mathml  # noqa: E402
 from test_core_support import REPO, render_text  # noqa: E402
 
 
@@ -130,7 +130,7 @@ class Cli(unittest.TestCase):
             self.assertIn("<mtable", html)
 
     def test_as_a_process(self):
-        r = subprocess.run([sys.executable, "-m", "tessera", "math", r"\sqrt{x}"], capture_output=True, text=True,
+        r = subprocess.run([sys.executable, "-m", "bazinga", "math", r"\sqrt{x}"], capture_output=True, text=True,
                            cwd=str(REPO))
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("<msqrt>", r.stdout)

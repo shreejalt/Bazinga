@@ -1,7 +1,7 @@
 """mathml.py: every pre-processing rule, the post-processing fixes, the rejection list and error lines."""
 import unittest
 
-from tessera.mathml import MathError, preprocess, split_tag_label, to_mathml
+from bazinga.mathml import MathError, preprocess, split_tag_label, to_mathml
 
 
 def body(tex, display=False):

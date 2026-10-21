@@ -12,9 +12,9 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from tessera.studio import security
-from tessera.studio.security import Refused, atomic_write, confine
-from tessera.studio.server import StudioServer
+from bazinga.studio import security
+from bazinga.studio.security import Refused, atomic_write, confine
+from bazinga.studio.server import StudioServer
 
 PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==")
 
@@ -113,7 +113,7 @@ class ServerCase(unittest.TestCase):
                                     headers={"Cookie": f"{self.server.cookie}=nope"})
         self.assertEqual(status, 401)
         status, _, _ = self.request("GET", "/api/state", cookie=False,
-                                    headers={"Cookie": f"tessera_studio_1={self.server.token}"})
+                                    headers={"Cookie": f"bazinga_studio_1={self.server.token}"})
         self.assertEqual(status, 401)
 
     def test_token_swapped_for_strict_httponly_cookie(self):
@@ -132,7 +132,7 @@ class ServerCase(unittest.TestCase):
         self.assertNotIn("Set-Cookie", headers)
 
     def test_cookie_name_carries_port(self):
-        self.assertEqual(self.server.cookie, f"tessera_studio_{self.port}")
+        self.assertEqual(self.server.cookie, f"bazinga_studio_{self.port}")
 
     # --- writes --------------------------------------------------------------------------------------------------
     def test_write_with_matching_origin(self):
@@ -274,7 +274,7 @@ class Paths(unittest.TestCase):
 
     def test_refused_places(self):
         for rel in ("site.yml", "../outside/x.md", "content/../site.yml", "/etc/passwd", "static/avatar.png",
-                    "tessera/studio/server.py", ".git/config", "content", "static/uploads", "wiki/log.md", ""):
+                    "bazinga/studio/server.py", ".git/config", "content", "static/uploads", "wiki/log.md", ""):
             with self.subTest(rel=rel):
                 with self.assertRaises(Refused):
                     confine(self.root, rel)
@@ -292,7 +292,7 @@ class Paths(unittest.TestCase):
             confine(self.root, "figures/x.py")
 
     def test_symlinked_page_is_not_written(self):
-        from tessera.studio.api import Studio
+        from bazinga.studio.api import Studio
         link = self.root / "content" / "posts" / "link.md"
         os.symlink(self.tmp / "outside" / "x.md", link)
         studio = Studio(self.root)
@@ -305,13 +305,13 @@ class DraftGate(unittest.TestCase):
     """Model-written figure code runs automatically only when it is plain computation."""
 
     def test_plain_figure_passes(self):
-        from tessera.studio.api import draft_gate
+        from bazinga.studio.api import draft_gate
         src = "import math\nfrom numpy import linspace\nTITLE='x'\nCAPTION=''\nCONTROLS=[]\n" \
               "def compute(_narrow=0):\n    return {'panels': [{'kind': 'xy', 'series': [{'y': [math.sin(1)]}]}]}\n"
         self.assertEqual(draft_gate(src), [])
 
     def test_escapes_are_caught(self):
-        from tessera.studio.api import draft_gate
+        from bazinga.studio.api import draft_gate
         for src in ("import os", "import subprocess as s", "from pathlib import Path", "open('x')",
                     "__import__('os')", "eval('1')", "().__class__.__bases__", "import socket",
                     "from . import x", "exec('x')", "import urllib.request"):
@@ -336,7 +336,7 @@ class AtomicWrite(unittest.TestCase):
     def test_failure_keeps_the_old_file(self):
         p = self.tmp / "a.md"
         p.write_text("original", encoding="utf-8")
-        with mock.patch("tessera.studio.security.os.replace", side_effect=OSError("disk full")):
+        with mock.patch("bazinga.studio.security.os.replace", side_effect=OSError("disk full")):
             with self.assertRaises(OSError):
                 atomic_write(p, "new text")
         self.assertEqual(p.read_text(), "original")

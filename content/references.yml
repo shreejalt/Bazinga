@@ -1,5 +1,5 @@
 # The citation library. Cite an entry in a page with [@KEY] or [@KEY, p. 4]; the page gets a numbered reference list.
-# Add papers with:  python -m tessera cite <arXiv id or DOI>   (or the Studio's citation panel)
+# Add papers with:  python -m bazinga cite <arXiv id or DOI>   (or the Studio's citation panel)
 # Each entry: title, authors (list), year, and at least one of arxiv / doi / url; venue is optional.
 
 Vaswani17:

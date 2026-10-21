@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from tessera.graph import build_graph, series_slug
+from bazinga.graph import build_graph, series_slug
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_wiki_fixtures import make_site  # noqa: E402

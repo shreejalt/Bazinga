@@ -2,17 +2,17 @@
 
 The root of the template is `/Users/shreejaltrivedi/Documents/Repos/shreejalt.github.io/.worktrees/template`.
 - Python: `.venv/bin/python` in that folder (3.14, with Markdown, PyYAML, Jinja2, latex2mathml and Pygments).
-- Run the engine as `.venv/bin/python -m tessera …` with the template root as the working directory.
+- Run the engine as `.venv/bin/python -m bazinga …` with the template root as the working directory.
 
-## tessera/config.py (owner: core)
+## bazinga/config.py (owner: core)
 ```python
-ROOT: Path                      # Path.cwd() at import, overridable by tessera.config.set_root(path) (tests use temp dirs)
+ROOT: Path                      # Path.cwd() at import, overridable by bazinga.config.set_root(path) (tests use temp dirs)
 def load(root=None) -> Config   # site.yml merged over DEFAULTS; raises ConfigError with a clear message
 class Config(dict):             # attribute + key access: cfg.site.name, cfg["theme"]["accent"], cfg.kinds, cfg.llm …
     root: Path                  # site root; paths: cfg.content_dir, cfg.figures_dir, cfg.drawings_dir, cfg.static_dir, cfg.out_dir (_site)
 ```
 
-## tessera/content.py (owner: core)
+## bazinga/content.py (owner: core)
 ```python
 @dataclass
 class Page:
@@ -34,7 +34,7 @@ def load_topics(cfg) -> dict[str, dict]                    # slug -> {slug,label
 def load_references(cfg) -> dict[str, dict]
 ```
 
-## tessera/markdown.py (owner: core)
+## bazinga/markdown.py (owner: core)
 ```python
 @dataclass
 class Rendered:
@@ -52,24 +52,24 @@ class SiteIndex:               # what rendering needs to know about the rest of 
     references: dict[str, dict]
     topics: dict[str, dict]
 ```
-`::figure name | start: Label` calls `tessera.figures.figure_html(name, start=label)`.
-`::drawing module.fn | caption` calls `tessera.drawings.drawing_html("module.fn", caption)`.
-Both raise `tessera.figures.FigureError` / `tessera.drawings.DrawingError`. markdown.py catches these and turns them into an issue plus a visible error box in preview builds; a production build fails on them.
+`::figure name | start: Label` calls `bazinga.figures.figure_html(name, start=label)`.
+`::drawing module.fn | caption` calls `bazinga.drawings.drawing_html("module.fn", caption)`.
+Both raise `bazinga.figures.FigureError` / `bazinga.drawings.DrawingError`. markdown.py catches these and turns them into an issue plus a visible error box in preview builds; a production build fails on them.
 
-## tessera/mathml.py (owner: core)
+## bazinga/mathml.py (owner: core)
 ```python
 class MathError(Exception): message, hint, offset
 def to_mathml(tex: str, display: bool) -> str   # raises MathError
 ```
 
-## tessera/checks.py (owner: core)
+## bazinga/checks.py (owner: core)
 ```python
 @dataclass
 class Issue: level: str ("error"|"warning"); line: int | None; message: str; hint: str = ""; code: str = ""
 def check_page(page: Page, site: SiteIndex) -> list[Issue]   # front matter + render issues + style rules
 ```
 
-## tessera/figures.py, plot.py, draw.py, drawings.py (owner: figures)
+## bazinga/figures.py, plot.py, draw.py, drawings.py (owner: figures)
 ```python
 class FigureError(Exception)
 def discover(cfg) -> dict[str, Path]                      # figures/*.py not starting with "_"
@@ -84,11 +84,11 @@ def render(spec: dict, narrow=0) -> tuple[str, str]       # (svg, readouts_html)
 class DrawingError(Exception)
 def drawing_html(ref: str, caption: str = "") -> str
 ```
-Browser side (owner: figures): `tessera/theme/assets/js/figure.js`, `tessera/theme/assets/js/pyworker.js`, `tessera/theme/assets/css/figure.css`.
-- `figure.js` exposes `window.Tessera.py` for others (Ask uses it): `await Tessera.py.call(moduleUrl, fnName, argsObject)` runs a function from a module URL in the same worker and returns JSON.
+Browser side (owner: figures): `bazinga/theme/assets/js/figure.js`, `bazinga/theme/assets/js/pyworker.js`, `bazinga/theme/assets/css/figure.css`.
+- `figure.js` exposes `window.Bazinga.py` for others (Ask uses it): `await Bazinga.py.call(moduleUrl, fnName, argsObject)` runs a function from a module URL in the same worker and returns JSON.
 - The base template includes `figure.js` on every page (it is tiny and boots nothing until needed).
 
-## tessera/graph.py, wiki.py, retrieve.py, llm.py, ask_server.py, api/ask.py (owner: wiki)
+## bazinga/graph.py, wiki.py, retrieve.py, llm.py, ask_server.py, api/ask.py (owner: wiki)
 ```python
 # graph.py
 class Graph:
@@ -108,7 +108,7 @@ def passages(pages, rendered) -> list[dict]           # {id,title,url,section,an
 def write_site_files(cfg, pages, rendered, graph, out: Path)   # llms.txt, llms-full.txt, <url>/index.md, data/passages.json, data/graph.json
 def write_repo_wiki(cfg, pages, graph)                # wiki/index.md (deterministic; only rewritten when content changes)
 def append_log(cfg, op: str, subject: str)            # wiki/log.md "## [YYYY-MM-DD] op | subject"
-# retrieve.py  (stdlib only; shipped to _site/figures/_retrieve.py and run in the browser via Tessera.py.call)
+# retrieve.py  (stdlib only; shipped to _site/figures/_retrieve.py and run in the browser via Bazinga.py.call)
 def answer(question: str, passages: list, graph: dict | None = None, page: str | None = None, k: int = 6) -> dict
 #   -> {"answer": str (extractive, plain), "passages": [...top k with "score"], "pages": [{id,title,url}], "count": n}
 # llm.py
@@ -119,7 +119,7 @@ def describe(cfg, page) -> str; def equation(cfg, words) -> str; def figure_draf
 # ask_server.py
 def handle(method: str, body: bytes, ip: str, env: dict, passages_loader) -> tuple[int, dict]
 ```
-Browser side (owner: wiki): `tessera/theme/assets/js/explore.js`, `tessera/theme/assets/js/ask.js`, `tessera/theme/assets/css/` additions in `wiki.css`.
+Browser side (owner: wiki): `bazinga/theme/assets/js/explore.js`, `bazinga/theme/assets/js/ask.js`, `bazinga/theme/assets/css/` additions in `wiki.css`.
 
 ## build.py (owner: core). The order of a build:
 1. Config.
@@ -132,7 +132,7 @@ Browser side (owner: wiki): `tessera/theme/assets/js/explore.js`, `tessera/theme
 8. `figures.write_assets`.
 9. `wiki.write_site_files` + `wiki.write_repo_wiki` (production only).
 10. seo (sitemap, robots, feed).
-11. Static copy: `tessera/theme/assets/` → `_site/assets/`, overridden by `<root>/theme/assets/`; `<root>/static/` → `_site/static/`.
+11. Static copy: `bazinga/theme/assets/` → `_site/assets/`, overridden by `<root>/theme/assets/`; `<root>/static/` → `_site/static/`.
 
 The core may import graph/wiki lazily and skip them with a printed note if they don't exist yet, so builders can work in parallel.
 
@@ -142,7 +142,7 @@ Also `def preview_html(page: Page, cfg) -> str` gives a full HTML page for the S
 - Every template gets:
   - `site` (cfg.site), `cfg`, `nav`;
   - `asset(path)` → `/assets/<path>?v=<hash>`;
-  - `vendor` (tessera.vendor URLs);
+  - `vendor` (bazinga.vendor URLs);
   - `page_title`, `canonical`, `og` (dict), `jsonld` (str);
   - `body_page_id` (or "") and `features`.
 - `page.html` also gets:
@@ -154,24 +154,24 @@ Also `def preview_html(page: Page, cfg) -> str` gives a full HTML page for the S
 
 ## Ownership (do not edit files you do not own; leave a note in docs/NOTES-<you>.md for the owner instead)
 - **core:**
-  - tessera/{__init__,__main__,cli,config,content,markdown,mathml,checks,build,serve,seo,vendor}.py;
-  - tessera/theme/templates/**;
-  - tessera/theme/assets/css/{tokens,site,math}.css;
-  - tessera/theme/assets/js/site.js;
-  - tessera/starters/post.md;
+  - bazinga/{__init__,__main__,cli,config,content,markdown,mathml,checks,build,serve,seo,vendor}.py;
+  - bazinga/theme/templates/**;
+  - bazinga/theme/assets/css/{tokens,site,math}.css;
+  - bazinga/theme/assets/js/site.js;
+  - bazinga/starters/post.md;
   - site.yml, requirements.txt;
   - content/topics.yml, content/references.yml, content/posts/*;
   - tests/test_core_*.py.
 - **figures:**
-  - tessera/{figures,plot,draw,drawings}.py;
-  - tessera/theme/assets/js/{figure,pyworker}.js;
-  - tessera/theme/assets/css/figure.css;
-  - tessera/starters/{figures,drawings}/**;
+  - bazinga/{figures,plot,draw,drawings}.py;
+  - bazinga/theme/assets/js/{figure,pyworker}.js;
+  - bazinga/theme/assets/css/figure.css;
+  - bazinga/starters/{figures,drawings}/**;
   - figures/**, drawings/**;
   - tests/test_fig_*.py.
 - **wiki:**
-  - tessera/{graph,wiki,retrieve,llm,ask_server}.py, api/ask.py;
-  - tessera/theme/assets/js/{explore,ask}.js;
-  - tessera/theme/assets/css/wiki.css;
+  - bazinga/{graph,wiki,retrieve,llm,ask_server}.py, api/ask.py;
+  - bazinga/theme/assets/js/{explore,ask}.js;
+  - bazinga/theme/assets/css/wiki.css;
   - tests/test_wiki_*.py.
-- **studio** (later): tessera/studio/**, tests/test_studio_*.py.
+- **studio** (later): bazinga/studio/**, tests/test_studio_*.py.
