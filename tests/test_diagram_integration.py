@@ -173,7 +173,8 @@ class StudioPanel(unittest.TestCase):
         raw = None
         if body is not None:
             raw = json.dumps(body).encode()
-            headers.update({"Content-Type": "application/json", "Origin": f"http://127.0.0.1:{port}"})
+            headers.update({"Content-Type": "application/json", "Origin": f"http://127.0.0.1:{port}",
+                            "X-Bazinga-Write": self.server.write_key})
         conn.request(method, path, body=raw, headers=headers)
         res = conn.getresponse()
         data = res.read()

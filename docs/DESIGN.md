@@ -293,8 +293,14 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
 
 **Every request is checked:**
 - The Host must be `127.0.0.1:<port>` or `localhost:<port>`.
-- Writes must be POST with JSON, a matching Origin (or `Sec-Fetch-Site: same-origin`) and the cookie.
+- Writes must be POST with JSON, a matching Origin (or `Sec-Fetch-Site: same-origin`), the cookie and the write key
+  (`X-Bazinga-Write`, a random value written into the Editor's own page only).
 - No CORS headers are sent.
+- **Previews run on a second port.** A preview runs the page's own scripts and its figures' code, so previews
+  (`/preview/<id>`, `/frame/...`) and the files they load are served by a second, read-only server on another
+  127.0.0.1 port: another origin. A script in a preview cannot read the Editor, and its writes are refused (wrong
+  Origin, no write key). The Editor and its preview frames talk by messages only (`static/bridge.js`): page updates,
+  scroll sync, theme, and the frame's height. The preview pages may be framed only by the Editor.
 - Paths must resolve inside `content/`, `figures/`, `drawings/`, `static/uploads/` or `content/references.yml`.
 - Writes are atomic (temp file then rename).
 - git and the publish command run with argument lists, never a shell string. The optional `publish.command` is split with `shlex.split`.
@@ -303,7 +309,7 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
 1. **Library.** All pages with their status pill (Draft / Scheduled / Published), word count, figures, last edited and check badges. Search, filter by kind/status, and a **New post** button (title + kind → slug → file from `starters/post.md`, status draft).
 2. **Editor.** Two panes, resizable:
    - **Left:** CodeMirror 6 Markdown with LaTeX-aware highlighting. It has autocomplete for `[[ids`, `[@keys`, `::figure names` and topics.
-   - **Right:** the live preview, rendered by the *real* `markdown.py` + theme (an iframe of `/preview/<id>`, updated within ~300 ms of typing, scroll-synced). Its interactive figures work through the same worker.
+   - **Right:** the live preview, rendered by the *real* `markdown.py` + theme (an iframe of `/preview/<id>` on the preview port, updated within ~300 ms of typing, scroll-synced). Its interactive figures work through the same worker.
    - **Top bar:** title, status pill, Save state ("Saved" / "Saving…"; autosave every 2 s after typing stops, plus a version snapshot in `.studio/history/`), **Checks** (count), **Publish**.
    - **The "/" menu** (and toolbar): Heading, Equation…, Inline math, Figure…, Drawing…, Citation…, Link to page…, Callout, Table, Image upload, Code block, Footnote, Divider.
    - **Equation helper:** a LaTeX field with live MathML, a palette (Greek, operators, fractions, sums/integrals, matrices, cases, arrows, accents), validation messages from `mathml.py` with the hint, "Describe in words" (llm, optional), and display/inline plus a name for references.

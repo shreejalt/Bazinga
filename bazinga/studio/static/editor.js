@@ -1,5 +1,5 @@
 // The Editor: title and summary, the Markdown surface, the live preview, autosave, checks, drawers and dialogs.
-import { api, store, h, clear, icon, pill, toast, debounce, modKey, ApiError, uploadImage, pickFile, IMAGE_ACCEPT, anyLayerOpen, fill } from "./lib.js";
+import { api, store, h, clear, icon, pill, toast, debounce, modKey, ApiError, uploadImage, pickFile, IMAGE_ACCEPT, anyLayerOpen, fill, previewURL } from "./lib.js";
 import { markdownEditor, makeCompletions, insertBlock, wrapSelection, insertText, goToLine, startCompletion, EditorView } from "./cm.js";
 import { createPreview } from "./preview.js";
 import { mathExtensions } from "./mathtips.js";
@@ -46,7 +46,7 @@ export async function openEditor(app, id) {
     h("button.seg-btn", { "aria-pressed": "false", title: "Phone width", onclick: (e) => device("phone", e.currentTarget) }, icon("phone", 15)));
   const previewPane = h("section.pane.preview",
     h("div.preview-bar", h("span.preview-label", "Preview"), h("span.preview-ms"), h("span.grow"), deviceBtns,
-      h("a.icon-btn", { href: `/preview/${encodeURIComponent(id)}`, target: "_blank", title: "Open the preview in a new tab" }, icon("external", 16))),
+      h("a.icon-btn", { href: previewURL(`/preview/${encodeURIComponent(id)}`), target: "_blank", rel: "noopener", title: "Open the preview in a new tab" }, icon("external", 16))),
     previewHost);
   const splitter = h("div.splitter", { role: "separator", "aria-orientation": "vertical", "aria-label": "Resize", tabindex: "0" });
   const drawer = h("aside.drawer", { "aria-label": "Side panel", hidden: true });

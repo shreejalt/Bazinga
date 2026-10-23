@@ -9,8 +9,12 @@ The rules (docs/research.md §3, after Vite's CVE-2025-24010):
 3. Every request needs the per-launch token. It arrives once in the launch URL and is swapped for an HttpOnly,
    ``SameSite=Strict`` cookie; the cookie's name carries the port because cookies are shared between ports.
 4. A write is a POST with a JSON body, an ``Origin`` equal to the Editor's own origin (or, without Origin,
-   ``Sec-Fetch-Site: same-origin``). Cross-site form posts and fetches are refused.
+   ``Sec-Fetch-Site: same-origin``) and the per-launch write key in the ``X-Bazinga-Write`` header. The key is
+   written into the Editor's own page only, so a script that runs anywhere else (a preview, a figure) cannot write
+   even when it reaches the Editor with the cookie. Cross-site form posts and fetches are refused.
 5. No CORS headers are ever sent.
+5a. Previews run the page's own scripts, so they are served from a second port (another origin): they cannot read
+   the Editor's pages or its answers, and their writes carry the wrong Origin and no write key.
 6. Paths are resolved (symlinks included) and must stay inside the allowed folders.
 7. Files are written atomically: a temp file in the same folder, fsync, then ``os.replace``.
 """
@@ -70,8 +74,11 @@ def check_host(host: str | None, port: int) -> None:
         raise Refused(403, "This address is not allowed. Open the Editor at the link it printed in the terminal.")
 
 
-def check_write(headers, port: int) -> None:
-    """A state-changing request must come from the Editor's own page and carry JSON."""
+WRITE_HEADER = "X-Bazinga-Write"
+
+
+def check_write(headers, port: int, key: str | None = None) -> None:
+    """A state-changing request must come from the Editor's own page, carry its write key and be JSON."""
     origin = headers.get("Origin")
     site = (headers.get("Sec-Fetch-Site") or "").strip().lower()
     if origin is not None:
@@ -81,6 +88,8 @@ def check_write(headers, port: int) -> None:
         raise Refused(403, "Writes are accepted only from the Editor's own page.")
     if site and site not in ("same-origin", "none"):
         raise Refused(403, "Writes are accepted only from the Editor's own page.")
+    if key is not None and not same_token(headers.get(WRITE_HEADER), key):
+        raise Refused(403, "Writes are accepted only from the Editor's own page. Reload the Editor.")
     ctype = (headers.get("Content-Type") or "").split(";")[0].strip().lower()
     if ctype != "application/json":
         raise Refused(415, "Writes must be JSON.")

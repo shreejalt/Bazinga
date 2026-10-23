@@ -256,7 +256,8 @@ class Streamed(unittest.TestCase):
                 body = json.dumps({"id": "post:hello", "mode": "publish", "dry_run": True}).encode()
                 conn.request("POST", "/api/publish/run", body, {
                     "Host": f"127.0.0.1:{server.port}", "Cookie": f"{server.cookie}={server.token}",
-                    "Origin": f"http://127.0.0.1:{server.port}", "Content-Type": "application/json"})
+                    "Origin": f"http://127.0.0.1:{server.port}", "Content-Type": "application/json",
+                    "X-Bazinga-Write": server.write_key})
                 res = conn.getresponse()
                 self.assertEqual(res.status, 200)
                 self.assertTrue(res.getheader("Content-Type").startswith("text/event-stream"))

@@ -2,7 +2,7 @@
 // at the cursor, optionally opened at a preset), and three ways to make one: fill in a form (no code), start from
 // an example (code), or describe it (when suggestions are on). Code opens in an editor beside a live preview with
 // the figure's test in plain words; a failing line is marked.
-import { api, store, h, clear, fill, modal, icon, toast, debounce, modKey } from "../lib.js";
+import { api, store, h, clear, fill, modal, icon, toast, debounce, modKey, fitFrame, previewURL } from "../lib.js";
 import { codeEditor, goToLine } from "../cm.js";
 import { isDark } from "../studio.js";
 import { builderForm, nameFromTitle } from "./figbuilder.js";
@@ -33,22 +33,6 @@ function picture(type) {
   return svg;
 }
 
-// Frames grow to fit the figure they show.
-function fitFrame(frame) {
-  const size = () => {
-    try {
-      const d = frame.contentDocument;
-      if (!d || !d.documentElement) return;
-      frame.style.height = Math.min(1600, Math.max(140, d.documentElement.scrollHeight)) + "px";
-    } catch (e) { /* not ready */ }
-  };
-  frame.addEventListener("load", () => {
-    size();
-    try { new ResizeObserver(size).observe(frame.contentDocument.body); } catch (e) { /* older browsers */ }
-  });
-  return frame;
-}
-
 // A stage that swaps in a new frame only once it has loaded, so the preview never flashes empty.
 function stage() {
   const el = h("div.fg-stage");
@@ -76,7 +60,7 @@ function stage() {
 }
 
 function theme() { return isDark() ? "dark" : "light"; }
-function withTheme(url) { return url + (url.includes("?") ? "&" : "?") + "theme=" + theme(); }
+function withTheme(url) { return previewURL(url + (url.includes("?") ? "&" : "?") + "theme=" + theme()); }
 
 function checksList(report) {
   if (!report) return null;

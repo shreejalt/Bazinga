@@ -1,25 +1,10 @@
 // Figures and drawings: pick one (with a live preview), start a new one from a starter or a description, edit its
 // code (Save runs its test and shows the result), and insert ::figure name / ::drawing module.fn | caption.
-import { api, store, h, clear, modal, icon, toast, escapeHtml, fill } from "../lib.js";
+import { api, store, h, clear, modal, icon, toast, escapeHtml, fill, fitFrame, previewURL } from "../lib.js";
 import { codeEditor } from "../cm.js";
 import { isDark } from "../studio.js";
 
-// Frames grow to fit what they show (the figure and its controls), within limits.
-function fit(frame) {
-  const size = () => {
-    try {
-      const d = frame.contentDocument;
-      if (!d || !d.documentElement) return;
-      const hgt = Math.min(1400, Math.max(160, d.documentElement.scrollHeight));
-      frame.style.height = hgt + "px";
-    } catch (e) { /* not ready */ }
-  };
-  frame.addEventListener("load", () => {
-    size();
-    try { new ResizeObserver(size).observe(frame.contentDocument.body); } catch (e) { /* older browsers */ }
-  });
-  return frame;
-}
+const fit = (frame) => fitFrame(frame, 160, 1400);
 
 export function open(ed, { kind = "figure" } = {}) {
   const isFig = kind === "figure";
@@ -36,7 +21,7 @@ export function open(ed, { kind = "figure" } = {}) {
   });
 
   const theme = () => (isDark() ? "dark" : "light");
-  const frameURL = (ref, extra = "") => `/frame/${kind}/${encodeURIComponent(ref)}?theme=${theme()}${extra}`;
+  const frameURL = (ref, extra = "") => previewURL(`/frame/${kind}/${encodeURIComponent(ref)}?theme=${theme()}${extra}`);
 
   function paintList() {
     clear(listEl);

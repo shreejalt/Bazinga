@@ -147,15 +147,17 @@ class OverHttp(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def request(self, method, path, body=None, cookie=True):
-        conn = http.client.HTTPConnection("127.0.0.1", self.server.port, timeout=60)
-        h = {"Host": f"127.0.0.1:{self.server.port}"}
+        # previews (frames and the files they load) are on the preview port; the API is on the Editor's port
+        port = self.server.preview_port if path.startswith(("/frame/", "/_draft/")) else self.server.port
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=60)
+        h = {"Host": f"127.0.0.1:{port}"}
         if cookie:
             h["Cookie"] = f"{self.server.cookie}={self.server.token}"
         raw = None
         if body is not None:
             raw = json.dumps(body).encode()
             h.update({"Content-Type": "application/json", "Origin": f"http://127.0.0.1:{self.server.port}",
-                      "Content-Length": str(len(raw))})
+                      "X-Bazinga-Write": self.server.write_key, "Content-Length": str(len(raw))})
         conn.request(method, path, body=raw, headers=h)
         res = conn.getresponse()
         data = res.read()

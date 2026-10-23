@@ -5,6 +5,9 @@ pull the new version in.
 
 ## 2026-10-23
 
+- **Editor: previews can no longer write.** A script in a page (or a figure's code) used to run in the preview with
+  the Editor's rights, so a page could save files through it. Previews now open from a second local port, and every
+  write needs a key that only the Editor's own page has. Nothing changes in how you use it.
 - **Sites under a sub-path work.** If `site.origin` has a path (for example `https://you.github.io/notes`), every
   link, asset, data file and figure module is placed under `/notes`. The GitHub Pages workflow fills in the address
   by itself, so a project site works with no edits. `python -m bazinga build --origin …`, `BAZINGA_ORIGIN` or

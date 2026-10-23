@@ -52,9 +52,11 @@ class ServerCase(unittest.TestCase):
         cls.server.server_close()
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
-    def request(self, method, path, body=None, headers=None, host=None, cookie=True, origin=True, ctype=True):
-        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=20)
-        h = {"Host": host or f"127.0.0.1:{self.port}"}
+    def request(self, method, path, body=None, headers=None, host=None, cookie=True, origin=True, ctype=True,
+                port=None):
+        port = port or self.port
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=20)
+        h = {"Host": host or f"127.0.0.1:{port}"}
         if cookie:
             h["Cookie"] = self.cookie
         raw = None
@@ -64,6 +66,7 @@ class ServerCase(unittest.TestCase):
                 h["Content-Type"] = "application/json"
             if origin:
                 h["Origin"] = self.origin
+            h["X-Bazinga-Write"] = self.server.write_key
         h.update(headers or {})
         conn.putrequest(method, path, skip_host=True, skip_accept_encoding=True)
         for k, v in h.items():
@@ -204,7 +207,8 @@ class ServerCase(unittest.TestCase):
         conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=20)
         conn.putrequest("POST", "/api/math", skip_host=True)
         for k, v in (("Host", f"127.0.0.1:{self.port}"), ("Cookie", self.cookie), ("Origin", self.origin),
-                     ("Content-Type", "application/json"), ("Content-Length", str(50 * 1024 * 1024))):
+                     ("Content-Type", "application/json"), ("X-Bazinga-Write", self.server.write_key),
+                     ("Content-Length", str(50 * 1024 * 1024))):
             conn.putheader(k, v)
         conn.endheaders()
         res = conn.getresponse()
