@@ -70,5 +70,34 @@ class Scripts(unittest.TestCase):
         self.assertNotRegex("\n".join(f.read_text(encoding="utf-8") for f in FILES), r"new FormData|EventSource\(")
 
 
+    def test_writes_carry_the_write_key(self):
+        lib = (STATIC / "lib.js").read_text(encoding="utf-8")
+        self.assertIn('"X-Bazinga-Write": WRITE_KEY', lib)
+        self.assertNotIn('headers: { "Content-Type": "application/json" }', lib)
+
+
+class Layout(unittest.TestCase):
+    """M3 and the Editor's phone fixes (device audit)."""
+
+    def setUp(self):
+        self.css = (STATIC / "studio.css").read_text(encoding="utf-8")
+        narrow = self.css[self.css.index("@media (max-width: 980px)"):]
+        self.narrow = narrow[:narrow.index("\n}\n")]
+
+    def test_preview_alone_fills_a_narrow_screen(self):
+        # the wide rule ".ed-main.only-preview { grid-template-columns: 0 0 ... }" must be overridden on narrow screens
+        self.assertIn('.ed-main.only-preview { grid-template-columns: minmax(0, 1fr); grid-template-areas: "preview"; }',
+                      self.narrow)
+        self.assertRegex(self.css, r"\.ed-main \{[^}]*grid-row: 3;")
+        js = (STATIC / "editor.js").read_text(encoding="utf-8")
+        self.assertIn('matchMedia("(max-width: 980px)")', js)
+
+    def test_top_bar_and_tabs_do_not_overlap_or_overflow(self):
+        self.assertIn(".ed-top-left, .ed-top-right { display: flex; align-items: center; gap: 6px; flex: none; }", self.css)
+        self.assertIn(".ed-top { overflow-x: auto;", self.narrow)
+        self.assertRegex(self.css, r"\.tabs \{[^}]*overflow-x: auto")
+        self.assertIn("height: 100dvh", self.css)
+
+
 if __name__ == "__main__":
     unittest.main()

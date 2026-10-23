@@ -59,7 +59,7 @@ export async function openEditor(app, id) {
   try { split = Number(localStorage.getItem(SPLIT_KEY)) || 52; } catch (e) { /* ignore */ }
   let showPreview = true;
   try { showPreview = localStorage.getItem(PREVIEW_KEY) !== "0"; } catch (e) { /* ignore */ }
-  const narrow = () => innerWidth < 980;
+  const narrow = () => matchMedia("(max-width: 980px)").matches;   // the same breakpoint as studio.css
   if (narrow()) showPreview = false;
   function layout() {
     main.style.setProperty("--split", `${split}%`);
