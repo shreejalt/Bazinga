@@ -236,6 +236,42 @@ class Builds(unittest.TestCase):
             title = re.search(r'^  title: "([^"]*)"', yml.read_text(encoding="utf-8"), re.M).group(1)
             self.assertNotIn("Your Name", title, yml)
 
+    def test_theme_width_and_fonts_take_effect(self):
+        """Docs audit: theme.width and theme.font_ui were accepted and did nothing; theme.mode and home.show are gone."""
+        from test_core_support import SITE_YML
+        yml = SITE_YML + 'theme: {width: 640, font_ui: "IBM Plex Mono", font_code: "Fira Code", mode: dark}\n'
+        root = make_site({"posts/a": post("A")}, site_yml=yml)
+        try:
+            cfg = config.load(root)
+            self.assertNotIn("mode", config.DEFAULTS["theme"])
+            self.assertNotIn("show", config.DEFAULTS["home"])
+            build.build(cfg, quiet=True)
+            html = (cfg.out_dir / "posts" / "a" / "index.html").read_text()
+            self.assertIn('--mono:"IBM Plex Mono"', html)
+            self.assertIn('--code:"Fira Code"', html)
+            self.assertIn("--width:640px", html)
+            css = (Path(__file__).resolve().parent.parent / "bazinga/theme/assets/css/site.css").read_text()
+            self.assertIn(".memo{font-family:var(--mono);font-size:16.5px;line-height:1.62;max-width:var(--width,78ch)", css)
+            self.assertIn("pre,code,kbd,samp{font-family:var(--code,var(--mono))}", css)
+        finally:
+            cleanup(root)
+        root = make_site({"posts/a": post("A")})
+        try:
+            cfg = config.load(root)
+            self.assertIsNone(cfg["theme"]["width"])
+            build.build(cfg, quiet=True)
+            self.assertNotIn("--width:", (cfg.out_dir / "posts" / "a" / "index.html").read_text())
+        finally:
+            cleanup(root)
+        for bad in ("width: 100", "width: wide"):
+            with self.subTest(bad=bad):
+                root = make_site(site_yml=SITE_YML + f"theme: {{{bad}}}\n")
+                try:
+                    with self.assertRaises(config.ConfigError):
+                        config.load(root)
+                finally:
+                    cleanup(root)
+
     def test_feed_is_capped_at_thirty(self):
         cfg = config.load(make_site())
         try:

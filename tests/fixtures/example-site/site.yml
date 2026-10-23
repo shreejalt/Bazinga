@@ -152,11 +152,10 @@ theme:
   ground: ""
   paper: ""
   font_text: "STIX Two Text"            # Google Fonts family names
-  font_ui: "Courier Prime"
-  font_code: "Courier Prime"
+  font_ui: "Courier Prime"             # the rail, labels and the typed text of reads and papers
+  font_code: "Courier Prime"           # code blocks and inline code
   font_math: "STIX Two Math"            # needs a font with a MATH table
-  width: 720
-  mode: light
+  # width: 780                         # optional: the reading column in px (480-1200; default: the theme's)
 
 features: {ask: true, explore: true, series: true, feed: true, llms_txt: true, credit: true}   # credit: the small "Made with Bazinga" link in the side rail
 

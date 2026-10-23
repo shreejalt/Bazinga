@@ -536,11 +536,14 @@ class Builder:
         if not theme.get("accent_dark"):
             out.append("--blue-d:color-mix(in srgb,var(--blue) 78%,black)")
         fonts = {"font_text": ("--serif", 'Georgia,"Times New Roman",serif'),
-                 "font_code": ("--mono", '"Courier New",Courier,monospace'),
+                 "font_ui": ("--mono", '"Courier New",Courier,monospace'),
+                 "font_code": ("--code", '"Courier New",Courier,monospace'),
                  "font_math": ("--math", '"STIX Two Math","Cambria Math","Latin Modern Math",serif')}
         for key, (var, fallback) in fonts.items():
             if theme.get(key):
                 out.append(f'{var}:"{theme[key]}",{fallback}')
+        if theme.get("width"):
+            out.append(f"--width:{int(theme['width'])}px")
         return ";".join(out)
 
     def base_context(self, url: str, title: str, description: str, page: Page | None = None,

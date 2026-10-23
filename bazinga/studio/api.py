@@ -77,7 +77,7 @@ class Editor:
                   "prefix": pages.page_id(cfg, k, "x")[:-2]} for k, v in cfg["kinds"].items()]
         return {
             "site": {"name": cfg["site"]["name"], "origin": cfg.origin, "author": cfg["site"]["author"]},
-            "accent": cfg["theme"]["accent"], "mode": cfg["theme"]["mode"],
+            "accent": cfg["theme"]["accent"],
             "kinds": kinds, "llm": llm_on,
             "available": {m: engine.available(m) for m in ("markdown", "checks", "build", "figures", "drawings",
                                                            "mathml", "wiki")},

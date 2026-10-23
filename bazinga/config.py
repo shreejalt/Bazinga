@@ -39,15 +39,14 @@ DEFAULTS: dict = {
         "posts": {"label": "Writing", "singular": "Post"},
         "projects": {"label": "Projects", "singular": "Project"},
     },
-    "home": {"intro": "", "show": ["latest", "series", "map"]},
+    "home": {"intro": ""},
     "theme": {
         "accent": "#3b5bdb",
         "font_text": "Source Serif 4",
-        "font_ui": "Inter",
-        "font_code": "JetBrains Mono",
+        "font_ui": "JetBrains Mono",    # the typewriter face of the rail, labels and memo pages
+        "font_code": "JetBrains Mono",  # code blocks and inline code
         "font_math": "STIX Two Math",
-        "width": 720,
-        "mode": "auto",
+        "width": None,                  # the reading column in px; None keeps the theme's (about 780)
     },
     "cv": {"pdf": ""},
     "features": {"ask": True, "explore": True, "series": True, "feed": True, "llms_txt": True, "credit": True},
@@ -288,18 +287,15 @@ def _validate(cfg: dict) -> None:
         if value and not _HEX.match(value):
             raise ConfigError(f"theme.{key} must be a hex colour such as '#E6DECD' (got {value!r})")
         theme[key] = value
-    if theme.get("mode") not in ("auto", "light", "dark"):
-        raise ConfigError("theme.mode must be auto, light or dark")
-    try:
-        theme["width"] = int(theme.get("width") or 720)
-    except (TypeError, ValueError):
-        raise ConfigError("theme.width must be a number of pixels, e.g. 720") from None
-    if not 480 <= theme["width"] <= 1200:
-        raise ConfigError("theme.width should be between 480 and 1200 pixels")
-
-    home = cfg["home"]
-    if not isinstance(home.get("show"), list):
-        raise ConfigError("home.show must be a list, e.g. [latest, series, map]")
+    if theme.get("width") not in (None, ""):
+        try:
+            theme["width"] = int(theme["width"])
+        except (TypeError, ValueError):
+            raise ConfigError("theme.width must be a number of pixels, e.g. 760") from None
+        if not 480 <= theme["width"] <= 1200:
+            raise ConfigError("theme.width should be between 480 and 1200 pixels")
+    else:
+        theme["width"] = None
 
 
 def kind_id_prefix(cfg, kind: str) -> str:

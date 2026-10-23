@@ -98,15 +98,15 @@ nav: [{label: Writing, href: /posts/}, {label: Projects, href: /projects/}, {lab
 kinds:                                  # each kind is a folder content/<kind>/ and a list page /<kind>/
   posts:    {label: Writing,  singular: Post}
   projects: {label: Projects, singular: Project}
-home: {intro: "A paragraph about you (Markdown).", show: [latest, series, map]}
+home: {intro: "A paragraph about you (Markdown)."}
 theme:
   accent: "#3b5bdb"                     # one colour; tokens.css derives the rest
   font_text: "Source Serif 4"           # Google Fonts names
-  font_ui: "Inter"
-  font_code: "JetBrains Mono"
+  font_ui: "JetBrains Mono"             # the rail, labels and the typed text of reads and papers (--mono)
+  font_code: "JetBrains Mono"           # code blocks and inline code (--code)
   font_math: "STIX Two Math"
-  width: 720                            # reading column in px
-  mode: auto                            # auto | light | dark
+  width: 780                            # optional: the reading column in px (480-1200); unset keeps the theme's
+                                        # (the theme is light only: there is no dark mode setting)
 features: {ask: true, explore: true, series: true, feed: true, llms_txt: true, credit: true}   # credit: "Made with Bazinga" in the rail
 llm:                                    # optional; everything works without it except proposals + written answers
   base_url: "https://openrouter.ai/api/v1"   # any OpenAI-compatible /chat/completions (OpenAI, OpenRouter, Ollama http://localhost:11434/v1 …)
@@ -337,7 +337,7 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
 ## Theme and look
 
 The look is calm and editorial: a reading column of about 720 px, a generous serif for text and a clean sans for the UI. Figures may break out to about 1000 px.
-- **Colour:** `tokens.css` derives everything from one `--accent`, with light and dark palettes (`prefers-color-scheme` plus a toggle stored in localStorage).
+- **Colour:** `tokens.css` derives everything from one `--accent` on a light paper palette (the theme has no dark mode; the Editor has its own light and dark).
 - **Pages:**
   - **Home:** intro, latest posts, series, a small map teaser.
   - **Lists:** cards with summary, topics and reading time.
