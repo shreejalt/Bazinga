@@ -31,6 +31,8 @@ pull the new version in.
   example `javascript:`) is no longer turned into a link; the arXiv or DOI link is used instead, if there is one.
   Titles containing `</script>` or `<!--` can no longer break out of the page's structured data. The local server's
   Ask endpoint refuses a body length that is not a plain number.
+- **The figure form cannot hang on a huge power.** An expression such as `(9*9)**999999999` used to be worked out
+  exactly and never finish; it is now computed as a decimal number, which overflows at once and leaves that point out.
 - **3-D figures work from the keyboard.** Tab to the picture, then the left and right arrow keys turn it and up and
   down tilt it (Shift for small steps); the new angle is read out to screen readers. The hint under the figure says so.
 - **Keyboard focus shows on the rail.** The rail kept a pale focus ring from when it was dark; it now uses the same

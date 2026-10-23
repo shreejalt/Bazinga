@@ -144,6 +144,28 @@ class Expressions(unittest.TestCase):
             eval(compile(code, "<test>", "eval"), {})   # the code the builder writes overflows at once
 
 
+class HugePowers(unittest.TestCase):
+    """C-5: (9*9)**999999999 in a readout or a curve used to be computed exactly and hang the figure."""
+
+    def test_a_huge_whole_number_power_does_not_hang(self):
+        import subprocess
+        import sys
+        site = Site()
+        self.addCleanup(site.close)
+        spec = fb.default_spec("function")
+        spec["readouts"][1]["expr"] = "(9*9)**999999999"
+        spec["curves"][0]["expr"] = "a*sin(f*x) + (2*3)**(10**9)*0"
+        src = fb.generate(spec)
+        self.assertIn("float(9 * 9) ** 999999999", src)
+        site.add("huge", src)
+        code = ("import sys, types; from pathlib import Path; from bazinga import figures; "
+                f"cfg = types.SimpleNamespace(root=Path({str(site.dir)!r}), figures_dir=Path({str(site.dir / 'figures')!r})); "
+                "figures.run('huge', None, 0, cfg); print('drew')")
+        r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=120,
+                           cwd=str(Path(__file__).resolve().parent.parent))
+        self.assertIn("drew", r.stdout, r.stderr[-2000:])
+
+
 class Generated(unittest.TestCase):
     def setUp(self):
         self.site = Site()
