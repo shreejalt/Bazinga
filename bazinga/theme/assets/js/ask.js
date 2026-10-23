@@ -19,7 +19,10 @@
   const S = window.SITE || { nodes: {}, kinds: {} };
   const e = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
   const kl = (id) => (S.nodes[id] || {}).kl || "";
-  const href = (id) => (S.nodes[id] || {}).url || "#";
+  // only links into this site: a path on it, or its own address (never javascript: or another site)
+  const siteURL = (u) => { u = String(u == null ? "" : u); return (u.startsWith("/") && !u.startsWith("//")) || u === location.origin || u.startsWith(location.origin + "/") ? u : null; };
+  const onSite = (list) => (Array.isArray(list) ? list.filter((p) => p && siteURL(p.url) !== null) : []);
+  const href = (id) => siteURL((S.nodes[id] || {}).url) || "#";
   const CONTENT = new Set(["read", "paper", "proj", "ext"]);
   let api = null, data = null, mapdata = null, pyOk = null;
   const views = {};
@@ -28,7 +31,7 @@
   const getJSON = (u) => fetch(u).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
   function loadData() {
     return data || (data = Promise.all([getJSON(PASSAGES).catch(() => []), getJSON(GRAPH).catch(() => null)])
-      .then(([passages, graph]) => ({ passages, graph })));
+      .then(([passages, graph]) => ({ passages: onSite(passages), graph })));
   }
   function loadMap() { return mapdata || (mapdata = getJSON(MAPDATA).catch(() => ({ items: [] }))); }
   function viewOf(id) { return views[id] || (views[id] = getJSON(BASE + "/data/view/" + id.replace(":", "-") + ".json")); }
@@ -132,7 +135,7 @@
   function item(id) { return `<a data-x="${e(id)}" href="${e(href(id))}">${e((S.nodes[id] || {}).title || id)}</a><span class="dim"> · ${e(kl(id))}</span>`; }
   function list(ids, empty) { return ids.length ? `<ol class="path">${ids.map((i) => `<li><div>${item(i)}</div></li>`).join("")}</ol>` : `<p class="why">${empty}</p>`; }
   function passagesHTML(res, head, shown) {
-    const ps = ((res && res.passages) || []).filter((p) => !shown || !shown.has(p.id));
+    const ps = onSite((res && res.passages) || []).filter((p) => !shown || !shown.has(p.id));
     if (!ps.length) return "";
     const seen = new Map();
     ps.forEach((p) => { const k = p.id; if (!seen.has(k)) seen.set(k, Object.assign({}, p, { more: [] })); else if (p.section && seen.get(k).section !== p.section) seen.get(k).more.push(p); });
@@ -293,7 +296,7 @@
         const r = await res.json();
         if (r.error) out.innerHTML = `<p class="why">${e(r.error)}</p>`;
         else {
-          const src = r.sources || [], byN = new Map(src.map((s, i) => [s.n || i + 1, s]));
+          const src = onSite(r.sources), byN = new Map(src.map((s, i) => [s.n || i + 1, s]));
           const cite = (t) => t.replace(/\[(\d+)\]/g, (m, n) => { const s = byN.get(+n); return s ? `<a class="cite" href="${e(s.url)}${s.anchor ? "#" + e(s.anchor) : ""}" title="${e(s.title)}">[${n}]</a>` : m; });
           const groups = [];
           src.forEach((s, i) => { let g = groups.find((x) => x.url === s.url); if (!g) { g = { url: s.url, title: s.title, parts: [] }; groups.push(g); } g.parts.push({ n: s.n || i + 1, section: s.section, anchor: s.anchor }); });

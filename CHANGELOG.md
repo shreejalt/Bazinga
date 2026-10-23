@@ -11,6 +11,10 @@ pull the new version in.
 - **Editor: a figure drafted from a description is not run until you say so.** It opens as code with a note; press
   "I have read it: run it" (or save it) to test it. The note also lists anything in it a figure does not need, such
   as imports other than `math`, `random`, `statistics`, the figure kits and (when declared) `numpy`.
+- **Ask's written answer reads only your own site.** On Vercel it used to take the site's address from the visitor's
+  request, so a crafted request could feed it someone else's passages and links. It now uses `SITE_URL` or
+  `site.origin` (and says so plainly when neither is set), and links that do not point into your site are dropped,
+  on the server and in the page.
 - **Sites under a sub-path work.** If `site.origin` has a path (for example `https://you.github.io/notes`), every
   link, asset, data file and figure module is placed under `/notes`. The GitHub Pages workflow fills in the address
   by itself, so a project site works with no edits. `python -m bazinga build --origin …`, `BAZINGA_ORIGIN` or
