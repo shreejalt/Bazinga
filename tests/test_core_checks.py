@@ -231,6 +231,27 @@ class CommandLine(unittest.TestCase):
         finally:
             cleanup(root)
 
+    def test_editor_port_and_its_old_name(self):
+        """E-11: --editor-port is the name; --studio-port keeps working."""
+        root = make_site()
+        try:
+            for flag in ("--editor-port", "--studio-port"):
+                with self.subTest(flag=flag), mock.patch("bazinga.serve.serve", return_value=0) as serve:
+                    code, text = self.run_cli("--root", str(root), "serve", flag, "9123", "--port", "9122")
+                    self.assertEqual(code, 0, text)
+                    self.assertEqual(serve.call_args.kwargs["studio_port"], 9123)
+        finally:
+            cleanup(root)
+
+    def test_no_studio_names_or_made_up_email_in_what_people_see(self):
+        from bazinga.studio import cite as studio_cite
+        from bazinga.studio import server
+        self.assertNotIn("@", studio_cite.UA)
+        self.assertNotIn("Studio", studio_cite.UA)
+        self.assertNotIn("Studio", server.Handler.server_version)
+        src = (REPO / "bazinga/studio/server.py").read_text(encoding="utf-8")
+        self.assertNotIn("Studio stopped", src)
+
     def test_passthrough_keeps_options(self):
         with mock.patch("bazinga.cli._module") as module:
             module.return_value.main = mock.Mock(return_value=0)

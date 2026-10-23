@@ -31,6 +31,8 @@ pull the new version in.
   example `javascript:`) is no longer turned into a link; the arXiv or DOI link is used instead, if there is one.
   Titles containing `</script>` or `<!--` can no longer break out of the page's structured data. The local server's
   Ask endpoint refuses a body length that is not a plain number.
+- **The Editor's name everywhere.** `serve --editor-port` (the old `--studio-port` still works), "The Editor
+  stopped." when you press Ctrl+C, and citation lookups no longer send a made-up email address.
 - **`bazinga new` writes valid front matter** for any title (backslashes and quotes included), and refuses a `--slug`
   with `/`, `..` or capitals instead of writing outside `content/`.
 - **The figure form cannot hang on a huge power.** An expression such as `(9*9)**999999999` used to be worked out

@@ -277,7 +277,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--drafts", action="store_true", help="also show drafts and scheduled pages (local preview)")
     p.add_argument("--no-editor", "--no-studio", dest="no_studio", action="store_true",
                    help="do not start the Editor (no Write button)")
-    p.add_argument("--studio-port", type=int, default=None,
+    p.add_argument("--editor-port", "--studio-port", dest="studio_port", type=int, default=None,
                    help="port of the Editor on 127.0.0.1 (default: the serve port + 1, or a free one)")
     p.set_defaults(fn=cmd_serve)
 

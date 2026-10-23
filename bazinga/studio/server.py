@@ -163,7 +163,7 @@ ROUTES_POST.update({"/api/diagram/render": "diagram_render"})
 
 class Handler(BaseHTTPRequestHandler):
     server: StudioServer
-    server_version = "BazingaStudio"
+    server_version = "BazingaEditor"
     sys_version = ""
     protocol_version = "HTTP/1.0"
 
@@ -484,7 +484,7 @@ def main(argv=None) -> int:
     try:
         server.serve_forever(poll_interval=0.3)
     except KeyboardInterrupt:
-        print("\nStudio stopped.")
+        print("\nThe Editor stopped.")
     finally:
         server.server_close()
     return 0
