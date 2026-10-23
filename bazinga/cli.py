@@ -174,7 +174,16 @@ def cmd_figure(args, cfg) -> int:
         except figs.FigureError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
-        print(f"Created {Path(path).relative_to(cfg.root)}. Use it in a post with ::figure {args.name}")
+        rel = Path(path).relative_to(cfg.root) if Path(path).is_relative_to(cfg.root) else path
+        if Path(path).parent.name == "drawings":          # a drawing starter: ::drawing <file>.<function>
+            import ast
+            fns = [n.name for n in ast.parse(Path(path).read_text(encoding="utf-8")).body
+                   if isinstance(n, ast.FunctionDef) and not n.name.startswith("_")]
+            use = f"::drawing {args.name}.{fns[0] if fns else '<function>'}"
+            more = f" (its functions: {', '.join(fns)})" if len(fns) > 1 else ""
+            print(f"Created {rel}. Use it in a post with {use}{more}")
+        else:
+            print(f"Created {rel}. Use it in a post with ::figure {args.name}")
         return 0
     if args.action == "list":
         return figs.cli_list(cfg)
@@ -308,7 +317,8 @@ def parser() -> argparse.ArgumentParser:
         ("editor", "studio.server", "main", "The Editor (bazinga/studio/)", "the Editor, the local writing window"),
         ("studio", "studio.server", "main", "The Editor (bazinga/studio/)", "the same as editor"),
         ("publish", "studio.publish", "cli_main", "Publishing (bazinga/studio/publish.py)", "publish one page"),
-        ("wiki", "llm", "cli", "The wiki tools (bazinga/llm.py)", "index, ingest, lint, highlights, describe"),
+        ("wiki", "llm", "cli", "The wiki tools (bazinga/llm.py)",
+         "index, query, ingest, lint, highlights, describe, equation, figure, log"),
     ]:
         p = sub.add_parser(name, help=help_text, add_help=False)
         p.add_argument("rest", nargs=argparse.REMAINDER)

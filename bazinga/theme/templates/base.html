@@ -20,7 +20,7 @@
 {% if drafts %}<meta name="robots" content="noindex">
 {% endif %}
 <script type="application/ld+json">{{ jsonld|safe }}</script>
-{% if site.avatar %}<link rel="icon" href="{{ base }}/{{ site.avatar }}">
+{% if site.avatar %}<link rel="icon" href="{{ base }}/{{ (site.avatar|string).lstrip('/') }}">
 {% else %}<link rel="icon" type="image/svg+xml" href="{{ asset('img/bazinga.svg') }}">
 {% endif %}
 {% for origin in vendor.font_preconnect %}

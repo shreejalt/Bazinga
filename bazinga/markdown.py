@@ -610,6 +610,31 @@ class _Figures(Treeprocessor):
             img.set("decoding", "async")
 
 
+_BLOCKS = {"p", "div", "li", "ul", "ol", "dl", "dt", "dd", "blockquote", "pre", "table", "tr", "td", "th", "h1", "h2",
+           "h3", "h4", "h5", "h6", "figure", "figcaption", "br", "hr", "section", "aside", "details", "summary"}
+
+
+def _block_text(el) -> str:
+    """The text of an element with a space where one block ends and the next starts (a callout's title and its
+    first line used to run together: "at onceHow")."""
+    out = []
+
+    def walk(e):
+        block = isinstance(e.tag, str) and e.tag.lower() in _BLOCKS
+        if block:
+            out.append(" ")
+        if e.text:
+            out.append(e.text)
+        for c in e:
+            walk(c)
+            if c.tail:
+                out.append(c.tail)
+        if block:
+            out.append(" ")
+    walk(el)
+    return "".join(out)
+
+
 class _Headings(Treeprocessor):
     """Give every heading a stable id and a hover link; collect the TOC and the plain-text sections."""
 
@@ -638,7 +663,7 @@ class _Headings(Treeprocessor):
                     continue
             if el.tag == "div" and "footnote" in (el.get("class") or ""):
                 continue
-            sections[-1]["text"].append(self.r.to_plain("".join(el.itertext()), self.md))
+            sections[-1]["text"].append(self.r.to_plain(_block_text(el), self.md))
         self.r.toc = toc
         self.r.sections = [{"id": s["id"], "title": s["title"], "text": " ".join(" ".join(s["text"]).split())}
                            for s in sections if s["id"] or " ".join(s["text"]).strip()]

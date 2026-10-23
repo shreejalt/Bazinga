@@ -213,7 +213,7 @@ def find_page(state: State, ref):
     for p in state.pages:
         if p.slug == ref or p.slug == stem or str(p.path).endswith(ref):
             return p
-    raise LLMError(f"no public page {ref!r} (use an id such as post:attention, a slug, or a file path)")
+    raise LLMError(f"no public page {ref!r} (use an id such as read:attention-from-scratch, a slug, or a file path)")
 
 
 def page_text(state: State, page, limit=12000) -> str:
@@ -712,7 +712,7 @@ USAGE = """usage: python -m bazinga wiki <command>
   figure "<description>"     draft a figure module from the closest starter
   log <op> "<subject>"       append an entry to wiki/log.md
 
-<page> is an id (post:attention), a slug or a file path. Proposals go to proposals/; nothing in content/ changes."""
+<page> is an id (read:attention-from-scratch), a slug or a file path. Proposals go to proposals/; nothing in content/ changes."""
 
 
 def cli(argv, cfg=None) -> int:
@@ -745,8 +745,15 @@ def cli(argv, cfg=None) -> int:
             res = retrieve.answer(" ".join(args), ps, state.graph.to_json())
             print(res["answer"] or "Nothing on this site matches that question.")
             print()
-            for p in res["passages"][:6]:
-                print(f"- {p['title']} — {p['section'] or 'introduction'}: {p['url']}{'#' + p['anchor'] if p['anchor'] else ''}")
+            seen = set()                     # a long section is split into several passages: list it once
+            for p in res["passages"]:
+                where = f"{p['url']}{'#' + p['anchor'] if p['anchor'] else ''}"
+                if where in seen:
+                    continue
+                seen.add(where)
+                print(f"- {p['title']} — {p['section'] or 'introduction'}: {where}")
+                if len(seen) == 6:
+                    break
             return 0
         needs_model = {"ingest", "highlights", "describe", "equation", "figure"}
         if op == "lint":

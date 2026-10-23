@@ -212,6 +212,30 @@ class Builds(unittest.TestCase):
         design = (repo / "docs/DESIGN.md").read_text(encoding="utf-8")
         self.assertNotIn("The README explains a daily cron build", design)
 
+    def test_avatar_with_or_without_a_leading_slash(self):
+        """Docs audit: avatar: /static/me.png gave a // favicon link and no share image."""
+        from test_core_support import SITE_YML
+        for value in ("static/me.png", "/static/me.png"):
+            with self.subTest(avatar=value):
+                root = make_site({"posts/a": post("A")}, site_yml=SITE_YML.replace("origin:", f'avatar: "{value}", origin:'))
+                try:
+                    (root / "static").mkdir()
+                    (root / "static" / "me.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+                    cfg = config.load(root)
+                    build.build(cfg, quiet=True)
+                    html = (cfg.out_dir / "posts" / "a" / "index.html").read_text()
+                    self.assertIn('<link rel="icon" href="/static/me.png">', html)
+                    self.assertIn('content="https://test.example/static/me.png"', html)
+                finally:
+                    cleanup(root)
+
+    def test_example_home_title_names_the_site_once(self):
+        import re
+        repo = Path(__file__).resolve().parent.parent
+        for yml in (repo / "tests" / "fixtures" / "example-site" / "site.yml",):     # never the site's own site.yml
+            title = re.search(r'^  title: "([^"]*)"', yml.read_text(encoding="utf-8"), re.M).group(1)
+            self.assertNotIn("Your Name", title, yml)
+
     def test_feed_is_capped_at_thirty(self):
         cfg = config.load(make_site())
         try:

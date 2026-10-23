@@ -434,7 +434,8 @@ def _run(cfg, page_id: str, opts: Options, emit) -> dict:
                 cmd = ["git", "push", "-u", "origin", "HEAD"]
             else:
                 raise StepFailed("Committed, but there is no remote to push to.",
-                                 "Add one with `git remote add origin <url>`, then publish again.")
+                                 "Add one with `git remote add origin <url>`, then run `git push -u origin HEAD` "
+                                 "(the commit is already made; publishing again is not needed).")
             code, out = run_stream(cmd, root, emit, opts.timeout_git)
             if code != 0:
                 raise StepFailed("Committed locally, but git push failed.", out)

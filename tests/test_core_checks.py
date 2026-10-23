@@ -262,6 +262,34 @@ class CommandLine(unittest.TestCase):
                 if bad.search(line) and "noqa: site" not in line:
                     self.fail(f"{f.name}:{n} reads the site's own files; use tests/fixtures/example-site: {line.strip()}")
 
+    def test_small_messages_from_the_docs_audit(self):
+        """figure new with a drawing starter names ::drawing; the wiki help lists every command; site.yml's YAML error
+        names the file once; a missing remote says to push, not to publish again."""
+        root = make_site()
+        try:
+            code, out = self.run_cli("--root", str(root), "figure", "new", "flow", "--from", "flowchart")
+            self.assertEqual(code, 0, out)
+            self.assertIn("::drawing flow.", out)
+            self.assertNotIn("::figure", out)
+            buf = io.StringIO()
+            with redirect_stdout(buf), self.assertRaises(SystemExit):
+                cli.main(["--help"])
+            out = buf.getvalue()
+            lines = out.splitlines()
+            i = next(n for n, l in enumerate(lines) if l.strip().startswith("wiki"))
+            line = " ".join(lines[i:i + 3])                      # argparse wraps the help text
+            for word in ("index", "query", "ingest", "lint", "highlights", "describe", "equation", "figure", "log"):
+                self.assertIn(word, line)
+            (root / "site.yml").write_text("site: {name: [unclosed\n", encoding="utf-8")
+            code, out = self.run_cli("--root", str(root), "build")
+            self.assertEqual(out.count("site.yml"), 1, out)
+            self.assertRegex(out, r"site\.yml:\d+: not valid YAML")
+        finally:
+            cleanup(root)
+        src = (REPO / "bazinga/studio/publish.py").read_text(encoding="utf-8")
+        self.assertIn("git push -u origin HEAD` ", src)
+        self.assertNotIn("then publish again", src)
+
     def test_passthrough_keeps_options(self):
         with mock.patch("bazinga.cli._module") as module:
             module.return_value.main = mock.Mock(return_value=0)

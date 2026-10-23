@@ -5,6 +5,13 @@ pull the new version in.
 
 ## 2026-10-23
 
+- **Small fixes from the documentation review:** `figure new <name> --from <drawing starter>` now tells you to use
+  `::drawing <name>.<function>`; `wiki query` lists each section once and no longer runs a callout's title into its
+  text ("at onceHow"); `wiki --help` lists every command, and its examples use a real page id
+  (`read:attention-from-scratch`); a broken `site.yml` is reported as `site.yml:<line>: not valid YAML`, once;
+  publishing without a remote says to run `git push -u origin HEAD` (the commit is already made); `site.avatar` may
+  start with `/`; the example home title is "Machine Learning Notes" (the site name is added to it); and
+  `wiki/index.md` lists all 14 example pages.
 - **No links to parts you switched off.** With `features: {ask: false}` (or `explore`, `series`) the rail leaves out
   those items even if `nav:` still lists them, and pages no longer show "Ask the map", "Explore" or "On the map".
 - **Page numbers after a `::pagebreak`** are right: the footer of the second page said "[Page 1]".

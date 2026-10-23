@@ -213,8 +213,8 @@ def load(root=None, local: bool = False, origin: str | None = None) -> Config:
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         except yaml.YAMLError as exc:
             mark = getattr(exc, "problem_mark", None)
-            where = f" (line {mark.line + 1})" if mark else ""
-            raise ConfigError(f"site.yml is not valid YAML{where}: {getattr(exc, 'problem', exc)}") from None
+            where = f":{mark.line + 1}" if mark else ""
+            raise ConfigError(f"site.yml{where}: not valid YAML: {getattr(exc, 'problem', exc)}") from None
         except ValueError as exc:         # YAML reads 2026-02-30 as a date and Python refuses it
             from .content import impossible_date
             bad = impossible_date(path.read_text(encoding="utf-8"))

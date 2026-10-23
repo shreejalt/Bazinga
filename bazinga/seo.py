@@ -46,8 +46,8 @@ def cut(text: str, limit: int = DESCRIPTION_MAX) -> str:
 def share_image(cfg, page: Page | None) -> str:
     if page is not None and page.cover:
         return absolute(cfg, "/" + page.cover.lstrip("/"))
-    avatar = cfg["site"].get("avatar")
-    if avatar and (cfg.root / str(avatar)).exists():
+    avatar = str(cfg["site"].get("avatar") or "").lstrip("/")      # static/a.png and /static/a.png both work
+    if avatar and (cfg.root / avatar).exists():
         return absolute(cfg, "/" + str(avatar).lstrip("/"))
     return ""
 

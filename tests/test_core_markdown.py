@@ -97,6 +97,31 @@ class Links(unittest.TestCase):
         self.assertEqual(r.issues[0].code, "cite-unknown")
 
 
+class SectionText(unittest.TestCase):
+    """Docs audit: a callout's title and its first line ran together in the passages ("at onceHow")."""
+
+    def test_blocks_are_spaced(self):
+        _, r = render_text("## Temperature\n\n> [!KEY] Two things at once\n> How confident it looks.\n\n- one\n- two\n")
+        text = next(s["text"] for s in r.sections if s["title"] == "Temperature")
+        self.assertIn("at once How confident", text)
+        self.assertIn("one two", text)
+        _, r = render_text("## A\n\nThe **bold**, and a word*s*, `code`.\n")      # inline stays joined
+        self.assertIn("The bold, and a words, code.", next(s["text"] for s in r.sections if s["title"] == "A"))
+
+    def test_wiki_query_lists_each_section_once(self):
+        import contextlib
+        import io
+        from bazinga import llm
+        cfg = config.load(EXAMPLE)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            llm.cli(["query", "what does the temperature do to the softmax"], cfg)
+        sources = [l for l in out.getvalue().splitlines() if l.startswith("- ")]
+        self.assertTrue(sources)
+        self.assertEqual(len(sources), len(set(sources)))
+        self.assertNotIn("onceHow", out.getvalue())
+
+
 class Blocks(unittest.TestCase):
     def test_callouts(self):
         _, r = render_text("> [!TIP]\n> One.\n\n> [!KEY] Remember this\n> Two.\n\n> [!WARNING]\n> Three.\n")
