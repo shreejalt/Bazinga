@@ -595,24 +595,7 @@ dl.skills .pill{font-family:var(--mono);font-size:12.5px;border:1px solid var(--
 .pager .pg-n{color:var(--ink-2);min-width:5ch;text-align:center}
 .pager .chip:disabled{opacity:.35;cursor:default}
 
-/* ---------- interactive scenes (figures/scene3d.py) ---------- */
-.figure .plot.orbit{cursor:grab;touch-action:pan-y}
-.figure .plot.dragging{cursor:grabbing}
-.figure .plot .lbl.halo{paint-order:stroke;stroke:var(--paper);stroke-width:3px;stroke-linejoin:round}
-.figure .plot .handle{cursor:grab;touch-action:none;outline:none}
-.figure .plot .handle .ring{fill:none;stroke:var(--blue);stroke-width:1.5;stroke-dasharray:3 3;opacity:.55;transition:opacity .15s}
-.figure .plot .handle:hover .ring,.figure .plot .handle:focus .ring,.figure .plot.dragging .handle .ring{opacity:1;stroke-dasharray:none}
-.figure .plot .hot{stroke-width:3!important;filter:drop-shadow(0 0 2px rgba(15,82,186,.45))}
-.figure .plot circle.pt.hot{r:6}
-.figure .plot .ghost{opacity:.5}
-.tile.hot .k{color:var(--blue)}
-.tile.m .mat{display:inline-grid;gap:2px 14px;font-family:var(--mono);font-size:15px;padding:6px 10px;margin:4px 0;border-left:1.5px solid var(--ink);border-right:1.5px solid var(--ink);font-variant-numeric:tabular-nums;text-align:right}
-.tile.m .mat .hot{color:var(--blue);font-weight:700}
-.ctl .play{font-family:var(--mono);font-size:12px;border:1px solid var(--ink);background:var(--paper);padding:3px 9px;cursor:pointer;line-height:1.2}
-.ctl .play[aria-pressed="true"]{background:var(--ink);color:var(--on-dark)}
-.ctl.pad output{color:var(--blue)}
-.ctl.presets{gap:8px}
-.ctl.presets .chip{padding:5px 10px;font-size:11.5px}
+/* ---------- 3-D figures: see figure.css ("3-D scenes") ---------- */
 .ctl.toggle,.ctl.steps{gap:6px}
 .ctl.toggle .chip,.ctl.steps .chip{padding:5px 10px;font-size:11.5px}
 .ctl.steps .stepname{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);min-width:12ch}

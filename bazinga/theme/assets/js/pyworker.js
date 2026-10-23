@@ -2,12 +2,14 @@
 // Started by figure.js as `new Worker(url, {type: "module"})`.
 //
 // Messages in:  {id, type: "init", indexURL}
-//               {id, type: "figure", module, plot, name, requires, values, narrow}
+//               {id, type: "figure", module, plot, kits, name, requires, values, narrow, drag}
 //               {id, type: "call", module, fn, args, requires}
 // Messages out: {id, ok: true, result} | {id, ok: false, error}
 //
-// "figure" returns {svg, readouts_html}; "call" returns whatever the function returns, as JSON.
+// "figure" returns {svg, readouts_html, state}; "call" returns whatever the function returns, as JSON.
 // Module files are fetched once per URL and written into the in-memory file system under /bazinga.
+// Kits ({"scene3d": url}) are installed as bazinga.<kit>, so a figure's `from bazinga import scene3d` works here
+// exactly as it does when the site is built.
 
 // Pinned runtime. figure.js normally passes the URL it was given by the page (from bazinga/vendor.py);
 // this constant is only the fallback and must match the pinned version there.
@@ -33,14 +35,24 @@ def _bazinga_import(name):
     importlib.invalidate_caches()
     return importlib.import_module(name)
 
-def _bazinga_figure(modname, values_json, narrow):
+def _bazinga_figure(modname, values_json, narrow, drag_json="null"):
     plot = _bazinga_import("_plot")
     mod = _bazinga_import(modname)
     controls = getattr(mod, "CONTROLS", [])
     values = plot.coerce(controls, json.loads(values_json))
-    spec = mod.compute(_narrow=1 if narrow else 0, **values)
+    drag = json.loads(drag_json)
+    extra = {"_drag": drag} if drag else {}
+    spec = mod.compute(_narrow=1 if narrow else 0, **values, **extra)
     svg, ro = plot.render(spec, narrow=narrow, title=getattr(mod, "TITLE", ""))
-    return json.dumps({"svg": svg, "readouts_html": ro})
+    state = spec.get("state") if isinstance(spec, dict) else None
+    if isinstance(state, dict):
+        state = plot.coerce([c for c in controls if c["name"] in state], state)
+    return json.dumps({"svg": svg, "readouts_html": ro, "state": state or None})
+
+def _bazinga_forget(prefixes):
+    for k in list(sys.modules):
+        if any(k == p or k.startswith(p) for p in prefixes):
+            sys.modules.pop(k, None)
 
 def _bazinga_resolve(v):
     if isinstance(v, dict):
@@ -75,6 +87,7 @@ async function boot(indexURL) {
         figure: p.globals.get("_bazinga_figure"),
         call: p.globals.get("_bazinga_call"),
         putJson: p.globals.get("_bazinga_put_json"),
+        forget: p.globals.get("_bazinga_forget"),
       };
       py = p;
       return p;
@@ -105,6 +118,28 @@ async function ensureModule(url, asName) {
   sourceOf.set(name, abs);
   fetched.set(abs, name);
   return name;
+}
+
+// A kit lives at /bazinga/bazinga/<kit>.py (the package `bazinga`, with an empty __init__.py). When its URL
+// changes (a new version), it and every figure module that imported it are imported afresh.
+const kitSource = new Map();
+async function ensureKits(kits) {
+  for (const [kit, url] of Object.entries(kits || {})) {
+    if (!/^[a-z][a-z0-9_]*$/.test(kit)) throw new Error("bad kit name " + kit);
+    const abs = new URL(url, self.location.href).href;
+    if (kitSource.get(kit) === abs) continue;
+    const res = await fetch(abs, { cache: "default" });
+    if (!res.ok) throw new Error("could not load " + abs + " (" + res.status + ")");
+    const text = await res.text();
+    py.FS.mkdirTree("/bazinga/bazinga");
+    if (!py.FS.analyzePath("/bazinga/bazinga/__init__.py").exists) py.FS.writeFile("/bazinga/bazinga/__init__.py", "");
+    py.FS.writeFile("/bazinga/bazinga/" + kit + ".py", text);
+    if (kitSource.has(kit)) {
+      fns.forget(["bazinga." + kit, "tfig_"]);
+      for (const [u, name] of fetched) if (name.startsWith("tfig_")) fetched.delete(u);
+    }
+    kitSource.set(kit, abs);
+  }
 }
 
 async function ensurePackages(list) {
@@ -160,9 +195,10 @@ async function handle(msg) {
       await boot(msg.indexURL);
       await ensurePackages(msg.requires);
       await ensureModule(msg.plot, "_plot");
+      await ensureKits(msg.kits);
       const name = await ensureModule(msg.module, "tfig_" + String(msg.name).replace(/[^A-Za-z0-9_]/g, "_"));
       const t0 = performance.now();
-      const out = fns.figure(name, JSON.stringify(msg.values || {}), msg.narrow ? 1 : 0);
+      const out = fns.figure(name, JSON.stringify(msg.values || {}), msg.narrow ? 1 : 0, JSON.stringify(msg.drag || null));
       result = JSON.parse(out);
       result.ms = performance.now() - t0;
     } else if (msg.type === "call") {

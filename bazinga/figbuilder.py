@@ -46,6 +46,7 @@ TYPES = {
     "heatmap": {"label": "Heatmap", "blurb": "A grid of cells, each coloured by an expression in its row i and column j."},
     "distribution": {"label": "Distribution", "blurb": "Normal, uniform, exponential, binomial or Poisson, with sliders for its parameters."},
     "data": {"label": "Data table", "blurb": "Paste a table (CSV) and draw it as lines, dots or bars, with a fitted line."},
+    "scene3d": {"label": "3-D scene", "blurb": "Points, segments, boxes and a surface z = f(x, y) in 3-D, which readers turn by dragging."},
 }
 
 # name -> (fewest arguments, most arguments, what it does). Calls to anything else are refused.
@@ -87,7 +88,7 @@ _LOCALS = {"xs", "series", "shapes", "panel", "panels", "readouts", "spec", "mat
            "heights", "ks", "probs", "ts", "pts", "corners", "ends", "known", "pick", "band_x", "band_y", "inside",
            "known_x", "curve_xs", "bar_dicts", "row_labels", "col_labels", "y_label", "t0", "t1", "running",
            "cumulative", "width", "show",
-           "t", "n_", "compute", "math", "inf", "nan"}
+           "t", "n_", "compute", "math", "inf", "nan", "sc", "view", "Scene", "surface_at", "p", "q"}
 _MODULE = {"TITLE", "CAPTION", "REQUIRES", "CONTROLS", "PRESETS", "DATA", "X_MIN", "X_MAX", "SAMPLES"}
 RESERVED = (set(keyword.kwlist) | set(keyword.softkwlist) | set(FUNCTIONS) | set(AGGREGATES) | set(CONSTANTS)
             | _LOCALS | {n for n in dir(builtins) if n.islower()})
@@ -803,6 +804,13 @@ def _presets(ctx, spec, controls):
                 ctx.add(p + ".values", "'%s' is not a control%s" % (k, (" — did you mean '%s'?" % s) if s else ""))
                 continue
             c = by[k]
+            if c["kind"] == "orbit":
+                if not (isinstance(v, (list, tuple)) and len(v) == 2 and
+                        all(isinstance(a, (int, float)) and not isinstance(a, bool) and math.isfinite(a) for a in v)):
+                    ctx.add(p + ".values." + k, "the view is [turn, height] in degrees, for example [35, 25]")
+                    continue
+                clean[k] = [v[0], max(-89, min(89, v[1]))]
+                continue
             if c["kind"] == "slider":
                 x = _number(ctx, p + ".values." + k, v)
                 if x is None:
@@ -969,6 +977,15 @@ def _type_controls(ctx, kind, spec):
             after.append({"name": "show", "kind": "toggle", "label": "Show",
                           "options": ["Probability", "Cumulative"], "value": 0})
         return params, after
+    if kind == "scene3d":
+        view = spec.get("view")
+        if view is None:
+            view = [35, 25]
+        if not (isinstance(view, (list, tuple)) and len(view) == 2 and
+                all(isinstance(a, (int, float)) and not isinstance(a, bool) and math.isfinite(a) for a in view)):
+            ctx.add("view", "the starting view is [turn, height] in degrees, for example [35, 25]")
+            view = [35, 25]
+        return [], [{"name": "view", "kind": "orbit", "value": [view[0], max(-89, min(89, view[1]))]}]
     if kind == "data" and spec.get("fit_toggle") and spec.get("fit") == "line":
         return [], [{"name": "fit", "kind": "toggle", "label": "Fitted line", "options": ["Hide", "Show"], "value": 1}]
     return [], []
@@ -1014,7 +1031,8 @@ class _Gen:
     # --- shared pieces -----------------------------------------------------------------------------------------
     def scalars(self):
         # every control with a usable name, even one with other problems (so its uses are not reported too)
-        return set(c["name"] for c in self.controls) | set(self.kinds)
+        # (not the view of a 3-D scene, which is a pair of angles)
+        return set(c["name"] for c in self.controls if c.get("kind") != "orbit") | set(self.kinds)
 
     def note_calls(self, e):
         if e is None:
@@ -1092,7 +1110,7 @@ class _Gen:
 
     def finish(self):
         w = self.w
-        doc = TYPES[self.kind]["label"].lower()
+        doc = TYPES[self.kind]["label"].lower().replace("3-d", "3-D")
         w('"""%s' % self.title.replace('"""', "'''").replace("\\", "\\\\"))
         w()
         w("Made with the figure builder (a %s). Open it in the Editor to change it with the form, or edit" % doc)
@@ -1110,7 +1128,12 @@ class _Gen:
             w("import math")
         if mods:
             w("from math import " + ", ".join(mods))
-        if needs_math or mods:
+        kits = getattr(self, "kit_imports", [])
+        if (needs_math or mods) and kits:
+            w()
+        for line in kits:
+            w(line)
+        if needs_math or mods or kits:
             w()
         w("TITLE = %s" % _lit(self.title))
         w("CAPTION = %s" % _lit(self.caption))
@@ -1597,6 +1620,126 @@ class _Gen:
             if s.get(key):
                 panel.append('"%s": %s' % (key, _lit(str(s[key]))))
         self.ret(panel, self.readouts_code(readouts), note)
+
+    def type_scene3d(self):
+        ctx, s = self.ctx, self.spec
+        scalars = self.scalars()
+        values = _values(ctx, s, scalars, self.taken)
+        rng = {}
+        for key, default in (("x_min", -2), ("x_max", 2), ("y_min", -2), ("y_max", 2), ("z_min", -1), ("z_max", 1)):
+            rng[key] = _number(ctx, key, s.get(key, default))
+        if None not in rng.values():
+            for a in "xyz":
+                if rng[a + "_min"] >= rng[a + "_max"]:
+                    ctx.add(a + "_max", "%s must run from a smaller to a larger number" % a)
+        lists = {"points": ("x", "y", "z"), "segments": ("x1", "y1", "z1", "x2", "y2", "z2"),
+                 "boxes": ("x1", "y1", "z1", "x2", "y2", "z2")}
+        parsed = {k: [] for k in lists}
+        total = 0
+        for key, fields in lists.items():
+            items = _list(ctx, key, s.get(key), LIMITS["items"])
+            total += len(items)
+            for n, it in enumerate(items):
+                p = "%s.%d" % (key, n)
+                if not isinstance(it, dict):
+                    ctx.add(p, "each one is a small form")
+                    continue
+                here = set(scalars)
+                rep = None
+                if key != "boxes" and it.get("repeat") not in (None, ""):
+                    rep = ctx.expr(p + ".repeat", it.get("repeat"), scalars)
+                    here.add("k")
+                parts = [ctx.expr("%s.%s" % (p, f), it.get(f), here) for f in fields]
+                label = ctx.template(p + ".label", it.get("label") or "", here) if key != "boxes" else []
+                style = _style(ctx, p + ".style", it.get("style"), "ink" if key == "segments" else "main")
+                if None not in parts:
+                    parsed[key].append((it, parts, label, style, rep))
+        surf = s.get("surface")
+        surf_e = None
+        if isinstance(surf, str) and surf.strip():
+            if "x" in scalars or "y" in scalars:
+                ctx.add("surface", "a control or value is named x or y; in a surface x and y are the position, "
+                                   "so rename it")
+            surf_e = ctx.expr("surface", surf, scalars | {"x", "y"}, local=("x", "y"))
+        elif surf not in (None, ""):
+            ctx.add("surface", "the surface is an expression in x and y, like sin(x)*cos(y)")
+        n_surf = _number(ctx, "samples", s.get("samples") or 16, integer=True)
+        if n_surf is not None and not 4 <= n_surf <= 24:
+            ctx.add("samples", "between 4 and 24 pieces along each side (more is slower)")
+        if not total and surf_e is None and not ctx.problems:
+            ctx.add("points", "add a point, a segment, a box or a surface")
+        readouts = _readouts(ctx, s, scalars, set(), None)
+        note = self.note_line(scalars)
+        if ctx.problems:
+            raise _Stop()
+        self.kit_imports = ["from bazinga.scene3d import Scene"]
+        r = rng
+        span = max(r["x_max"] - r["x_min"], r["y_max"] - r["y_min"], r["z_max"] - r["z_min"])
+        centre = [(r[a + "_min"] + r[a + "_max"]) / 2 for a in "xyz"]
+        self.pre += ["# The box the scene fills: x, y and z from their smallest to their largest values (z is up).",
+                     "LO = (%s, %s, %s)" % (_num_lit(r["x_min"]), _num_lit(r["y_min"]), _num_lit(r["z_min"])),
+                     "HI = (%s, %s, %s)" % (_num_lit(r["x_max"]), _num_lit(r["y_max"]), _num_lit(r["z_max"])),
+                     "DISTANCE = %s   # how far away the eye is: larger shows the scene smaller" % _num_lit(round(span * 1.5, 2))]
+        args = []
+        if surf_e is not None:
+            self.note_calls(surf_e)
+            args = ["x", "y"] + [a for a in surf_e.names if a not in ("x", "y")]
+            doc = _comment(surf_e.text).replace('"""', "'''").replace("\\", "\\\\")
+            self.defs.append([
+                "def surface_at(%s):" % ", ".join(args),
+                '    """z = %s"""' % doc,
+                "    return %s" % surf_e.code,
+            ])
+        self.control_lines()
+        self.values_lines(values)
+        b = self.body
+        self.helpers.add("_value")
+        b("sc = Scene()", 1)
+        if s.get("axes", True):
+            ticks = s.get("ticks", True)
+            b("sc.axes3d(lo=LO, hi=HI, ticks=%d)   # the three axes%s" % (4 if ticks else 0, ", with numbers" if ticks else ""), 1)
+        if surf_e is not None:
+            extra = ", ".join(a for a in args if a not in ("x", "y"))
+            b("# the surface z = %s, coloured by height and cut off at the top and bottom of the box" % _comment(surf_e.text), 1)
+            b("sc.surface(lambda x, y: _value(surface_at, x, y%s), x=(LO[0], HI[0]), y=(LO[1], HI[1]), n=%d," % (
+                (", " + extra) if extra else "", n_surf), 1)
+            b("z_range=(LO[2], HI[2]))", 3)
+        for it, parts, label, style, rep in parsed["boxes"]:
+            b("p, q = [%s], [%s]   # two opposite corners" % (", ".join(self.val(e) for e in parts[:3]),
+                                                             ", ".join(self.val(e) for e in parts[3:])), 1)
+            b("if None not in p + q:", 1)
+            b("sc.box(p, q, style=%s, faces=%s)" % (_lit(style), "False" if it.get("faces") is False else "True"), 2)
+        for key in ("segments", "points"):
+            for it, parts, label, style, rep in parsed[key]:
+                ind = 1
+                if rep is not None:
+                    self.helpers.add("_count")
+                    b("for k in range(_count(%s, %d)):   # repeated: k = 0, 1, 2 …" % (self.val(rep), LIMITS["repeat"]), 1)
+                    ind = 2
+                lab = self.tmpl(label) if label else None
+                if key == "points":
+                    b("p = [%s]" % ", ".join(self.val(e) for e in parts), ind)
+                    b("if None not in p:", ind)
+                    b("sc.point(p, style=%s%s)" % (_lit(style), (", label=%s" % lab) if lab else ""), ind + 1)
+                else:
+                    b("p, q = [%s], [%s]" % (", ".join(self.val(e) for e in parts[:3]),
+                                             ", ".join(self.val(e) for e in parts[3:])), ind)
+                    b("if None not in p + q:", ind)
+                    b("sc.line(p, q, style=%s%s%s)" % (_lit(style), ", arrow=True" if it.get("arrow") else "",
+                                                       (", label=%s" % lab) if lab else ""), ind + 1)
+        b()
+        ro = self.readouts_code(readouts)
+        b("# the view is the control \"view\": readers change it by dragging the picture", 1)
+        b("return sc.render(", 1)
+        b("view=view, narrow=_narrow, dist=DISTANCE, target=(%s)," % ", ".join(_num_lit(round(c, 4)) for c in centre), 2)
+        if ro:
+            b("readouts=[", 2)
+            for line in ro:
+                b(line + ",", 3)
+            b("],", 2)
+        if note:
+            b("note=%s," % note, 2)
+        b(")", 1)
 
     def type_bars(self):
         ctx, s = self.ctx, self.spec
@@ -2243,6 +2386,19 @@ def default_spec(kind="function"):
                 "csv": "height (cm),arm span (cm)\n152,150\n158,160\n163,161\n165,168\n170,169\n172,175\n"
                        "176,174\n180,183\n184,182\n190,193",
                 "chart": "scatter", "x": "height_cm", "y": ["arm_span_cm"], "fit": "line", "fit_toggle": True}
+    if kind == "scene3d":
+        return {"type": "scene3d", "title": "A wave and a point above it",
+                "caption": "Change the height of the wave and of the point; drag the picture to turn it.",
+                "controls": [{"name": "a", "kind": "slider", "label": "Height of the wave", "min": 0, "max": 1,
+                              "step": 0.05, "value": 0.5},
+                             {"name": "h", "kind": "slider", "label": "Height of the point", "min": -1, "max": 1,
+                              "step": 0.05, "value": 0.6}],
+                "surface": "a*sin(x)*cos(y)", "samples": 16,
+                "points": [{"x": "1", "y": "1", "z": "h", "label": "P", "style": "second"}],
+                "segments": [{"x1": "1", "y1": "1", "z1": "0", "x2": "1", "y2": "1", "z2": "h", "style": "second dashed"}],
+                "x_min": -2, "x_max": 2, "y_min": -2, "y_max": 2, "z_min": -1, "z_max": 1, "view": [35, 25],
+                "readouts": [{"label": "Surface under P", "expr": "a*sin(1)*cos(1)", "decimals": 2}],
+                "presets": [{"label": "From above", "values": {"view": [0, 89]}}]}
     raise ValueError("unknown figure type %r" % kind)
 
 

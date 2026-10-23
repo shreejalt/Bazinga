@@ -1,6 +1,6 @@
 # Interfaces between the builders (binding; change only by agreement through this file)
 
-The root of the template is `/Users/shreejaltrivedi/Documents/Repos/shreejalt.github.io/.worktrees/template`.
+The root of the template is the folder you cloned (the one holding `site.yml`).
 - Python: `.venv/bin/python` in that folder (3.14, with Markdown, PyYAML, Jinja2, latex2mathml and Pygments).
 - Run the engine as `.venv/bin/python -m bazinga …` with the template root as the working directory.
 

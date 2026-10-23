@@ -198,7 +198,8 @@ def coerce(controls, values):
     """Clamp and round control values exactly as the build does (so browser == build).
 
     Sliders whose min, max and step are whole numbers give ints; other sliders give floats rounded
-    to the step; steps/toggle give the option index (int)."""
+    to the step; steps/toggle give the option index (int); orbit, pad and hidden give lists (or a number)
+    of the default's shape, clamped to their min/max."""
     out = {}
     for c in controls:
         name = c["name"]
@@ -220,6 +221,8 @@ def coerce(controls, values):
                 v = round(v, dec)
             if all(float(x).is_integer() for x in (c["min"], c["max"], c.get("step") or 1)):
                 v = int(round(v))
+        elif kind in ("orbit", "pad", "hidden"):
+            v = _coerce_vec(c, v)
         else:
             n = len(c.get("options") or [])
             try:
@@ -229,6 +232,40 @@ def coerce(controls, values):
             v = min(max(0, n - 1), max(0, v))
         out[name] = v
     return out
+
+
+def _coerce_vec(c, v):
+    """An orbit ([azimuth, elevation]), pad or hidden value: the default's shape, clamped to min/max, rounded."""
+    d = c.get("value")
+    if isinstance(d, (list, tuple)):
+        try:
+            out = [float(x) for x in v]
+        except (TypeError, ValueError):
+            out = None
+        if out is None or len(out) != len(d) or any(math.isnan(x) or math.isinf(x) for x in out):
+            out = [float(x) for x in d]
+        lo, hi = c.get("min"), c.get("max")
+        if c.get("kind") == "orbit":
+            el_lo, el_hi = c.get("el_range") or (-89, 89)
+            out[0] = ((out[0] + 180.0) % 360.0) - 180.0
+            out[1] = min(float(el_hi), max(float(el_lo), out[1]))
+        for i in range(len(out)):
+            if isinstance(lo, (list, tuple)) and i < len(lo):
+                out[i] = max(float(lo[i]), out[i])
+            if isinstance(hi, (list, tuple)) and i < len(hi):
+                out[i] = min(float(hi[i]), out[i])
+        return [round(x, 4) + 0.0 for x in out]
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        x = float(d or 0)
+    if math.isnan(x) or math.isinf(x):
+        x = float(d or 0)
+    if isinstance(c.get("min"), (int, float)):
+        x = max(float(c["min"]), x)
+    if isinstance(c.get("max"), (int, float)):
+        x = min(float(c["max"]), x)
+    return round(x, 4) + 0.0
 
 
 # ----------------------------------------------------------------------------------------------
@@ -1464,8 +1501,8 @@ def render(spec, narrow=0, title=None):
         if not isinstance(p, dict):
             raise PlotError("panels[%d] must be a dict" % i)
         k = p.get("kind", "xy")
-        if k not in ("xy", "bars", "heatmap", "scene"):
-            raise PlotError("panels[%d]: unknown kind %r (use xy, bars, heatmap or scene)" % (i, k))
+        if k not in ("xy", "bars", "heatmap", "scene", "scene3d"):
+            raise PlotError("panels[%d]: unknown kind %r (use xy, bars, heatmap, scene or scene3d)" % (i, k))
 
     # legend (optional): spec["legend"] = [{"name", "style", "kind": "line"|"box"}]
     y = 0
@@ -1523,6 +1560,10 @@ def render(spec, narrow=0, title=None):
 
 
 def _panel_height(p, w, default_h, base_h, narrow):
+    if p.get("kind") == "scene3d":
+        # drawn at its own size, scaled to the width it is given
+        pw = _num(p.get("width"), "scene3d width") or w
+        return float(_num(p.get("height"), "scene3d height") or base_h) * w / pw
     h = p.get("height") or default_h
     if h:
         h = float(h)
@@ -1558,8 +1599,189 @@ def _draw_panel(ctx, p, x, y, w, h, where):
         _panel_xy(ctx, p, x, y, w, h, where)
     elif k == "scene":
         _panel_xy(ctx, p, x, y, w, h, where, scene=True)
+    elif k == "scene3d":
+        _panel_scene3d(ctx, p, x, y, w, h, where)
     elif k == "bars":
         _panel_bars(ctx, p, x, y, w, h, where)
     else:
         _panel_heatmap(ctx, p, x, y, w, h, where)
     ctx.add("</g>")
+
+
+# ----------------------------------------------------------------------------------------------
+# 3-D scenes (bazinga/scene3d.py): items already projected and labels already placed; this only draws them
+
+def _s3_pt(p, where):
+    if not isinstance(p, (list, tuple)) or len(p) < 2:
+        raise PlotError(where + ": a point must be [x, y]")
+    x, y = _num(p[0], where), _num(p[1], where)
+    return None if x is None or y is None else (x, y)
+
+
+def _s3_label(it, x, y, anchor, ts, cls, where):
+    """An item's label where the kit placed it (it["L"]), else at (x, y)."""
+    lab = it.get("label")
+    if lab in (None, ""):
+        return ""
+    L = it.get("L") or [x, y, anchor]
+    fs = float(it.get("size") or (13 if it.get("type") == "point" else 12)) * ts
+    a = L[2] if L[2] in ("start", "middle", "end") else "start"
+    lx, ly = _num(L[0], where), _num(L[1], where)
+    if lx is None or ly is None:
+        return ""
+    style = it.get("style") or "ink"
+    klass = _classes(style, "s3-text " + cls)
+    lines = it.get("lines")
+    if lines:
+        spans = "".join('<tspan x="%s"%s>%s</tspan>' % (_f(lx), ' dy="1.15em"' if i else "", _esc(r)) for i, r in enumerate(lines))
+        return '<text class="%s" x="%s" y="%s" font-size="%s"%s>%s</text>' % (
+            klass, _f(lx), _f(ly), _f(fs), "" if a == "start" else ' text-anchor="%s"' % a, spans)
+    return _text(lx, ly, str(lab), klass, fs, a)
+
+
+def _s3_items(items, rect, ts, where):
+    """SVG for a list of projected items, clipped to rect (x0, y0, x1, y1)."""
+    out, labels = [], []
+    for i, it in enumerate(_list(items, where)):
+        w_ = "%s[%d]" % (where, i)
+        if not isinstance(it, dict):
+            raise PlotError(w_ + " must be a dict")
+        t = it.get("type")
+        style = it.get("style") or "ink"
+        tip = ("<title>%s</title>" % _esc(it["hover"])) if it.get("hover") else ""
+        if t in ("poly", "face"):
+            pts = [_s3_pt(q, w_) for q in _list(it.get("pts"), w_)]
+            if None in pts or len(pts) < 3:
+                continue
+            poly = _clip_poly(pts, rect)
+            if len(poly) < 3:
+                continue
+            if t == "face":
+                fill, _ = _cell_fill(float(_num(it.get("shade"), w_) or 0.0), 0.0, 1.0, False)
+                out.append('<path class="%s" d="%s" style="fill:%s">%s</path>' % (
+                    "s3-face" + ("" if it.get("mesh", True) else " no-mesh"), _poly_d(poly), fill, tip))
+            else:
+                op = it.get("opacity")
+                out.append('<path class="%s" d="%s"%s>%s</path>' % (
+                    _classes(style, "poly s3-poly"), _poly_d(poly),
+                    (' fill-opacity="%.2f"' % min(1.0, max(0.0, float(op)))) if op is not None else "", tip))
+            if it.get("label"):
+                cx = sum(q[0] for q in poly) / len(poly)
+                cy = sum(q[1] for q in poly) / len(poly)
+                labels.append(_s3_label(it, cx, cy, "middle", ts, "", w_))
+        elif t in ("line", "polyline", "arc"):
+            pts = [_s3_pt(q, w_) for q in _list(it.get("pts"), w_)]
+            d = _polyline_path(pts, rect)
+            if not d:
+                continue
+            attrs = ""
+            if it.get("dash"):
+                attrs += ' stroke-dasharray="%s"' % _esc(it["dash"])
+            if it.get("w"):
+                attrs += ' stroke-width="%s"' % _f(float(it["w"]))
+            out.append('<path class="%s" d="%s"%s>%s</path>' % (_classes(style, "line s3-line"), d, attrs, tip))
+            good = [q for q in pts if q]
+            if it.get("arrow") and len(good) >= 2:
+                (x0, y0), (x1, y1) = good[-2], good[-1]
+                if rect[0] - 1 <= x1 <= rect[2] + 1 and rect[1] - 1 <= y1 <= rect[3] + 1 and math.hypot(x1 - x0, y1 - y0) > 1:
+                    out.append('<path class="%s" d="%s"/>' % (_classes(style, "head"), _poly_d(_arrow_head(x0, y0, x1, y1, 9))))
+            if it.get("label") and good:
+                at = it.get("at") if t == "arc" else None
+                e = _s3_pt(at, w_) if at else good[-1]
+                labels.append(_s3_label(it, e[0], e[1], "middle", ts, "", w_))
+        elif t == "dim":
+            a, b = [_s3_pt(q, w_) for q in _list(it.get("pts"), w_)][:2]
+            if a is None or b is None:
+                continue
+            dx, dy = b[0] - a[0], b[1] - a[1]
+            n = math.hypot(dx, dy) or 1.0
+            nx, ny = -dy / n * 5, dx / n * 5
+            d = _polyline_path([a, b], rect) + _polyline_path([(a[0] + nx, a[1] + ny), (a[0] - nx, a[1] - ny)], rect) + \
+                _polyline_path([(b[0] + nx, b[1] + ny), (b[0] - nx, b[1] - ny)], rect)
+            if d:
+                out.append('<path class="%s" d="%s"/>' % (_classes(style, "line s3-dim"), d))
+            labels.append(_s3_label(it, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, "middle", ts, "", w_))
+        elif t == "point":
+            p = _s3_pt(it.get("p"), w_)
+            if p is None or not (rect[0] - 1 <= p[0] <= rect[2] + 1 and rect[1] - 1 <= p[1] <= rect[3] + 1):
+                continue
+            r = _num(it.get("r", 4), w_) or 4
+            out.append('<circle class="%s" cx="%s" cy="%s" r="%s">%s</circle>' % (
+                _classes(style, "dot s3-dot" + ("" if it.get("fill", True) else " s3-open")), _f(p[0]), _f(p[1]), _f(r), tip))
+            labels.append(_s3_label(it, p[0] + r + 4, p[1] - r - 3, "start", ts, "s3-strong", w_))
+        elif t == "text":
+            p = _s3_pt(it.get("p"), w_)
+            if p is not None:
+                labels.append(_s3_label(it, p[0] + (it.get("dx") or 0), p[1] + (it.get("dy") or 0), it.get("anchor") or "start", ts, "", w_))
+        elif t == "tick":                                 # fixed text (tick numbers of a small plot): not moved
+            p = _s3_pt(it.get("p"), w_)
+            if p is not None and it.get("label") not in (None, ""):
+                a = it.get("anchor") or "start"
+                fs = float(it.get("size") or 10) * ts
+                labels.append(_text(p[0], p[1], str(it["label"]), _classes(style, "s3-text s3-tick"), fs,
+                                    a if a in ("start", "middle", "end") else "start"))
+        elif t == "callout":
+            p = _s3_pt(it.get("p"), w_)
+            if p is None:
+                continue
+            x, y = p
+            dx, dy = (_num(it.get("dx", 36), w_) or 0), (_num(it.get("dy", -28), w_) or 0)
+            L = it.get("L")
+            if L:
+                tx = L[0] + (3 if L[2] == "end" else -3 if L[2] == "start" else 0)
+                ty = L[1] + (3 if L[1] < y else -12)
+            else:
+                tx, ty = x + dx, y + dy
+            out.append('<path class="%s" d="M%s %sL%s %s"/><circle class="%s" cx="%s" cy="%s" r="1.8"/>' % (
+                _classes(style, "s3-leader"), _f(x), _f(y), _f(tx), _f(ty), _classes(style, "dot s3-dot"), _f(x), _f(y)))
+            labels.append(_s3_label(it, tx + (3 if dx >= 0 else -3), ty + (-3 if dy < 0 else 12),
+                                    "start" if dx >= 0 else "end", ts, "", w_))
+        else:
+            raise PlotError("%s: unknown scene item %r" % (w_, t))
+    return "".join(out) + "".join(labels)
+
+
+def _panel_scene3d(ctx, p, X, Y, W, H, where):
+    pw = _num(p.get("width"), where + ".width")
+    sh = _num(p.get("scene_h", p.get("height")), where + ".scene_h")
+    if not pw or not sh or pw <= 0 or sh <= 0:
+        raise PlotError(where + ": a scene3d panel needs a width and a height (use bazinga.scene3d)")
+    k = W / pw
+    ts = float(_num(p.get("text_scale", 1.0), where) or 1.0)
+    out = ['<g class="s3%s" transform="translate(%s %s) scale(%s)" data-w="%s">' % (
+        " s3-orbit" if p.get("view") else "", _f(X), _f(Y), ("%.4f" % k).rstrip("0").rstrip("."), _f(pw))]
+    out.append('<rect class="s3-bg" width="%s" height="%s"/>' % (_f(pw), _f(_num(p.get("height"), where) or sh)))
+    out.append(_s3_items(p.get("items"), (0.0, 0.0, pw, sh), ts, where + ".items"))
+    for j, n in enumerate(_list(p.get("insets"), where + ".insets")):
+        w_ = "%s.insets[%d]" % (where, j)
+        iw, ih = _num(n.get("w"), w_), _num(n.get("h"), w_)
+        ix, iy, s = _num(n.get("x", 0), w_), _num(n.get("y", 0), w_), _num(n.get("s", 1), w_) or 1
+        if not iw or not ih:
+            raise PlotError(w_ + ": an inset needs w and h")
+        out.append('<g class="s3-inset" data-inset="%s" transform="translate(%s %s) scale(%s)">' % (
+            _esc(n.get("name", "")), _f(ix), _f(iy), ("%.3f" % s).rstrip("0").rstrip(".")))
+        out.append('<rect class="s3-inset-frame" x="-1" y="-1" width="%s" height="%s"/>' % (_f(iw + 2), _f(ih + 2)))
+        out.append(_s3_items(n.get("items"), (0.0, 0.0, iw, ih), 1.0, w_ + ".items"))
+        if n.get("ticks") and n.get("frame"):
+            fw, fh = n["frame"]
+            for x_, lab, a in ((0, 0, "start"), (iw / 2, fw / 2, "middle"), (iw, fw, "end")):
+                out.append(_text(x_, ih + 13, fmt_num(lab), "s3-text s3-tick", 10.5, a))
+            for y_, lab in ((ih / 2 + 3, fh / 2), (ih + 3, fh)):
+                out.append(_text(-4, y_, fmt_num(lab), "s3-text s3-tick", 10.5, "end"))
+        out.append("</g>")
+        if n.get("title"):
+            out.append(_text(ix, iy - 8, str(n["title"]), "s3-text s3-inset-title", 11.5 * (ts if s > 1 else 1.0)))
+    for j, h in enumerate(_list(p.get("handles"), where + ".handles")):
+        w_ = "%s.handles[%d]" % (where, j)
+        P = _s3_pt(h.get("P") or h.get("p"), w_)
+        if P is None:
+            continue
+        loc = _s3_pt(h.get("p") or P, w_)
+        out.append('<g class="s3-handle" tabindex="0" role="button" aria-label="%s" data-name="%s" data-control="%s" '
+                   'data-inset="%s" data-lx="%s" data-ly="%s"><title>%s</title><circle class="s3-ring" cx="%s" cy="%s" r="11"/>'
+                   '<circle class="s3-grab" cx="%s" cy="%s" r="20"/></g>' % (
+                       _esc(h.get("hint") or "drag"), _esc(h.get("name", "")), _esc(h.get("control") or h.get("name", "")),
+                       _esc(h.get("inset") or ""), _f(loc[0]), _f(loc[1]), _esc(h.get("hint") or "drag"),
+                       _f(P[0]), _f(P[1]), _f(P[0]), _f(P[1])))
+    out.append("</g>")
+    ctx.add("".join(out))

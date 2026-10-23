@@ -28,16 +28,23 @@ import zlib
 from pathlib import Path
 
 from bazinga import plot
+from bazinga import scene3d
 
 __all__ = ["FigureError", "discover", "load", "run", "figure_html", "write_assets", "test_figure",
            "test_report", "defaults", "cli_new", "cli_test", "cli_list", "cli_preview", "made_with", "STARTERS"]
 
-KINDS = ("slider", "steps", "toggle")
+KINDS = ("slider", "steps", "toggle", "orbit", "pad", "hidden")
+VECTOR_KINDS = ("orbit", "pad", "hidden")   # values a drag in the picture changes (3-D figures)
+# kits a figure may import besides the standard library; each is shipped to figures/_<kit>.py
+KITS = {"scene3d": Path(scene3d.__file__)}
+_KIT_RE = {k: re.compile(r"^\s*(from\s+bazinga\s+import\s+[^\n]*\b%s\b|from\s+bazinga\.%s\s+import|import\s+bazinga\.%s\b)" % (k, k, k), re.M)
+           for k in KITS}
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 BUDGET_MS = 30.0
 STARTER_DIR = Path(__file__).parent / "starters"
 STARTERS = ("slider_plot", "compare_bars", "heatmap", "geometry2d", "animation", "scatter_fit", "distribution",
-            "matrix_transform", "step_through", "data_lines", "linked_panels", "sampling", "vector_field")
+            "matrix_transform", "step_through", "data_lines", "linked_panels", "sampling", "vector_field",
+            "scene_basic", "surface_plot", "vectors_planes", "camera_rig")
 # ::figure starter_<name> shows a starter as it is (the template gallery uses this); a figures/ file of the same
 # name wins.
 STARTER_PREFIX = "starter_"
@@ -184,6 +191,11 @@ def validate(mod, name):
             raise FigureError(where + ": unknown kind %r. Use one of: %s." % (k, ", ".join(KINDS)))
         if not isinstance(c.get("label", n), str):
             raise FigureError(where + ": 'label' must be a string.")
+        if "group" in c and (not isinstance(c["group"], str) or not c["group"].strip()):
+            raise FigureError(where + ": 'group' is the heading of a folding panel of controls, a non-empty string.")
+        if k in VECTOR_KINDS:
+            _check_vector_control(c, where)
+            continue
         if k == "slider":
             for f in ("min", "max", "value"):
                 if not _isnum(c.get(f)):
@@ -217,7 +229,11 @@ def validate(mod, name):
         params = sig.parameters
         varkw = any(p.kind == p.VAR_KEYWORD for p in params.values())
         if not varkw:
-            missing = [n for n in [c["name"] for c in controls] + ["_narrow"] if n not in params]
+            need_drag = ["_drag"] if any(c.get("kind") in ("pad", "hidden") for c in controls) else []
+            missing = [n for n in [c["name"] for c in controls] + ["_narrow"] + need_drag if n not in params]
+            if need_drag and missing == ["_drag"]:
+                raise FigureError(pre + "it has a pad or hidden control, which a drag in the picture moves, so "
+                                  "compute() must accept _drag, e.g. def compute(..., _drag=None, _narrow=0).")
             if missing:
                 raise FigureError(pre + "compute() does not accept %s. Its parameters must match CONTROLS "
                                   "plus _narrow, e.g. def compute(%s_narrow=0)." % (
@@ -245,7 +261,42 @@ def validate(mod, name):
             _check_value(by[k], v, where + " (%r)" % ps["label"])
 
 
+def _numlist(v):
+    return isinstance(v, (list, tuple)) and 1 <= len(v) <= 4 and all(_isnum(x) for x in v)
+
+
+def _check_vector_control(c, where):
+    """orbit: value [azimuth, elevation]; pad / hidden: a number or a list of up to 4, optional min / max alike."""
+    v = c.get("value")
+    if c["kind"] == "orbit":
+        if not (_numlist(v) and len(v) == 2):
+            raise FigureError(where + ": an orbit control's value is [azimuth, elevation] in degrees, e.g. [35, 25].")
+        er = c.get("el_range")
+        if er is not None and not (_numlist(er) and len(er) == 2 and er[0] < er[1]):
+            raise FigureError(where + ": el_range is [lowest, highest] elevation in degrees, e.g. [-10, 89].")
+        return
+    if not (_isnum(v) or _numlist(v)):
+        raise FigureError(where + ": a %s control's value is a number or a list of numbers, e.g. [0.5, 1.0]." % c["kind"])
+    for f in ("min", "max"):
+        b = c.get(f)
+        if b is None:
+            continue
+        if _isnum(v) and not _isnum(b) or (not _isnum(v) and not (_numlist(b) and len(b) == len(v))):
+            raise FigureError(where + ": %s must have the same shape as the value (%r)." % (f, v))
+    if c.get("min") is not None and c.get("max") is not None:
+        lo, hi = c["min"], c["max"]
+        pairs = [(lo, hi)] if _isnum(v) else list(zip(lo, hi))
+        if any(a > b for a, b in pairs):
+            raise FigureError(where + ": min must not be above max.")
+
+
 def _check_value(c, v, where):
+    if c["kind"] in VECTOR_KINDS:
+        d = c.get("value")
+        ok = _isnum(v) if _isnum(d) else (_numlist(v) and len(v) == len(d))
+        if not ok:
+            raise FigureError("%s: %s must look like its starting value %r (got %r)." % (where, c["name"], d, v))
+        return
     if c["kind"] == "slider":
         if not _isnum(v):
             raise FigureError("%s: %s must be a number (got %r)." % (where, c["name"], v))
@@ -282,26 +333,30 @@ def _values_for(mod, name, values):
 # ----------------------------------------------------------------------------------------------
 # running
 
-def compute_spec(name, values=None, narrow=0, cfg=None):
+def compute_spec(name, values=None, narrow=0, cfg=None, drag=None):
     mod = load(name, cfg)
     vals = _values_for(mod, name, values)
     try:
-        spec = mod.compute(_narrow=1 if narrow else 0, **vals)
+        spec = mod.compute(_narrow=1 if narrow else 0, **vals, **({"_drag": drag} if drag else {}))
     except Exception as e:
         raise FigureError("figure %r: compute(%s) raised %s%s" % (
             name, ", ".join("%s=%r" % kv for kv in vals.items()), _short_exc(e), _where(e, mod.__file__)))
     return mod, vals, spec
 
 
-def run(name, values=None, narrow=0, cfg=None):
-    """{"svg", "readouts_html", "ms"} for the figure at these values (defaults when None)."""
+def run(name, values=None, narrow=0, cfg=None, drag=None):
+    """{"svg", "readouts_html", "ms"} for the figure at these values (defaults when None); "state" too when
+    compute() returned one (the values a drag changed)."""
     t0 = time.perf_counter()
-    mod, vals, spec = compute_spec(name, values, narrow, cfg)
+    mod, vals, spec = compute_spec(name, values, narrow, cfg, drag)
     try:
         svg, ro = plot.render(spec, narrow=narrow, title=mod.TITLE)
     except plot.PlotError as e:
         raise FigureError("figure %r: the spec from compute() cannot be drawn: %s" % (name, e))
-    return {"svg": svg, "readouts_html": ro, "ms": (time.perf_counter() - t0) * 1000.0}
+    out = {"svg": svg, "readouts_html": ro, "ms": (time.perf_counter() - t0) * 1000.0}
+    if isinstance(spec, dict) and spec.get("state"):
+        out["state"] = spec["state"]
+    return out
 
 
 # ----------------------------------------------------------------------------------------------
@@ -312,6 +367,8 @@ def _attr(v):
 
 
 def _fmt_val(c, v):
+    if c["kind"] in VECTOR_KINDS:
+        return _vec_text(v)
     if c["kind"] != "slider":
         return str(c["options"][v])
     st = float(c.get("step") or 0)
@@ -321,9 +378,20 @@ def _fmt_val(c, v):
     return ("%." + str(dec) + "f") % v
 
 
+def _vec_text(v):
+    if isinstance(v, (list, tuple)):
+        return "(" + ", ".join(plot.fmt_num(round(float(x), 2)) for x in v) + ")"
+    return plot.fmt_num(round(float(v), 2))
+
+
 def _control_html(name, c, v):
     lab = html.escape(c.get("label", c["name"]))
     cname = html.escape(c["name"])
+    if c["kind"] in ("orbit", "hidden"):
+        return ""                                 # moved by dragging the picture; nothing to show
+    if c["kind"] == "pad":
+        return ('<div class="fig-ctl fig-pad" data-name="%s"><span class="fig-ctl-label">%s</span>'
+                '<output class="fig-ctl-value">%s</output></div>') % (cname, lab, html.escape(_vec_text(v)))
     if c["kind"] == "slider":
         step = c.get("step", (c["max"] - c["min"]) / 100.0)
         play = ""
@@ -342,6 +410,32 @@ def _control_html(name, c, v):
             html.escape(group), i, " checked" if i == v else "", html.escape(str(o))))
     return ('<fieldset class="fig-ctl fig-%s" data-name="%s"><legend class="fig-ctl-label">%s</legend>'
             '<div class="fig-seg">%s</div></fieldset>') % (c["kind"], cname, lab, "".join(opts))
+
+
+def _controls_html(name, ctl, vals):
+    """The controls in order; consecutive controls with the same "group" fold into one panel under its heading."""
+    out, open_group = [], None
+    for c in ctl:
+        g = c.get("group")
+        if g != open_group:
+            if open_group:
+                out.append("</div></details>")
+            if g:
+                out.append('<details class="fig-group"><summary>%s</summary><div class="fig-group-body">' % html.escape(g))
+            open_group = g
+        out.append(_control_html(name, c, vals[c["name"]]))
+    if open_group:
+        out.append("</div></details>")
+    return "".join(out)
+
+
+def uses_kits(mod):
+    """The kits (e.g. scene3d) a figure module imports, read from its source."""
+    try:
+        src = Path(mod.__file__).read_text(encoding="utf-8")
+    except (OSError, TypeError, AttributeError):
+        return []
+    return [k for k, rx in _KIT_RE.items() if rx.search(src)]
 
 
 def _version(path):
@@ -369,6 +463,7 @@ def figure_html(name, start=None, cfg=None):
     wide = run(name, vals, 0, cfg)
     narrow = run(name, vals, 1, cfg)
     ctl = controls(mod)
+    kits = uses_kits(mod)
     data = {
         "name": name,
         # ?v= changes when the file changes, so browsers and the worker never use a stale copy
@@ -381,6 +476,8 @@ def figure_html(name, start=None, cfg=None):
         "presets": presets(mod),
         "title": mod.TITLE,
     }
+    if kits:
+        data["kits"] = {k: "figures/_%s.py?v=%s" % (k, _version(KITS[k])) for k in kits}
     caption = getattr(mod, "CAPTION", "")
     parts = ['<figure class="fig" data-figure="%s" data-bazinga="%s">' % (
         html.escape(name), _attr(data))]
@@ -391,11 +488,14 @@ def figure_html(name, start=None, cfg=None):
     parts.append('<div class="fig-out">%s</div>' % wide["readouts_html"])
     if ctl or presets(mod):
         parts.append('<form class="fig-controls" action="#" onsubmit="return false"><fieldset class="fig-fs" disabled>')
-        parts.append("".join(_control_html(name, c, vals[c["name"]]) for c in ctl))
+        parts.append(_controls_html(name, ctl, vals))
         btns = "".join('<button type="button" class="fig-preset" data-preset="%d">%s</button>' % (i, html.escape(p["label"]))
                        for i, p in enumerate(presets(mod)))
-        parts.append('<div class="fig-presets">%s<button type="button" class="fig-reset">Reset</button>'
-                     '<span class="fig-status" role="status" aria-live="polite"></span></div>' % btns)
+        hint = ""
+        if any(c["kind"] == "orbit" for c in ctl):
+            hint = '<span class="fig-hint">Drag the picture to turn it.</span>'
+        parts.append('<div class="fig-presets">%s<button type="button" class="fig-reset">Reset</button>%s'
+                     '<span class="fig-status" role="status" aria-live="polite"></span></div>' % (btns, hint))
         parts.append("</fieldset></form>")
     parts.append("</figure>")
     return "".join(parts)
@@ -410,6 +510,8 @@ def write_assets(cfg, used, out):
     dest = out / "figures"
     dest.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(Path(plot.__file__), dest / "_plot.py")
+    for kit, src in KITS.items():
+        shutil.copyfile(src, dest / ("_%s.py" % kit))
     for name in sorted(set(used or ())):
         src = _path(name, cfg)
         if not src.is_file():
@@ -455,7 +557,16 @@ def _random_states(mod, n, seed):
     for _ in range(n):
         v = {}
         for c in controls(mod):
-            if c["kind"] == "slider":
+            if c["kind"] == "orbit":
+                lo, hi = c.get("el_range") or (-89, 89)
+                v[c["name"]] = [rng.uniform(-180, 180), rng.uniform(max(lo, -30), min(hi, 80))]
+            elif c["kind"] in ("pad", "hidden"):
+                d, lo, hi = c["value"], c.get("min"), c.get("max")
+                if lo is not None and hi is not None:
+                    v[c["name"]] = rng.uniform(lo, hi) if _isnum(d) else [rng.uniform(a, b) for a, b in zip(lo, hi)]
+                else:
+                    v[c["name"]] = d
+            elif c["kind"] == "slider":
                 if rng.random() < 0.15:
                     v[c["name"]] = rng.choice([c["min"], c["max"]])
                 else:
@@ -466,14 +577,15 @@ def _random_states(mod, n, seed):
     return states
 
 
-def check_state(name, values, narrow=0, cfg=None, budget_ms=BUDGET_MS, timing=None):
+def check_state(name, values, narrow=0, cfg=None, budget_ms=BUDGET_MS, timing=None, drag=None):
     """Problems for one state (empty list = fine). The best time in ms is appended to ``timing`` when given."""
-    label = "%s %s%s" % (name, json.dumps(values, sort_keys=True), " (narrow)" if narrow else "")
+    label = "%s %s%s%s" % (name, json.dumps(values, sort_keys=True), " (narrow)" if narrow else "",
+                           (" dragging %s" % drag.get("handle")) if drag else "")
     try:
         best = None
         for attempt in range(3):
             t0 = time.perf_counter()
-            mod, vals, spec = compute_spec(name, values, narrow, cfg)
+            mod, vals, spec = compute_spec(name, values, narrow, cfg, drag)
             svg, ro = plot.render(spec, narrow=narrow, title=mod.TITLE)
             ms = (time.perf_counter() - t0) * 1000
             best = ms if best is None else min(best, ms)
@@ -505,7 +617,68 @@ def check_state(name, values, narrow=0, cfg=None, budget_ms=BUDGET_MS, timing=No
         problems.append("%s: the readouts HTML is not well-formed: %s" % (label, e))
     if re.search(r">\s*(nan|inf|-inf)\s*<", ro, re.I):
         problems.append("%s: a readout shows nan/inf" % label)
+    st = spec.get("state") if isinstance(spec, dict) else None
+    if st is not None:
+        by = {c["name"]: c for c in controls(mod)}
+        if not isinstance(st, dict):
+            problems.append("%s: state must be a dict of control values" % label)
+        else:
+            for k, v in st.items():
+                if k not in by:
+                    problems.append("%s: state names %r, which is not a control" % (label, k))
+                else:
+                    try:
+                        _check_value(by[k], plot.coerce([by[k]], {k: v})[k], "state")
+                    except FigureError as e:
+                        problems.append("%s: %s" % (label, e))
     return problems
+
+
+def drag_cases(name, values, narrow=0, cfg=None):
+    """A small drag of every handle in the figure's scene panels at these values: [(values, narrow, drag)]."""
+    try:
+        mod, vals, spec = compute_spec(name, values, narrow, cfg)
+    except Exception:
+        return []
+    out = []
+    for p in (spec.get("panels") or []) if isinstance(spec, dict) else []:
+        if not isinstance(p, dict) or p.get("kind") != "scene3d":
+            continue
+        for h in p.get("handles") or []:
+            ctl = h.get("control") or h.get("name")
+            if ctl not in vals:
+                continue
+            frm = list(h.get("p") or h.get("P"))
+            for d in ((14, -9), (-30, 22)):
+                out.append((values, narrow, {"handle": h.get("name"), "name": ctl, "inset": h.get("inset"),
+                                             "start": vals[ctl], "from": frm, "to": [frm[0] + d[0], frm[1] + d[1]]}))
+    return out
+
+
+def _handle_problems(name, mod, values, narrow, cfg):
+    """Handles must drive real controls, and compute() must take _drag when there are handles."""
+    try:
+        _, vals, spec = compute_spec(name, values, narrow, cfg)
+    except Exception:
+        return []
+    probs = []
+    names = {c["name"] for c in controls(mod)}
+    for p in (spec.get("panels") or []) if isinstance(spec, dict) else []:
+        for h in (p.get("handles") or []) if isinstance(p, dict) else []:
+            ctl = h.get("control") or h.get("name")
+            if ctl not in names:
+                probs.append("figure %r: the handle %r drives %r, which is not a control (add a pad or hidden control "
+                             "with that name)" % (name, h.get("name"), ctl))
+    if probs or not any((p.get("handles") if isinstance(p, dict) else None) for p in spec.get("panels") or []):
+        return probs
+    try:
+        params = inspect.signature(mod.compute).parameters
+        if "_drag" not in params and not any(q.kind == q.VAR_KEYWORD for q in params.values()):
+            probs.append("figure %r: it has handles to drag, so compute() must accept _drag "
+                         "(def compute(..., _drag=None, _narrow=0))" % name)
+    except (TypeError, ValueError):
+        pass
+    return probs
 
 
 def test_figure(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
@@ -531,6 +704,14 @@ def test_figure(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
         if len(problems) >= 8:
             problems.append("(stopped after 8 problems)")
             break
+    if len(problems) < 8:
+        for nar in (0, 1):
+            problems += _handle_problems(name, mod, defaults(mod), nar, cfg)
+        if not problems:
+            for v, nar, drag in drag_cases(name, defaults(mod), 0, cfg) + drag_cases(name, defaults(mod), 1, cfg):
+                problems += check_state(name, v, nar, cfg, budget_ms, drag=drag)
+                if len(problems) >= 8:
+                    break
     try:
         figure_html(name, cfg=cfg)
     except FigureError as e:
@@ -675,6 +856,19 @@ def test_report(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
                 break
         problems += found
         checks.append({"label": label, "ok": not found, "detail": found[0] if found else ""})
+    drags = drag_cases(name, defaults(mod), 0, cfg) + drag_cases(name, defaults(mod), 1, cfg)
+    hp = _handle_problems(name, mod, defaults(mod), 0, cfg) + _handle_problems(name, mod, defaults(mod), 1, cfg)
+    if drags or hp:
+        found = list(hp)
+        if not found:
+            for v, nar, drag in drags:
+                for pr in check_state(name, v, nar, cfg, budget_ms, timing=times, drag=drag):
+                    (slow if " took " in pr and "budget" in pr else found).append(pr)
+                if len(found) >= 4:
+                    break
+        problems += found
+        checks.append({"label": "Dragging each point in the picture works", "ok": not found,
+                       "detail": found[0] if found else ""})
     slowest = max(times) if times else None
     if slowest is not None:
         ok = not slow

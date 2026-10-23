@@ -4,7 +4,7 @@
 
 | File | What it does |
 |---|---|
-| `bazinga/plot.py` | spec → `(svg, readouts_html)`. Standard library only; shipped to `_site/figures/_plot.py` and run in the browser too. Panel kinds `xy`, `bars`, `heatmap`, `scene`; 1–4 panels in a row (880 wide) or a column when narrow (480 wide). Also `coerce(controls, values)`, used by the build and the worker so both see identical values. |
+| `bazinga/plot.py` | spec → `(svg, readouts_html)`. Standard library only; shipped to `_site/figures/_plot.py` and run in the browser too. Panel kinds `xy`, `bars`, `heatmap`, `scene`, `scene3d` (drawn from `bazinga/scene3d.py`'s projected items); 1–4 panels in a row (880 wide) or a column when narrow (480 wide). Also `coerce(controls, values)`, used by the build and the worker so both see identical values. |
 | `bazinga/figures.py` | `discover`, `load` (contract check, cached by mtime), `run`, `figure_html`, `write_assets`, `test_figure`, `defaults`, `cli_new`, `cli_test`, `FigureError`. |
 | `bazinga/draw.py` | Diagram kit: `Diagram`, `box`, `arrow` (edge anchoring, `bend`, `start`/`end` sides, `both`), `label`, `note`, `group`, `row`, `column`, `grid`, `chain`, `svg()`. |
 | `bazinga/drawings.py` | `drawing_html(ref, caption)`, `render`, `discover`, `DrawingError`. |
@@ -176,7 +176,51 @@ await Bazinga.py.call("/figures/_retrieve.py", "answer",
 - **Text width is estimated** from character classes; there is no font metrics. Labels can sit a few pixels off with unusual fonts.
 - **Label placement is a greedy candidate search.** It avoids other labels, points, lines and the plot edge, but very crowded plots can still touch.
 - **No hover tooltips beyond SVG `<title>`.** That is the native tooltip on lines, bars and cells. There is no crosshair.
-- **No helpers for contours, 3-D or images.** Contours are drawn as shapes, for example the ellipses in `gradient_descent`.
+- **No helpers for contours or images.** Contours are drawn as shapes, for example the ellipses in `gradient_descent`. 3-D: see below.
+- **3-D hides by painter's order** (farthest first, by mean depth). Long items that pierce a surface can sort wrongly; `axes3d`, `curve` and `poly(split=n)` cut themselves into pieces to keep this small.
 - **One module per figure.** A figure cannot import a sibling helper module from `figures/`; only the module itself and `_plot.py` are shipped.
 - **One shared worker.** Figures on a page compute one at a time, latest values first. Play advances only when the previous frame has arrived, so slow devices play slower rather than skipping.
 - **The runtime comes from the pinned CDN.** Offline, figures stay static at their defaults.
+
+## 3-D figures (2026-10-22)
+
+Ported from the owner's site kit and generalised.
+
+- **`bazinga/scene3d.py`** (standard library only). `Scene(up="z" | "-y" | "y")` holds points, lines, polylines,
+  polygons, faces, text, callouts, dims and arcs in world coordinates; helpers `vector`, `curve` (parametric, cut into
+  pieces), `plane`, `box(faces=)`, `surface(f, x, y, n, z_range)` (faces coloured by height), `axes3d(lo, hi, ticks)`,
+  `axes`, `grid`, `camera`, `ray`, `image_view` (a camera's picture as an inset), `as_inset`, `plot_inset`, `Flat` (2-D
+  with the same items). `render(view, readouts, note, insets, handles, state, **layout())` returns a whole spec whose
+  panel has kind `scene3d`; `panel(...)` returns just the panel (`columns=2` lays it out for a row of two).
+  `layout(narrow, dist, target, width, height, up, columns, narrow_*)` is shared with `apply_drag(_drag, rules,
+  values, **layout)`. Labels are placed by `declutter()`; `label_report(spec)` lists overlaps for tests. The camera
+  panel (`rig_controls`, `rig_from`, `camera_handles`, `camera_drag_rules`, `camera_drag_controls`) is kept.
+  Stripped from the owner's version: series conventions in the docstrings, photo items (`/images/jev/`), hover groups.
+- **Shipping.** `figures.write_assets` copies the kit to `_site/figures/_scene3d.py`; `figure_html` adds
+  `"kits": {"scene3d": url}` to `data-bazinga` when the figure's source imports it (`uses_kits`). The worker installs a
+  kit as `/bazinga/bazinga/<kit>.py` (package `bazinga`), so `from bazinga import scene3d` works in the browser exactly
+  as at build time; a new kit URL re-imports the kit and the figure modules. The Editor serves
+  `/_draft/figures/_scene3d.py` and `/figures/_scene3d.py`.
+- **plot.py** draws `scene3d` panels (`_panel_scene3d`): `<g class="s3" transform="translate scale">`, a `.s3-bg`
+  rect, items geometrically clipped (no clipPath ids), insets as `<g class="s3-inset" data-inset>` with a frame and
+  optional frame ticks, handles as `<g class="s3-handle" data-name data-control data-inset data-lx data-ly>` with a
+  ring and a 20-unit grab circle. Faces use the heatmap's sequential `color-mix`, so both themes work.
+- **Controls.** New kinds `orbit` (`[azimuth, elevation]`, optional `el_range`), `pad` (number or list, optional
+  `min`/`max` of the same shape; shown as a read-only value) and `hidden`. `plot.coerce` clamps and rounds them the
+  same on both sides. Any control may have `"group"`: consecutive controls with the same group fold into
+  `<details class="fig-group">`. A figure with a pad or hidden control must accept `_drag`.
+- **figure.js.** Pointer down on a `.s3` picture: the nearest handle within 26 screen px wins (overlapping handles);
+  otherwise, with an orbit control, the drag turns the view in the browser (300° per picture width, elevation 0.6 of
+  that). Handle drags send `_drag = {handle, name, inset, start, from, to}` in the panel's (or inset's) own units,
+  found with `getScreenCTM()`. A returned `state` updates the controls. Arrow keys move a focused handle by 8 units.
+  `touch-action: pan-y` on orbiting pictures (vertical swipes still scroll the page), `none` on handles.
+- **Tests.** `figure test` / `test_report` also drag every handle a little, wide and narrow ("Dragging each point in
+  the picture works"), check that handles drive real controls and that `state` names real controls.
+  `tests/test_scene3d.py`: kit maths (round trip, look_at frames, down stays down, drags follow the pointer in both
+  conventions, near-plane clipping, inset clipping), every scene figure and starter (no NaN, < 450 items, < 15 ms per
+  compute, labels never overlap at the defaults, presets and phone layout), the renderer and the builder type.
+- **Builder type `scene3d`.** Points, segments (arrow), boxes (shaded sides), a surface expression in x and y with
+  `samples` (4–24), the view box `x_min … z_max`, the starting `view`, axes and ticks; presets may set `view`.
+  The generated file imports `math` and `from bazinga.scene3d import Scene` only.
+- **Starters.** `scene_basic`, `surface_plot`, `vectors_planes` (handles + `apply_drag` + `state`), `camera_rig`
+  (camera convention, inset, camera panel). Example figure: `figures/tangent_plane.py` on the making-figures guide.

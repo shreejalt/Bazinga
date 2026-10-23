@@ -219,12 +219,15 @@ class FigurePanel:
                      + inner + '<script src="/assets/js/figure.js" defer></script></body></html>')
 
     def draft_file(self, path: str) -> Path | None:
-        """/_draft/figures/<name>.py (a draft's code) and /_draft/figures/_plot.py (the renderer)."""
-        m = re.fullmatch(r"/_draft/figures/(_plot|[a-z][a-z0-9_]*)\.py", path)
+        """/_draft/figures/<name>.py (a draft's code), /_draft/figures/_plot.py (the renderer) and
+        /_draft/figures/_scene3d.py (the 3-D kit)."""
+        m = re.fullmatch(r"/_draft/figures/(_plot|_scene3d|[a-z][a-z0-9_]*)\.py", path)
         if not m:
             return None
         if m.group(1) == "_plot":
             p = ENGINE_DIR / "plot.py"
+        elif m.group(1) == "_scene3d":
+            p = ENGINE_DIR / "scene3d.py"
         else:
             p = self.root / ".studio" / "drafts" / "figures" / f"{m.group(1)}.py"
         return p if p.is_file() else None

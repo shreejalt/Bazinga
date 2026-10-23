@@ -169,8 +169,11 @@ class Generated(unittest.TestCase):
                         imported |= {a.name for a in node.names}
                     elif isinstance(node, ast.ImportFrom):
                         imported.add(node.module)
-                self.assertLessEqual(imported, {"math"})
-                self.assertNotIn("bazinga", src.split(fb.MARK)[0])
+                # a 3-D scene also imports the 3-D kit, which is shipped next to the renderer
+                kit = {"bazinga.scene3d"} if kind == "scene3d" else set()
+                self.assertLessEqual(imported, {"math"} | kit)
+                if not kit:
+                    self.assertNotIn("bazinga", src.split(fb.MARK)[0])
                 self.assertNotIn("eval(", src)
                 self.assertNotIn("exec(", src)
                 # the file runs on a bare interpreter with only the standard library

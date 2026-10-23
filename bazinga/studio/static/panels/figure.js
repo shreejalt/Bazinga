@@ -24,6 +24,7 @@ const TYPE_PICTURES = {
   heatmap: "M4 4h5v5H4zM10 4h5v5h-5zM16 4h4v5h-4zM4 10h5v5H4zM10 10h5v5h-5zM16 10h4v5h-4zM4 16h5v4H4zM10 16h5v4h-5zM16 16h4v4h-4z",
   distribution: "M3 19c4 0 5-13 9-13s5 13 9 13M3 19h18",
   data: "M5 17l3-4 3 2 4-6 4 3M5 6h.01M9 9h.01M13 5h.01",
+  scene3d: "M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5",
 };
 
 function picture(type) {

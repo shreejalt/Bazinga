@@ -123,6 +123,7 @@ export function builderForm(container, initial, info, onChange) {
     if (where === "curve") out.push("x");
     if (where === "cell") out.push("i", "j");
     if (where === "param") out.push("t");
+    if (where === "surface") out.push("x", "y");
     if (where === "repeat") out.push("k");
     if (t === "distribution") {
       const fam = (info.families || {})[spec.family || "normal"];
@@ -556,6 +557,71 @@ export function builderForm(container, initial, info, onChange) {
         spec.chart !== "bar" ? section("Curves on top", "Optional: a curve y = expression in x drawn over the data, e.g. a model to fit by hand with sliders.", curvesEditor("overlay"), { open: (spec.curves || []).length > 0, path: "curves" }) : null,
       ];
     },
+  };
+
+  // 3-D scene: rows of points, segments and boxes whose coordinates are expressions, and a surface z = f(x, y)
+  TYPE_PARTS.scene3d = function () {
+    const coordRows = (key, fields, what, extra) => {
+      spec[key] = spec[key] || [];
+      const list = spec[key];
+      return list.map((it, i) => {
+        const p = `${key}.${i}`;
+        const coords = fields.map(([k, label]) => {
+          const e = exprIn(it, k, `${p}.${k}`, "0");
+          if (it.repeat) e.dataset.where = "repeat";
+          return field(label, e);
+        });
+        return h("div.fb-row", { "data-path": p }, h("div.fb-row-fields", ...coords, ...extra(it, p),
+          ...styleSelects(it, "style", `${p}.style`, { lines: key === "segments" ? [["", "Solid"], ["dashed", "Dashed"], ["thick", "Thick"], ["thin", "Thin"]] : null,
+            fallback: key === "segments" ? "ink" : "main" })),
+        removeBtn(list, i, what));
+      });
+    };
+    const labelAndRepeat = (it, p) => [
+      field("Label", textIn(it, "label", { path: `${p}.label`, placeholder: "optional, e.g. P" })),
+      field("Repeat", textIn(it, "repeat", { path: `${p}.repeat`, mono: true, placeholder: "once" }), { hint: "n times; k = 0, 1, 2 … inside" })];
+    const P3 = [["x", "x"], ["y", "y"], ["z", "z (up)"]];
+    const S6 = [["x1", "from x"], ["y1", "from y"], ["z1", "from z"], ["x2", "to x"], ["y2", "to y"], ["z2", "to z"]];
+    const B6 = [["x1", "corner x"], ["y1", "corner y"], ["z1", "corner z"], ["x2", "opposite x"], ["y2", "opposite y"], ["z2", "opposite z"]];
+    const surf = exprIn(spec, "surface", "surface", "a*sin(x)*cos(y)");
+    surf.dataset.where = "surface";
+    spec.view = Array.isArray(spec.view) ? spec.view : [35, 25];
+    const viewIn = (i, label, hint) => {
+      const el = h("input.input.num", { type: "text", inputmode: "decimal", "data-path": "view" });
+      el.value = String(spec.view[i]);
+      el.addEventListener("input", () => { const n = toNumber(el.value); spec.view[i] = n === undefined ? 0 : n; changed(); });
+      return field(label, el, { hint });
+    };
+    const add = (key, label, d) => h("button.btn.small", { type: "button", onclick: () => { (spec[key] = spec[key] || []).push(d); rerender(); } }, icon("plus", 14), label);
+    return [
+      section("Surface", "Optional: a surface z = expression in x and y, coloured by height. Leave it empty for none.", [h("div.fb-grid",
+        field("z =", surf, { wide: true }),
+        field("Pieces along each side", textIn(spec, "samples", { path: "samples", number: true, placeholder: "16" }), { hint: "4 to 24; more is smoother and slower" }))]),
+      section("Points", "Each coordinate is an expression, so points move with the controls.", [
+        coordRows("points", P3, "point", labelAndRepeat),
+        h("div.fb-adds", add("points", "Point", { x: "0", y: "0", z: "0", label: "" }))], { path: "points", open: (spec.points || []).length > 0 || !spec.surface }),
+      section("Segments and arrows", "Straight lines from one point to another.", [
+        coordRows("segments", S6, "segment", (it, p) => [check(it, "arrow", "Arrow at the end", { path: `${p}.arrow` }), ...labelAndRepeat(it, p)]),
+        h("div.fb-adds", add("segments", "Segment", { x1: "0", y1: "0", z1: "0", x2: "1", y2: "1", z2: "1" }))], { path: "segments", open: (spec.segments || []).length > 0 }),
+      section("Boxes", "A box between two opposite corners, with see-through sides.", [
+        coordRows("boxes", B6, "box", (it, p) => [(() => { const box = h("input", { type: "checkbox" }); box.checked = it.faces !== false;
+          box.addEventListener("change", () => { if (box.checked) delete it.faces; else it.faces = false; changed(); });
+          return h("label.fb-check", box, h("span", "Shaded sides")); })()]),
+        h("div.fb-adds", add("boxes", "Box", { x1: "-0.5", y1: "-0.5", z1: "-0.5", x2: "0.5", y2: "0.5", z2: "0.5" }))], { path: "boxes", open: (spec.boxes || []).length > 0 }),
+      section("View", "The box the scene fills (z is up), and where the reader looks from at first. Readers turn the picture by dragging it.", [h("div.fb-grid",
+        ...["x", "y", "z"].flatMap((a) => [
+          field(`Smallest ${a}`, textIn(spec, `${a}_min`, { path: `${a}_min`, number: true, placeholder: a === "z" ? "-1" : "-2" })),
+          field(`Largest ${a}`, textIn(spec, `${a}_max`, { path: `${a}_max`, number: true, placeholder: a === "z" ? "1" : "2" }))]),
+        viewIn(0, "Turned by (degrees)", "around the up axis"),
+        viewIn(1, "Looking down by (degrees)", "0 is level, 89 from straight above")),
+      h("div.fb-checks",
+        (() => { const box = h("input", { type: "checkbox" }); box.checked = spec.axes !== false;
+          box.addEventListener("change", () => { if (box.checked) delete spec.axes; else spec.axes = false; changed(); });
+          return h("label.fb-check", box, h("span", "Axes")); })(),
+        (() => { const box = h("input", { type: "checkbox" }); box.checked = spec.ticks !== false;
+          box.addEventListener("change", () => { if (box.checked) delete spec.ticks; else spec.ticks = false; changed(); });
+          return h("label.fb-check", box, h("span", "Numbers on the axes")); })())]),
+    ];
   };
 
   let textTimer = null;

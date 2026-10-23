@@ -230,6 +230,60 @@ overlap the lines, the dots or each other.
 `readouts` are the tiles under the figure: `{"label": "Period", "value": "3.14", "note": "seconds"}`. The value is
 text, so format numbers yourself (`"%.2f" % period`). `note` is one plain line under them.
 
+## Figures in 3-D
+
+A figure can also be a small 3-D scene that the reader turns by dragging it. This one is a surface with a point on
+it: drag P across the surface, drag anywhere else to look from another side, and use the sliders to bend it.
+
+::figure tangent_plane
+
+You describe the scene in ordinary x, y, z coordinates, with z pointing up; the site works out where everything
+lands on the screen, draws what is nearer on top of what is behind, and keeps the labels clear of each other.
+
+```python
+from bazinga.scene3d import Scene
+
+CONTROLS = [{"name": "view", "kind": "orbit", "value": [35, 25]}]   # drag the picture to turn it
+
+def compute(view=(35, 25), _narrow=0):
+    sc = Scene()
+    sc.axes3d(lo=(-1, -1, -1), hi=(1, 1, 1))              # three axes with numbered ticks
+    sc.box((-0.5, -0.5, -0.5), (0.5, 0.5, 0.5), faces=True)
+    sc.vector((0, 0, 0), (0.8, 0.3, 0.6), label="v")      # an arrow
+    return sc.render(view=view, narrow=_narrow, dist=5)
+```
+
+What a scene can hold:
+
+| Call | Draws |
+|---|---|
+| `point(p, label)`, `line(a, b)`, `vector(origin, v, label)` | points, segments and arrows |
+| `poly(corners)`, `box(lo, hi, faces=True)`, `plane(point, normal)` | flat shapes, boxes and pieces of planes |
+| `surface(f, x=(lo, hi), y=(lo, hi), n=18)` | the surface z = f(x, y), coloured by height |
+| `curve(f, t0, t1)` | a curve through space, f(t) = (x, y, z) |
+| `axes3d(lo, hi, ticks=4)`, `grid(size, n)` | axes with numbers, and a floor |
+| `text`, `callout`, `dim`, `arc` | labels, notes with a leader line, measurements and angles |
+| `camera(R, C, K)`, `ray(X, cam)`, `image_view(K, R, C, points=…)` | a pinhole camera, its rays and the picture it takes |
+
+Three more kinds of control go with a scene:
+
+- `orbit` is the direction you look from, `[turn, height]` in degrees. It has no slider: the reader drags the picture.
+- `pad` holds a point (one number or a short list) that the reader drags in the picture; its value is shown under
+  the figure. `hidden` is the same, not shown.
+- Controls with the same `"group"` fold into one panel under that heading, which keeps a long list tidy.
+
+To make a point draggable, give `render()` a handle, `{"name": "p", "at": point}`, named after a `pad` control.
+When the reader drags it, `compute()` receives `_drag`, and `apply_drag()` turns that into the new value (for
+example, moved within a flat plane). Hand the new value back with `render(state={"p": ...})` so the controls
+follow. The `vectors_planes` template does exactly this in a dozen lines.
+
+With the form, choose **3-D scene**: list points, segments and boxes by their coordinates, give a surface as an
+expression in x and y, and add sliders; the reader can turn the result. The templates `scene_basic`,
+`surface_plot`, `vectors_planes` and `camera_rig` are the starting points in code, and all four are working on the
+[[read:templates|templates page]].
+
+The test checks a 3-D figure like any other, and also drags every handle a little, wide and on a phone.
+
 ## Testing a figure
 
 The Editor tests a figure every time you save it, and `figure test` does the same from a terminal. The test

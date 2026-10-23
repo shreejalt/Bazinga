@@ -191,6 +191,44 @@
 .fig-plot .cell-hl { fill: none; stroke: var(--fig-ink); stroke-width: 2; }
 .fig-plot .key.line { stroke-width: 2.5; }
 
+/* ---------------------------------------------------------------- 3-D scenes (bazinga/scene3d.py) */
+
+.fig-plot .s3-bg { fill: transparent; }
+.fig-plot .s3-face { stroke: var(--fig-surface); stroke-width: .6; stroke-opacity: .55; stroke-linejoin: round; }
+.fig-plot .s3-face.no-mesh { stroke: none; }
+.fig-plot .s3-line { stroke-width: 1.75; }
+.fig-plot .s3-line.s-faint, .fig-plot .s3-dim { stroke-width: 1; }
+.fig-plot .s3-dim { fill: none; stroke: var(--c); }
+.fig-plot .s3-leader { fill: none; stroke: var(--c); stroke-width: .9; }
+.fig-plot .s3 .s-ink, .fig-plot .s3 .s-paper { --c: var(--fig-ink); }
+.fig-plot .s3 .s-muted { --c: var(--fig-axis); }
+.fig-plot .s3 .s-plane { --c: var(--fig-c1); }
+.fig-plot .s3-poly.s-paper { fill: var(--fig-surface); fill-opacity: .94; stroke: var(--fig-ink-2); stroke-width: 1.2; }
+.fig-plot .s3-poly.s-thin { stroke-width: .8; }
+.fig-plot .s3-dot.s3-open { fill: var(--fig-surface); stroke: var(--c); stroke-width: 1.6; }
+.fig-plot .s3-text { fill: var(--c); paint-order: stroke; stroke: var(--fig-surface); stroke-width: 3px;
+  stroke-linejoin: round; }
+.fig-plot .s3-text.s-muted, .fig-plot .s3-text.s-faint { fill: var(--fig-ink-2); }
+.fig-plot .s3-text.s-ink, .fig-plot .s3-text.s-paper { fill: var(--fig-ink); }
+.fig-plot .s3-strong { font-weight: 650; }
+.fig-plot .s3-tick { fill: var(--fig-ink-3); stroke-width: 0; }
+.fig-plot .s3-inset-frame { fill: var(--fig-surface); stroke: var(--fig-ink-3); stroke-width: 1; }
+.fig-plot .s3-inset-title { fill: var(--fig-ink-2); font-weight: 650; letter-spacing: .02em; stroke-width: 0; }
+.fig-plot .s3-handle { cursor: grab; outline: none; touch-action: none; }
+.fig-plot .s3-grab { fill: transparent; }
+.fig-plot .s3-ring { fill: none; stroke: var(--fig-c1); stroke-width: 1.5; stroke-dasharray: 3 3; opacity: .7;
+  transition: opacity .15s ease; }
+.fig-plot .s3-handle:hover .s3-ring, .fig-plot .s3-handle:focus-visible .s3-ring { opacity: 1; stroke-dasharray: none; stroke-width: 2; }
+.fig-orbits .fig-stage svg { cursor: grab; touch-action: pan-y; }
+.fig-3d .fig-stage { -webkit-user-select: none; user-select: none; }
+.fig.is-dragging .fig-stage svg, .fig.is-dragging .s3-handle { cursor: grabbing; }
+.fig-pad .fig-ctl-value { display: block; text-align: left; color: var(--fig-c1); }
+.fig-hint { font-size: .8rem; color: var(--fig-ink-3); }
+.fig-group { flex: 1 1 100%; border-top: 1px solid var(--fig-rule); padding-top: .55rem; }
+.fig-group > summary { cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--fig-ink-2); }
+.fig-group > summary:focus-visible { outline: 2px solid var(--fig-focus); outline-offset: 2px; }
+.fig-group-body { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .9rem 2rem; padding: .8rem 0 .2rem; }
+
 /* ---------------------------------------------------------------- readouts */
 
 .fig-out:empty { display: none; }

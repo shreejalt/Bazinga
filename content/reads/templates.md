@@ -113,6 +113,35 @@ Four sliders, one for each entry of a matrix, and the grid they move. Template: 
 
 ::figure starter_matrix_transform
 
+## In 3-D
+
+Drag the picture of any of these to turn it.
+
+### A cube and its axes
+
+The smallest 3-D figure: three numbered axes, a cube and a slider for its size. Template: `scene_basic`.
+
+::figure starter_scene_basic
+
+### A surface with sliders
+
+A surface z = f(x, y), coloured by height, with a curve drawn on it. Template: `surface_plot`.
+
+::figure starter_surface_plot
+
+### Vectors and a plane
+
+Two arrows whose tips you drag, their cross product and the plane through them. Template: `vectors_planes`.
+
+::figure starter_vectors_planes
+
+### A camera and its picture
+
+A pinhole camera, the ray from a point to its centre, and the picture it takes. Drag the point or the camera, or open
+the camera panels to move it, turn it and change its focal length. Template: `camera_rig`.
+
+::figure starter_camera_rig
+
 ## Diagrams, written as text
 
 A diagram needs no file at all. Copy one of these blocks into a post and change the words. [[read:drawing-diagrams]]

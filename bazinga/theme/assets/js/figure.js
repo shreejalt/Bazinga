@@ -6,6 +6,11 @@
 // renderer there; the new SVG replaces the old one. Requests are coalesced: only the latest values
 // are computed. If the worker cannot start, the static figure stays and a plain message says so.
 //
+// 3-D figures (bazinga/scene3d.py) draw a <g class="s3"> panel. Dragging its background turns the view (an
+// "orbit" control, changed here); dragging a handle (<g class="s3-handle">) sends compute() a _drag
+// {handle, name, inset, start, from, to} in picture units, and compute() may answer with a "state" of new
+// control values, which the controls then show. Overlapping handles: a press takes the nearest one.
+//
 // Also exposes window.Bazinga.py.call(moduleUrl, fnName, args) -> Promise<JSON> for other scripts
 // (Ask uses it). Inside args, {"$json": url} is fetched once and handed to the function as data.
 (function () {
@@ -101,6 +106,19 @@
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   var instances = 0;
 
+  function clone(v) { return Array.isArray(v) ? v.slice() : v; }
+  function same(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) {
+      return Array.isArray(a) && Array.isArray(b) && a.length === b.length &&
+        a.every(function (x, i) { return Math.abs(x - b[i]) < 1e-9; });
+    }
+    return Math.abs(a - b) < 1e-9;
+  }
+  function vecText(v) {
+    var f = function (x) { return String(Math.round(x * 100) / 100).replace("-", "\u2212"); };
+    return Array.isArray(v) ? "(" + v.map(f).join(", ") + ")" : f(v);
+  }
+
   function decimals(step) {
     var s = String(step);
     if (s.indexOf("e-") >= 0) return parseInt(s.split("e-")[1], 10);
@@ -175,6 +193,7 @@
     el.addEventListener("focusin", warm, { once: true });
     el.addEventListener("touchstart", warm, { once: true, passive: true });
     this.markPresets();
+    this.wirePicture();
   }
 
   Figure.prototype.paintSlider = function (input) {
@@ -183,6 +202,7 @@
   };
 
   Figure.prototype.formatValue = function (c, v) {
+    if (c.kind === "pad" || c.kind === "orbit" || c.kind === "hidden") return vecText(v);
     if (c.kind !== "slider") return String(c.options[v]);
     var step = c.step || (c.max - c.min) / 100;
     var allInt = [c.min, c.max, step].every(function (x) { return Number.isInteger(x); });
@@ -193,6 +213,11 @@
     var c = this.byName[name], v = this.values[name];
     var box = this.el.querySelector('.fig-ctl[data-name="' + name + '"]');
     if (!box) return;
+    if (c.kind === "pad") {
+      var o = box.querySelector("output");
+      if (o) o.textContent = this.formatValue(c, v);
+      return;
+    }
     if (c.kind === "slider") {
       var input = box.querySelector('input[type="range"]');
       if (parseFloat(input.value) !== v) input.value = v;
@@ -211,8 +236,8 @@
     this.el.querySelectorAll(".fig-preset").forEach(function (b) {
       var p = self.data.presets[parseInt(b.getAttribute("data-preset"), 10)];
       var target = Object.assign({}, self.data.defaults, p.values);
-      var same = Object.keys(target).every(function (k) { return Math.abs(target[k] - self.values[k]) < 1e-9; });
-      b.setAttribute("aria-pressed", same ? "true" : "false");
+      var eq = Object.keys(target).every(function (k) { return same(target[k], self.values[k]); });
+      b.setAttribute("aria-pressed", eq ? "true" : "false");
     });
   };
 
@@ -228,7 +253,7 @@
     var self = this;
     this.touched = true;
     Object.keys(vals).forEach(function (k) {
-      if (self.byName[k]) { self.values[k] = vals[k]; self.syncControl(k); }
+      if (self.byName[k]) { self.values[k] = clone(vals[k]); self.syncControl(k); }
     });
     this.markPresets();
     this.request();
@@ -251,7 +276,9 @@
     var self = this;
     this.dirty = false;
     this.inflight = true;
-    var values = Object.assign({}, this.values);
+    var values = JSON.parse(JSON.stringify(this.values));
+    var drag = this.pendingDrag || null;
+    this.pendingDrag = null;
     var narrow = narrowMQ.matches ? 1 : 0;
     var booted = false;
     var loadingTimer = setTimeout(function () {
@@ -264,9 +291,11 @@
         name: self.data.name,
         module: new URL(self.data.module, siteRoot).href,
         plot: new URL(self.data.plot, siteRoot).href,
+        kits: self.kitURLs(),
         requires: self.data.requires || [],
         values: values,
-        narrow: narrow
+        narrow: narrow,
+        drag: drag
       });
     }).then(function (res) {
       clearTimeout(loadingTimer);
@@ -298,8 +327,26 @@
       live.className = "fig-svg fig-svg-live";
       this.stage.appendChild(live);
     }
+    var focused = document.activeElement && document.activeElement.closest && document.activeElement.closest("g.s3-handle");
+    var focusName = focused && this.stage.contains(focused) ? focused.getAttribute("data-name") : null;
     live.innerHTML = res.svg;
+    this.el.classList.add("is-live");
+    if (focusName) {
+      var again = live.querySelector('g.s3-handle[data-name="' + CSS.escape(focusName) + '"]');
+      if (again) again.focus({ preventScroll: true });
+    }
     if (this.out) this.out.innerHTML = res.readouts_html || "";
+    if (res.state && typeof res.state === "object") {
+      // the values a drag changed: the controls follow them
+      var self = this;
+      Object.keys(res.state).forEach(function (k) {
+        if (!self.byName[k]) return;
+        self.values[k] = clone(res.state[k]);
+        values[k] = clone(res.state[k]);
+        self.syncControl(k);
+      });
+      this.markPresets();
+    }
     this.el.classList.add("is-live");
     this.shown = values;
     this.shownNarrow = narrow;
@@ -319,6 +366,127 @@
     var fs = this.el.querySelector(".fig-fs");
     if (fs) fs.disabled = true;
     this.say("The interactive version could not start here; this is the figure at its default settings.", true);
+  };
+
+  Figure.prototype.kitURLs = function () {
+    var out = {}, kits = this.data.kits || {};
+    Object.keys(kits).forEach(function (k) { out[k] = new URL(kits[k], siteRoot).href; });
+    return out;
+  };
+
+  // ------------------------------------------------------------------ 3-D pictures: orbit and handles
+
+  // the SVG the reader sees now: the live one, else the phone or wide picture from the build
+  Figure.prototype.visibleSvg = function () {
+    if (this.el.classList.contains("is-live")) return this.stage.querySelector(".fig-svg-live svg");
+    return this.stage.querySelector(narrowMQ.matches ? ".fig-svg-narrow svg" : ".fig-svg-wide svg");
+  };
+
+  // client coordinates -> the coordinates of an SVG element (the scene panel or one of its insets)
+  function toLocal(node, x, y) {
+    var m = node && node.getScreenCTM && node.getScreenCTM();
+    if (!m) return null;
+    var p = new DOMPoint(x, y).matrixTransform(m.inverse());
+    return [Math.round(p.x * 10) / 10, Math.round(p.y * 10) / 10];
+  }
+
+  Figure.prototype.panelNode = function (index, inset) {
+    var svg = this.visibleSvg();
+    var g = svg && svg.querySelectorAll("g.s3")[index];
+    if (!g) return null;
+    if (inset) return g.querySelector('g.s3-inset[data-inset="' + CSS.escape(inset) + '"]') || g;
+    return g;
+  };
+
+  Figure.prototype.wirePicture = function () {
+    var self = this;
+    this.orbit = (this.data.controls || []).filter(function (c) { return c.kind === "orbit"; })[0] || null;
+    var drag = null;
+    var stage = this.stage;
+    if (this.el.querySelector("g.s3")) this.el.classList.add("fig-3d");
+    if (this.orbit) this.el.classList.add("fig-orbits");
+
+    function nearestHandle(svg, x, y) {
+      var best = null, bd = 26 * 26;     // within 26 screen pixels: a finger's width
+      svg.querySelectorAll("g.s3-handle .s3-grab").forEach(function (c) {
+        var r = c.getBoundingClientRect();
+        if (!r.width) return;
+        var dx = r.left + r.width / 2 - x, dy = r.top + r.height / 2 - y, d = dx * dx + dy * dy;
+        if (d < bd) { bd = d; best = c.closest("g.s3-handle"); }
+      });
+      return best;
+    }
+
+    stage.addEventListener("pointerdown", function (e) {
+      if (e.button > 0) return;
+      var g = e.target.closest && e.target.closest("g.s3");
+      if (!g) return;
+      var svg = g.ownerSVGElement;
+      var index = Array.prototype.indexOf.call(svg.querySelectorAll("g.s3"), g);
+      var h = nearestHandle(svg, e.clientX, e.clientY);
+      if (h && self.byName[h.getAttribute("data-control")]) {
+        var name = h.getAttribute("data-control"), inset = h.getAttribute("data-inset") || null;
+        var from = toLocal(self.panelNode(index, inset), e.clientX, e.clientY);
+        if (!from) return;
+        self.stopPlay();
+        drag = { kind: "handle", index: index, handle: h.getAttribute("data-name"), name: name, inset: inset,
+                 start: clone(self.values[name]), from: from };
+      } else if (self.orbit) {
+        self.stopPlay();
+        drag = { kind: "orbit", start: clone(self.values[self.orbit.name]), x: e.clientX, y: e.clientY,
+                 w: Math.max(240, g.getBoundingClientRect().width) };
+      } else {
+        return;
+      }
+      startWorker();
+      try { stage.setPointerCapture(e.pointerId); } catch (_) { /* fine */ }
+      self.el.classList.add("is-dragging");
+      if (e.pointerType !== "touch" || drag.kind === "handle") e.preventDefault();
+    });
+
+    stage.addEventListener("pointermove", function (e) {
+      if (!drag) return;
+      e.preventDefault();
+      if (drag.kind === "orbit") {
+        var k = 300 / drag.w;              // degrees per screen pixel: a full-width drag turns it most of the way round
+        var c = self.orbit, lo = (c.el_range || [-89, 89])[0], hi = (c.el_range || [-89, 89])[1];
+        var az = drag.start[0] - (e.clientX - drag.x) * k;
+        az = ((az + 180) % 360 + 360) % 360 - 180;
+        var el = Math.min(hi, Math.max(lo, drag.start[1] + (e.clientY - drag.y) * k * 0.6));
+        self.set(c.name, [Math.round(az * 10) / 10, Math.round(el * 10) / 10]);
+        return;
+      }
+      var to = toLocal(self.panelNode(drag.index, drag.inset), e.clientX, e.clientY);
+      if (!to) return;
+      self.sendDrag({ handle: drag.handle, name: drag.name, inset: drag.inset, start: drag.start, from: drag.from, to: to });
+    });
+
+    function end() {
+      drag = null;
+      self.el.classList.remove("is-dragging");
+    }
+    stage.addEventListener("pointerup", end);
+    stage.addEventListener("pointercancel", end);
+    stage.addEventListener("lostpointercapture", end);
+
+    // a focused handle moves with the arrow keys
+    stage.addEventListener("keydown", function (e) {
+      var h = e.target.closest && e.target.closest("g.s3-handle");
+      if (!h) return;
+      var d = { ArrowLeft: [-8, 0], ArrowRight: [8, 0], ArrowUp: [0, -8], ArrowDown: [0, 8] }[e.key];
+      var name = h.getAttribute("data-control");
+      if (!d || !self.byName[name]) return;
+      e.preventDefault();
+      var from = [parseFloat(h.getAttribute("data-lx")), parseFloat(h.getAttribute("data-ly"))];
+      self.sendDrag({ handle: h.getAttribute("data-name"), name: name, inset: h.getAttribute("data-inset") || null,
+                      start: clone(self.values[name]), from: from, to: [from[0] + d[0], from[1] + d[1]] });
+    });
+  };
+
+  Figure.prototype.sendDrag = function (drag) {
+    this.touched = true;
+    this.pendingDrag = drag;
+    this.request();
   };
 
   // ------------------------------------------------------------------ play

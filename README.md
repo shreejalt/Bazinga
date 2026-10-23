@@ -119,7 +119,8 @@ you would on paper:
 - bars;
 - a heatmap;
 - a distribution;
-- a pasted data table.
+- a pasted data table;
+- a 3-D scene: points, segments, boxes and a surface `z = f(x, y)`, which readers turn by dragging.
 
 The sliders, readouts and presets are fields of the form, and the preview redraws as you type. Saving writes
 `figures/<name>.py`. Then put `::figure <name>` in the post.
@@ -138,6 +139,8 @@ words and numbers. Every line of each template has a comment.
 | `animation`, `sampling`, `vector_field` | animations with a Play button: a thrown ball, a die rolled again and again, a path through a field of arrows |
 | `step_through` | an algorithm, one step at a time |
 | `geometry2d`, `matrix_transform` | shapes and a matrix moving the plane |
+| `scene_basic`, `surface_plot` | 3-D: a cube with numbered axes, and a surface z = f(x, y) with sliders |
+| `vectors_planes`, `camera_rig` | 3-D with points to drag: two vectors and their cross product, and a pinhole camera with its picture and a panel to move it |
 
 ```bash
 python -m bazinga figure starters                           # list them
@@ -161,6 +164,27 @@ def compute(t=1.0, _narrow=0):
     return {"panels": [{"kind": "bars", "bars": [{"label": f"class {i+1}", "value": v / sum(e)}
                                                  for i, v in enumerate(e)]}]}
 ```
+
+**In 3-D**, a figure builds a scene with `bazinga/scene3d.py` (standard library only, shipped next to the renderer
+and imported the same way at build time and in the browser). Readers turn it by dragging the picture and move
+points by dragging their handles:
+
+```python
+from bazinga.scene3d import Scene
+
+CONTROLS = [{"name": "view", "kind": "orbit", "value": [35, 25]}]    # no slider: drag the picture
+
+def compute(view=(35, 25), _narrow=0):
+    sc = Scene()                                     # z is up; Scene(up="-y") for the camera convention
+    sc.axes3d(lo=(-1, -1, -1), hi=(1, 1, 1))
+    sc.surface(lambda x, y: x * x - y * y, x=(-1, 1), y=(-1, 1), z_range=(-1, 1))
+    sc.vector((0, 0, 0), (0.8, 0.3, 0.6), label="v")
+    return sc.render(view=view, narrow=_narrow, dist=5)
+```
+
+A scene also has points, lines, boxes, planes, curves, labels, measurements, cameras with the picture they take,
+and handles: a `pad` (shown) or `hidden` control that a handle drives, a `_drag` argument for `compute()`, and
+`apply_drag()` to turn the drag into values. `figure test` drags every handle too.
 
 `content/reads/making-figures.md` is the full guide.
 

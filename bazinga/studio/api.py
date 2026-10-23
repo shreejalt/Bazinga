@@ -709,12 +709,15 @@ class Editor:
         m = re.match(r"^(?:/.*)?/static/(.+)$", path)
         if m:
             return _inside(cfg.static_dir, m.group(1))
-        m = re.match(r"^/figures/_(plot|retrieve)\.py$", path)
+        m = re.match(r"^/figures/_(plot|retrieve|scene3d)\.py$", path)
         if m:
             return _inside(ENGINE_DIR, f"{m.group(1)}.py")
         m = re.match(r"^/figures/([a-z][a-z0-9_]*)\.py$", path)
         if m:
-            return _inside(cfg.figures_dir, f"{m.group(1)}.py")
+            own = _inside(cfg.figures_dir, f"{m.group(1)}.py")
+            if own or not m.group(1).startswith("starter_"):
+                return own
+            return _inside(ENGINE_DIR / "starters" / "figures", f"{m.group(1)[len('starter_'):]}.py")   # ::figure starter_x
         m = re.match(r"^/data/((?:view/)?[a-z0-9][a-z0-9_-]*\.(?:json|js))$", path)
         if m:   # what the last build generated: search passages, the map, hover cards (site.js), per-page views
             return _inside(cfg.out_dir / "data", m.group(1))
