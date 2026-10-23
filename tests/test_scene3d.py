@@ -26,7 +26,8 @@ from perf_support import PERF, perf_only  # noqa: E402,F401
 ROOT = Path(__file__).resolve().parent.parent
 BUDGET_MS = 15 * (3 if os.environ.get("CI") or os.environ.get("VERCEL") else 1)   # per compute, in this interpreter
 MAX_ITEMS = 450
-CFG = SimpleNamespace(root=ROOT, figures_dir=ROOT / "figures")     # this repository's figures, whatever other tests set
+EXAMPLE = ROOT / "tests" / "fixtures" / "example-site"     # the example figures, whatever this site keeps
+CFG = SimpleNamespace(root=EXAMPLE, figures_dir=EXAMPLE / "figures")
 SCENE_STARTERS = ("scene_basic", "surface_plot", "vectors_planes", "camera_rig")
 
 

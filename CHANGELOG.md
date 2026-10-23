@@ -5,6 +5,10 @@ pull the new version in.
 
 ## 2026-10-23
 
+- **Removing the example pages no longer stops your deploys.** Sixteen tests built the template's own example pages,
+  so on a portfolio-only site (or any site that deleted the examples) they failed, and every host runs the tests
+  before deploying. They now build their own copy of the example site in `tests/fixtures/example-site/`. There is no
+  need to take the test step out of `vercel.json`, `netlify.toml` or the Pages workflow.
 - **Editor: previews can no longer write.** A script in a page (or a figure's code) used to run in the preview with
   the Editor's rights, so a page could save files through it. Previews now open from a second local port, and every
   write needs a key that only the Editor's own page has. Nothing changes in how you use it.

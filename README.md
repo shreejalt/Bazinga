@@ -39,7 +39,8 @@ Open http://127.0.0.1:8000. You see the example site, and it rebuilds whenever y
 Only want a portfolio? Delete the example posts in `content/reads/`, `content/papers/` and `content/elsewhere/`, keep
 the `projects` kind in `site.yml`, trim `nav:` to Home, Projects and CV, and set
 `features: {ask: false, explore: false, series: false, feed: false, llms_txt: true, credit: true}`. The build tells you if anything still points at
-a page you removed.
+a page you removed. The tests keep passing: they build their own copy of the example site
+(`tests/fixtures/example-site/`), not your pages, so your host's deploy (which runs them first) is not affected.
 
 ## 3. Write a post
 

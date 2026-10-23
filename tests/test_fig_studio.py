@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def make_site(root):
-    shutil.copy(ROOT / "site.yml", root / "site.yml")
+    shutil.copy(ROOT / "tests" / "fixtures" / "example-site" / "site.yml", root / "site.yml")
     (root / "content" / "reads").mkdir(parents=True)
     (root / "figures").mkdir()
     shutil.copy(ROOT / "bazinga" / "starters" / "figures" / "slider_plot.py", root / "figures" / "wave.py")

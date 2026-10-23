@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from test_core_support import REPO, cleanup, make_site, post  # noqa: E402
+from test_core_support import EXAMPLE, REPO, cleanup, make_site, post  # noqa: E402
 
 from bazinga import checks, cite, cli, config, content, vendor  # noqa: E402
 
@@ -267,7 +267,7 @@ class Vendor(unittest.TestCase):
             self.assertNotIn("latest", url)
 
     def test_font_urls(self):
-        urls = vendor.font_urls(config.load(REPO)["theme"])
+        urls = vendor.font_urls(config.load(EXAMPLE)["theme"])
         self.assertTrue(any("STIX+Two+Math" in u for u in urls))
 
 

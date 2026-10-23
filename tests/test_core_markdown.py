@@ -9,11 +9,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bazinga import config, content
 from bazinga.markdown import references
 
-from test_core_support import REPO, post, render_text  # noqa: E402
+from test_core_support import EXAMPLE, post, render_text  # noqa: E402
 
 
 def other(slug="other", title="Other Page", status=None, date="2020-01-01"):
-    cfg = config.load(REPO)
+    cfg = config.load(EXAMPLE)
     fields = {"status": status} if status else {}
     return content.parse(post(title=title, date=date, **fields), Path(f"content/reads/{slug}.md"), cfg)
 
@@ -139,7 +139,7 @@ class Blocks(unittest.TestCase):
 
     def test_figure_and_drawing_hooks(self):
         _, r = render_text("::figure softmax_temperature | start: Sharp\n\n::drawing pipeline.overview | Cap\n",
-                           cfg=config.load(REPO))
+                           cfg=config.load(EXAMPLE))
         self.assertEqual(r.figures, ["softmax_temperature"])
         self.assertEqual(r.drawings, ["pipeline.overview"])
 

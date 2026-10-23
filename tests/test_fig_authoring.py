@@ -169,7 +169,7 @@ class Report(unittest.TestCase):
 class Cli(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp(prefix="fig-cli-"))
-        shutil.copy(ROOT / "site.yml", self.tmp / "site.yml")
+        shutil.copy(ROOT / "tests" / "fixtures" / "example-site" / "site.yml", self.tmp / "site.yml")
         (self.tmp / "content" / "reads").mkdir(parents=True)
 
     def tearDown(self):

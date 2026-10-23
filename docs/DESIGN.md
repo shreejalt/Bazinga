@@ -370,6 +370,11 @@ python -m bazinga publish <file>                   the Editor's publish pipeline
 
 ## Tests (tests/, unittest, must pass before a deploy)
 
+The tests that build the example site use their own copy of it, `tests/fixtures/example-site/` (site.yml, content,
+figures, drawings, static), never the site's own files, so a site that removed or replaced the example pages (a
+portfolio-only site, say) still passes; the site's own figures are still tested when it has any. When the example
+content changes, copy it into the fixture too.
+
 The tests cover:
 - the math cases (every pre-processing rule, the rejection list, error messages with line numbers);
 - the Markdown extensions;

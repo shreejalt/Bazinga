@@ -61,7 +61,8 @@ class Kit(unittest.TestCase):
 
 class Drawings(unittest.TestCase):
     def setUp(self):
-        self.cfg = types.SimpleNamespace(root=ROOT, figures_dir=ROOT / "figures", drawings_dir=ROOT / "drawings")
+        ex = ROOT / "tests" / "fixtures" / "example-site"     # the example drawings, whatever this site keeps
+        self.cfg = types.SimpleNamespace(root=ex, figures_dir=ex / "figures", drawings_dir=ex / "drawings")
 
     def test_example(self):
         h = drawings.drawing_html("pipeline.overview", "Write & publish", cfg=self.cfg)

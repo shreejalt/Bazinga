@@ -111,13 +111,14 @@ class CodeRoute(unittest.TestCase):
             draw.tree(42)
 
     def test_example_drawing(self):
-        sys.path.insert(0, str(ROOT))
+        example = str(ROOT / "tests" / "fixtures" / "example-site")     # the example drawings, whatever this site keeps
+        sys.path.insert(0, example)
         try:
             from drawings import diagrams
             for narrow in (0, 1):
                 ET.fromstring(diagrams.stages(narrow=narrow))
         finally:
-            sys.path.remove(str(ROOT))
+            sys.path.remove(example)
 
     def test_the_older_kit_still_draws_the_same(self):
         d = draw.Diagram(600)

@@ -26,7 +26,7 @@ SVG = "{http://www.w3.org/2000/svg}"
 
 def guide_blocks():
     """Every ```diagram block of the guide (the ones between ~~~ are the same text shown as source)."""
-    text = (ROOT / "content" / "reads" / "drawing-diagrams.md").read_text(encoding="utf-8")
+    text = (ROOT / "tests" / "fixtures" / "example-site" / "content" / "reads" / "drawing-diagrams.md").read_text(encoding="utf-8")
     text = re.sub(r"^~~~markdown\n.*?^~~~$", "", text, flags=re.S | re.M)
     return re.findall(r"^```diagram([^\n]*)\n(.*?)^```$", text, flags=re.S | re.M)
 
