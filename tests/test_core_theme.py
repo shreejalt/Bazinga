@@ -113,6 +113,28 @@ class ExampleTheme(unittest.TestCase):
 
 
 class ThemeRules(unittest.TestCase):
+    def test_no_links_to_parts_that_are_switched_off(self):
+        """Docs audit: with features ask/explore/series off, pages still linked to /ask/, /explore/ and /series/."""
+        from test_core_support import SITE_YML
+        yml = SITE_YML + ("features: {ask: false, explore: false, series: false, feed: false}\n"
+                          "nav:\n  - {label: Home, href: /}\n  - {label: Writing, href: /posts/}\n"
+                          "  - {label: Series, href: /series/}\n  - {label: Explore, href: /explore/}\n"
+                          "  - {label: Ask, href: /ask/}\n")
+        root = make_site({"posts/a": post("Alpha"), "posts/b": post("Beta", builds_on="[post:a]")}, site_yml=yml)
+        try:
+            cfg = config.load(root)
+            build.build(cfg, quiet=True)
+            pages = [f for f in cfg.out_dir.rglob("*.html")]
+            self.assertTrue(pages)
+            for f in pages:
+                html = f.read_text(encoding="utf-8")
+                for href in ("/ask/", "/explore/", "/series/"):
+                    with self.subTest(page=str(f.relative_to(cfg.out_dir)), href=href):
+                        self.assertNotRegex(html, r'href="[^"]*%s' % re.escape(href))
+                self.assertNotIn("Ask the map", html)
+        finally:
+            cleanup(root)
+
     def test_list_with_many_pages(self):
         root = make_site({f"posts/p{i:02d}": post(f"Post {i}", date=f"2020-01-{i + 1:02d}") for i in range(12)})
         try:

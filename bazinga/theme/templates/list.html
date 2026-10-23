@@ -2,7 +2,7 @@
 {#- The list of one kind: a filter box, a table (by role: reads, papers, projects or entries that live elsewhere),
     ten rows at a time with a pager (assets/js/pager.js), and the series in this kind. -#}
 {% block scripts %}<script src="{{ asset('js/pager.js') }}"></script>{% endblock %}
-{% block cta %}<a class="cta" href="{{ base }}/">Home</a><a class="cta" href="{{ base }}/explore/">Explore</a>{% endblock %}
+{% block cta %}<a class="cta" href="{{ base }}/">Home</a>{% if features.explore %}<a class="cta" href="{{ base }}/explore/">Explore</a>{% endif %}{% endblock %}
 
 {% block content %}
 <section class="sec" id="top">

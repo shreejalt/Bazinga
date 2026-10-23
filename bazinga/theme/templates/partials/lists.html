@@ -39,7 +39,7 @@
   <li><div class="role">Also under these tags</div>
     {% for u in wider.under %}<div><a data-x="{{ u.id }}" href="{{ link(u.url) }}">{{ u.title }}</a><span class="why" style="display:inline;margin-left:8px">{{ u.shared|join(", ") }}</span></div>{% endfor %}</li>
   {% endif %}
-  <li><div class="role">Ask the map</div><div><a href="{{ base }}/ask/?q={{ wider.ask|urlencode }}">{{ wider.ask }}…</a><div class="why">type the other page's name; the map answers with the chain of links between them</div></div></li>
+  {% if features.ask %}<li><div class="role">Ask the map</div><div><a href="{{ base }}/ask/?q={{ wider.ask|urlencode }}">{{ wider.ask }}…</a><div class="why">type the other page's name; the map answers with the chain of links between them</div></div></li>{% endif %}
 </ul>
 {% endmacro %}
 

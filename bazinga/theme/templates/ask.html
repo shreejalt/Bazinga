@@ -18,6 +18,6 @@
   </form>
   <div class="answer" id="ask-out" hidden></div>
   <p class="pystat" id="ask-stat" hidden></p>
-  <noscript><p class="fn">Asking needs JavaScript. You can still browse the <a href="{{ base }}/explore/">map</a> or the <a href="{{ base }}/topics/">topics</a>.</p></noscript>
+  <noscript><p class="fn">Asking needs JavaScript. You can still browse {% if features.explore %}the <a href="{{ base }}/explore/">map</a> or {% endif %}the <a href="{{ base }}/topics/">topics</a>.</p></noscript>
 </section>
 {% endblock %}

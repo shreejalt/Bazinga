@@ -502,9 +502,21 @@ class Builder:
         return labels
 
     # ---- shared template context
+    # nav items for parts of the site a feature switch turns off: they are left out of the rail
+    FEATURE_PAGES = {"/ask/": "ask", "/explore/": "explore", "/series/": "series", "/feed.xml": "feed"}
+
     @property
     def site_nav(self) -> list:
-        return [(str(n["href"]), str(n["label"])) for n in self.cfg["nav"]]
+        feats = self.cfg["features"]
+        out = []
+        for n in self.cfg["nav"]:
+            href = str(n["href"])
+            path = href.split("?", 1)[0].split("#", 1)[0]
+            path = path if path.endswith((".xml", "/")) else path + "/"
+            if not feats.get(self.FEATURE_PAGES.get(path, ""), True):
+                continue
+            out.append((href, str(n["label"])))
+        return out
 
     def links_list(self) -> list:
         links = self.cfg["site"].get("links") or {}

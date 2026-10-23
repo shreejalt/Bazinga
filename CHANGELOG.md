@@ -5,6 +5,8 @@ pull the new version in.
 
 ## 2026-10-23
 
+- **No links to parts you switched off.** With `features: {ask: false}` (or `explore`, `series`) the rail leaves out
+  those items even if `nav:` still lists them, and pages no longer show "Ask the map", "Explore" or "On the map".
 - **Page numbers after a `::pagebreak`** are right: the footer of the second page said "[Page 1]".
 - **Removing the example pages no longer stops your deploys.** Sixteen tests built the template's own example pages,
   so on a portfolio-only site (or any site that deleted the examples) they failed, and every host runs the tests
