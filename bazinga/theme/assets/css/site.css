@@ -871,3 +871,7 @@ svg.links .bx.soft rect{fill-opacity:.85}
 .rail .cta.write{background:var(--blue);border-color:var(--blue);color:var(--on-dark)}
 .rail .cta.write:hover{background:var(--blue-d);border-color:var(--blue-d)}
 .pager[hidden]{display:none}
+/* ---------- "Made with Bazinga" (features.credit) ---------- */
+.rail .made{display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-decoration:none}
+.rail .made img{border-radius:5px;flex:none}
+.rail .made:hover{color:var(--accent)}

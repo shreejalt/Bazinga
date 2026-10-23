@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="documentation/assets/brand/banner-dark.gif">
+    <img src="documentation/assets/brand/banner-light.gif" width="100%" alt="Bazinga: a Vulcan-salute hand holding a pencil, beside a small post whose equation types in, whose live figure slides a box while its loss curve updates, and whose map of linked posts lights up.">
+  </picture>
+</p>
+
 # Bazinga
 
 A template for a personal site and technical blog. You write posts in Markdown. Equations render properly,

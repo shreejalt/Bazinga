@@ -48,7 +48,7 @@ DEFAULTS: dict = {
         "mode": "auto",
     },
     "cv": {"pdf": ""},
-    "features": {"ask": True, "explore": True, "series": True, "feed": True, "llms_txt": True},
+    "features": {"ask": True, "explore": True, "series": True, "feed": True, "llms_txt": True, "credit": True},
     "llm": {"base_url": "https://openrouter.ai/api/v1", "model": "", "key_env": "LLM_API_KEY"},
     "ask": {"written_answers": True, "per_visitor": 5, "daily_cap": 300},
     "publish": {"commit": True, "push": True, "command": "", "author": ""},

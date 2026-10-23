@@ -20,7 +20,7 @@
 {% endif %}
 <script type="application/ld+json">{{ jsonld|safe }}</script>
 {% if site.avatar %}<link rel="icon" href="/{{ site.avatar }}">
-{% else %}<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23FBF7EC'/%3E%3Ctext x='16' y='22' font-family='Courier New,monospace' font-weight='700' font-size='17' text-anchor='middle' fill='{{ theme.accent|replace('#', '%23') }}'%3E{{ (author or site.name)[:1]|e }}%3C/text%3E%3C/svg%3E">
+{% else %}<link rel="icon" type="image/svg+xml" href="{{ asset('img/bazinga.svg') }}">
 {% endif %}
 {% for origin in vendor.font_preconnect %}
 <link rel="preconnect" href="{{ origin }}"{% if 'gstatic' in origin %} crossorigin{% endif %}>
@@ -63,6 +63,7 @@
   <!-- local-tools -->
   {% if not here %}{% block cta %}<a class="cta" href="/">Home</a>{% endblock %}{% endif %}
   <p class="tiny">{% block tiny %}Updated {{ updated }}{% endblock %}</p>
+  {% if features.credit %}<a class="made" href="https://github.com/shreejalt/Bazinga"><img src="{{ asset('img/bazinga.svg') }}" alt="" width="22" height="22">Made with Bazinga</a>{% endif %}
 </aside>
 <main class="sheet" id="main" tabindex="-1">
 {% block content %}{% endblock %}

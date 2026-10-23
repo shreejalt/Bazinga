@@ -157,7 +157,7 @@ theme:
   width: 720
   mode: light
 
-features: {ask: true, explore: true, series: true, feed: true, llms_txt: true}
+features: {ask: true, explore: true, series: true, feed: true, llms_txt: true, credit: true}   # credit: the small "Made with Bazinga" link in the side rail
 
 # Optional. Without a model everything works except LLM proposals and written answers on the Ask page.
 llm:
