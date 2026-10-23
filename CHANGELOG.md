@@ -27,6 +27,8 @@ pull the new version in.
 - **Python 3.11 works again.** `requirements.txt` pinned numpy 2.5.4, which needs Python 3.12, so the whole install
   failed on 3.11. It now picks numpy 2.4.6 on 3.11. A build without numpy no longer stops: a figure that needs it
   is replaced by a short note and a warning.
+- **Keyboard focus shows on the rail.** The rail kept a pale focus ring from when it was dark; it now uses the same
+  blue ring as the rest of the page. Unused dark-rail colours were removed from `site.css`.
 - **Deploys no longer fail on a slow build machine.** The tests that time things (figures under 30 ms and the like)
   now run only with `BAZINGA_PERF_TESTS=1`; the deploy runs every correctness check as before.
 - **`check` counts pages it cannot read.** Broken front matter is now an error (exit code 1), and

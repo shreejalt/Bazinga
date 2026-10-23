@@ -140,6 +140,18 @@ class ThemeRules(unittest.TestCase):
             cleanup(root)
 
 
+class Stylesheet(unittest.TestCase):
+    """E-2: the rail is light now, so it keeps the global blue focus ring, and its dark-rail colours are gone."""
+
+    def test_rail_keeps_the_global_focus_ring(self):
+        import re
+        css = (Path(__file__).resolve().parent.parent / "bazinga/theme/assets/css/site.css").read_text(encoding="utf-8")
+        self.assertIn(":focus-visible{outline:2px solid var(--blue)", css)
+        self.assertNotRegex(css, r"\.rail[^{]*:focus-visible\s*\{[^}]*outline-color")
+        first = css.split("/* ---------- man-page sections", 1)[0]
+        self.assertNotIn("var(--on-dark)", first.split(".rail{", 1)[1])   # dead dark-rail colours are gone
+
+
 class LocalWriteButton(unittest.TestCase):
     PAGE = b'<html><body class="post" data-page="read:welcome"><aside class="rail"><!-- local-tools --></aside></body></html>'
 
