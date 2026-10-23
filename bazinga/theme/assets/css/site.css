@@ -878,3 +878,19 @@ svg.links .bx.soft rect{fill-opacity:.85}
   .sheet{padding:22px 14px 44px}
   .memo .body > .fig,.memo .body > .drawing,.memo .body > figure.drawing{margin-left:0}
 }
+
+/* ---------- touch screens: no zoom on focus, fingers-sized targets (device audit) ---------- */
+@media (pointer:coarse){
+  input,select,textarea,.find,.askrow .find,.askpanel .askrow .find,.ctl select,.finder select,.pick select{font-size:16px}  /* iOS zooms into anything smaller */
+  .fig input[type="range"]{height:36px}
+  .fig input[type="range"]::-webkit-slider-thumb{width:22px;height:22px;margin-top:-9px}
+}
+.askpanel-x{min-width:36px;min-height:36px;display:inline-grid;place-items:center}
+.askpanel{max-height:min(70vh,640px);max-height:min(70dvh,640px)}
+.askpanel-h{position:sticky;top:-14px;z-index:1;background:var(--paper);margin:-14px -16px 6px;padding:14px 16px 4px}   /* stays in view, also above a phone keyboard */
+@media (max-width:700px){.askpanel{max-height:72vh;max-height:72dvh}}
+@media (max-width:600px){.refs li{grid-template-columns:6ch minmax(0,1fr)}}
+@media (max-width:980px){
+  /* a post's section list scrolls sideways on phones: fade its right edge so that shows */
+  body.post .rail nav{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);padding-right:24px}
+}

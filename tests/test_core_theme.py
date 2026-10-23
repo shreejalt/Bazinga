@@ -152,6 +152,33 @@ class Stylesheet(unittest.TestCase):
         self.assertNotIn("var(--on-dark)", first.split(".rail{", 1)[1])   # dead dark-rail colours are gone
 
 
+class TouchScreens(unittest.TestCase):
+    """M4 and the theme minors from the device audit (measured in WebKit on iPhone sizes when they were fixed)."""
+
+    def setUp(self):
+        css_dir = Path(__file__).resolve().parent.parent / "bazinga/theme/assets/css"
+        self.site = (css_dir / "site.css").read_text(encoding="utf-8")
+        self.fig = (css_dir / "figure.css").read_text(encoding="utf-8")
+        start = self.site.index("/* ---------- touch screens:")
+        self.block = self.site[start:]
+
+    def test_no_zoom_on_focus(self):
+        import re
+        coarse = self.block[self.block.index("@media (pointer:coarse){"):]
+        rule = re.search(r"\n  ([^{]+)\{font-size:16px\}", coarse)
+        self.assertIsNotNone(rule)
+        for sel in ("input", "select", "textarea", ".askpanel .askrow .find", ".finder select", ".pick select"):
+            self.assertIn(sel, rule.group(1).split(","))
+
+    def test_targets_and_layout(self):
+        self.assertIn(".askpanel-x{min-width:36px;min-height:36px", self.block)
+        self.assertIn(".askpanel-h{position:sticky", self.block)
+        self.assertIn('.fig input[type="range"]{height:36px}', self.block)       # after site.css's own 22px
+        self.assertIn(".fig-play, .fig-preset, .fig-reset { min-height: 36px; }", self.fig)
+        self.assertIn(".refs li{grid-template-columns:6ch minmax(0,1fr)}", self.block)
+        self.assertIn("body.post .rail nav{-webkit-mask-image:linear-gradient", self.block)
+
+
 class MapTouch(unittest.TestCase):
     def test_first_tap_on_a_phone_shows_connections(self):
         """M1: Safari's click after a tap reports pointerType "mouse", so the tap must be remembered from the

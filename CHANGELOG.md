@@ -27,6 +27,10 @@ pull the new version in.
 - **Python 3.11 works again.** `requirements.txt` pinned numpy 2.5.4, which needs Python 3.12, so the whole install
   failed on 3.11. It now picks numpy 2.4.6 on 3.11. A build without numpy no longer stops: a figure that needs it
   is replaced by a short note and a warning.
+- **Phones and tablets:** text fields and menus are 16 px on touch screens, so iPhones no longer zoom in when you
+  tap them; the Ask panel's close button is a proper target and its header stays in view above the keyboard;
+  figure sliders and buttons are at least 36 px tall on touch screens; the references list wastes less width on
+  phones; and a post's section list in the rail fades at its edge to show it scrolls.
 - **Editor on tablets and phones:** the preview no longer comes up blank at 980 px and narrower (it fills the screen
   when you show it), the top bar's buttons scroll inside the bar instead of overlapping, the Library's tabs scroll
   instead of pushing the page sideways, and the Editor uses the visible screen height on phones.
