@@ -1,7 +1,7 @@
 # GitHub Pages: build and deploy on every push to main, and once a day so scheduled posts go live on their date.
-# Turn it on in the repository: Settings -> Pages -> Source: "GitHub Actions".
+# Turn it on in the repository: Settings -> Pages -> Source: "GitHub Actions". Until you do (for example because you
+# deploy with Vercel or Netlify), every run stops at the first step with a note and nothing fails.
 # In the Bazinga repository itself these jobs are skipped: its Pages site is the documentation (docs.yml).
-# In your own copy (a fork or "Use this template") they run and publish your site.
 name: Deploy to GitHub Pages
 on:
   push:
@@ -17,8 +17,25 @@ concurrency:
   group: pages
   cancel-in-progress: true
 jobs:
-  build:
+  check:
     if: github.repository != 'shreejalt/Bazinga'
+    runs-on: ubuntu-latest
+    outputs:
+      enabled: ${{ steps.pages.outputs.enabled }}
+    steps:
+      - id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/${{ github.repository }}/pages" --jq .build_type 2>/dev/null | grep -q workflow; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::GitHub Pages is not set to GitHub Actions in this repository (Settings -> Pages), so this run deploys nothing."
+          fi
+  build:
+    needs: check
+    if: needs.check.outputs.enabled == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +56,6 @@ jobs:
         with:
           path: _site
   deploy:
-    if: github.repository != 'shreejalt/Bazinga'
     needs: build
     runs-on: ubuntu-latest
     environment:

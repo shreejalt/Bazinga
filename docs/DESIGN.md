@@ -21,7 +21,7 @@ This file is the contract between the parts. Every builder reads it first. `docs
    - requires a per-launch token.
 
    The deployed site can only *answer* (Ask). It cannot write.
-6. **Standard library first.** The runtime dependencies are Markdown, PyYAML, Jinja2, latex2mathml and Pygments. Python ≥ 3.11. No Node needed. CDN assets are pinned to exact versions in one place (`bazinga/vendor.py`).
+6. **Standard library first.** The runtime dependencies are Markdown, PyYAML, Jinja2, latex2mathml and Pygments, plus numpy for figures that declare `REQUIRES = ["numpy"]` (pinned per Python version in `requirements.txt`: 2.5.4 on 3.12+, 2.4.6 on 3.11). Without numpy the site still builds: such a figure becomes a note in the built page and a warning. Python ≥ 3.11. No Node needed. CDN assets are pinned to exact versions in one place (`bazinga/vendor.py`).
 7. **Customisable without forking the engine.**
    - `site.yml` covers names, nav, colours, fonts, kinds, LLM provider and deploy command.
    - A `theme/` folder in the site root overrides any template or asset of `bazinga/theme/` by the same path.
@@ -98,15 +98,15 @@ nav: [{label: Writing, href: /posts/}, {label: Projects, href: /projects/}, {lab
 kinds:                                  # each kind is a folder content/<kind>/ and a list page /<kind>/
   posts:    {label: Writing,  singular: Post}
   projects: {label: Projects, singular: Project}
-home: {intro: "A paragraph about you (Markdown).", show: [latest, series, map]}
+home: {intro: "A paragraph about you (Markdown)."}
 theme:
   accent: "#3b5bdb"                     # one colour; tokens.css derives the rest
   font_text: "Source Serif 4"           # Google Fonts names
-  font_ui: "Inter"
-  font_code: "JetBrains Mono"
+  font_ui: "JetBrains Mono"             # the rail, labels and the typed text of reads and papers (--mono)
+  font_code: "JetBrains Mono"           # code blocks and inline code (--code)
   font_math: "STIX Two Math"
-  width: 720                            # reading column in px
-  mode: auto                            # auto | light | dark
+  width: 780                            # optional: the reading column in px (480-1200); unset keeps the theme's
+                                        # (the theme is light only: there is no dark mode setting)
 features: {ask: true, explore: true, series: true, feed: true, llms_txt: true, credit: true}   # credit: "Made with Bazinga" in the rail
 llm:                                    # optional; everything works without it except proposals + written answers
   base_url: "https://openrouter.ai/api/v1"   # any OpenAI-compatible /chat/completions (OpenAI, OpenRouter, Ollama http://localhost:11434/v1 …)
@@ -144,7 +144,7 @@ cover: static/uploads/x.png             # optional share image
 ```
 
 Rules:
-- **What is public:** a page is public when `status: published` and `date <= today`. A future date means scheduled: it appears on the first build after that date. Drafts and scheduled pages are never written to `_site`, the sitemap, the feed, the wiki files or the passages. The Editor previews them.
+- **What is public:** a page is public when `status: published` and `date <= today`. A future date means scheduled: it appears on the first build after that date. Drafts and scheduled pages are never written to `_site`, the sitemap, the feed, the wiki files or the passages. The Editor previews them. A page that does not say `status: draft` but has a status or a date the build cannot read (`publshed`, `2026/01/05`) stops a production build with its file and line, instead of quietly staying out; an impossible date (`2026-02-30`) in any YAML file is reported as `<file>:<line>: … not a real date`.
 - **Topics:** `topics.yml` looks like `{groups: [{name: "Methods", topics: [{slug: attention, label: "Attention", blurb: "…"}]}]}`. An unknown topic is an error with a "did you mean".
 - **References:** `references.yml` maps `KEY: {title, authors: [..], year, venue, arxiv?, doi?, url?}`.
 
@@ -189,7 +189,7 @@ The contract. `figures.py` validates it; the Editor's starters follow it.
 ```python
 TITLE = "Softmax temperature"                 # shown above the figure
 CAPTION = "What the slider does, in one or two sentences."
-REQUIRES = []                                 # optional Pyodide packages, e.g. ["numpy"] (build env must have them too)
+REQUIRES = []                                 # optional Pyodide packages, e.g. ["numpy"] (without it in the build env: a note + warning)
 CONTROLS = [                                  # rendered as HTML controls in this order
   {"name": "t", "kind": "slider", "label": "temperature", "min": 0.1, "max": 5, "step": 0.1, "value": 1, "play": False},
   {"name": "k", "kind": "steps",  "label": "classes", "options": ["3", "5", "10"], "value": 0},
@@ -241,7 +241,7 @@ def compute(t=1.0, k=0, log=0, _narrow=0):    # pure: same inputs → same spec;
 `bazinga/scene3d.py` (standard library only) builds 3-D scenes: points, lines, boxes, planes, curves, surfaces
 `z = f(x, y)`, vectors, axes with ticks, labels, measurements and cameras with the picture they take. `Scene.render()`
 returns a `scene3d` panel that `plot.py` draws; the kit ships as `/figures/_scene3d.py` and is imported as
-`bazinga.scene3d` both at build time and in the browser. Controls `orbit` (turn by dragging the picture), `pad` and
+`bazinga.scene3d` both at build time and in the browser. Controls `orbit` (turn by dragging the picture, or by focusing it and using the arrow keys), `pad` and
 `hidden` (points moved by their handles), `_drag` and `state` in `compute()`. Starters: `scene_basic`, `surface_plot`,
 `vectors_planes`, `camera_rig`; the form has a "3-D scene" type. `figure test` also drags every handle.
 
@@ -279,10 +279,10 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
   - `highlights <series>` writes 3–4 highlights per part from the part's own text; numbers must appear in the page or the line is rejected.
   - `describe <page>` writes a ≤155-character description from the page's own words.
   - `equation "<words>"` turns words into LaTeX (Editor equation helper).
-  - `figure "<description>"` drafts a figure module from the closest starter. The Editor runs it through the contract test before showing it.
+  - `figure "<description>"` drafts a figure module from the closest starter. The Editor shows the draft as text and never runs it on its own: it runs only when the author presses "I have read it: run it" or saves it. It also lists anything the draft uses beyond what a figure needs (an allowlist: `math`, `random`, `statistics`, the figure kits `bazinga.scene3d` and `bazinga.plot`, and `numpy` only when the figure declares `REQUIRES = ["numpy"]`, without its file functions; no `getattr`, `eval`, `exec`, `open` or double-underscore names).
 - **Ask** (`retrieve.py`, the same code everywhere):
   - **The browser box:** the `/ask/` page and the floating "Ask" button on every page (which takes the current page as context). It runs `retrieve.answer(question, passages, graph, page=None)` on Pyodide. That does BM25 over the passages, boosted for the current page and its graph neighbours, and returns the top passages, the pages they come from, and a short extractive answer. The quick answer needs no server.
-  - **A "Written answer" button** appears when `/api/ask/` says it is on. It POSTs `{q, page}` to `api/ask.py`, which picks passages with the same `retrieve` code and asks the configured model to answer **only** from them with numbered citations. It has per-IP and daily limits and stores nothing. Locally, `bazinga serve` serves the same endpoint.
+  - **A "Written answer" button** appears when `/api/ask/` says it is on. It POSTs `{q, page}` to `api/ask.py`, which picks passages with the same `retrieve` code and asks the configured model to answer **only** from them with numbered citations. It has per-IP and daily limits and stores nothing. On Vercel it reads the passages from the site's own address, `SITE_URL` or `site.origin`, never from the request's Host, and it drops any passage whose link is not on the site (the page's script does the same before it shows a link). Locally, `bazinga serve` serves the same endpoint.
 
 ## The Editor (local only)
 
@@ -293,8 +293,14 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
 
 **Every request is checked:**
 - The Host must be `127.0.0.1:<port>` or `localhost:<port>`.
-- Writes must be POST with JSON, a matching Origin (or `Sec-Fetch-Site: same-origin`) and the cookie.
+- Writes must be POST with JSON, a matching Origin (or `Sec-Fetch-Site: same-origin`), the cookie and the write key
+  (`X-Bazinga-Write`, a random value written into the Editor's own page only).
 - No CORS headers are sent.
+- **Previews run on a second port.** A preview runs the page's own scripts and its figures' code, so previews
+  (`/preview/<id>`, `/frame/...`) and the files they load are served by a second, read-only server on another
+  127.0.0.1 port: another origin. A script in a preview cannot read the Editor, and its writes are refused (wrong
+  Origin, no write key). The Editor and its preview frames talk by messages only (`static/bridge.js`): page updates,
+  scroll sync, theme, and the frame's height. The preview pages may be framed only by the Editor.
 - Paths must resolve inside `content/`, `figures/`, `drawings/`, `static/uploads/` or `content/references.yml`.
 - Writes are atomic (temp file then rename).
 - git and the publish command run with argument lists, never a shell string. The optional `publish.command` is split with `shlex.split`.
@@ -303,7 +309,7 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
 1. **Library.** All pages with their status pill (Draft / Scheduled / Published), word count, figures, last edited and check badges. Search, filter by kind/status, and a **New post** button (title + kind → slug → file from `starters/post.md`, status draft).
 2. **Editor.** Two panes, resizable:
    - **Left:** CodeMirror 6 Markdown with LaTeX-aware highlighting. It has autocomplete for `[[ids`, `[@keys`, `::figure names` and topics.
-   - **Right:** the live preview, rendered by the *real* `markdown.py` + theme (an iframe of `/preview/<id>`, updated within ~300 ms of typing, scroll-synced). Its interactive figures work through the same worker.
+   - **Right:** the live preview, rendered by the *real* `markdown.py` + theme (an iframe of `/preview/<id>` on the preview port, updated within ~300 ms of typing, scroll-synced). Its interactive figures work through the same worker.
    - **Top bar:** title, status pill, Save state ("Saved" / "Saving…"; autosave every 2 s after typing stops, plus a version snapshot in `.studio/history/`), **Checks** (count), **Publish**.
    - **The "/" menu** (and toolbar): Heading, Equation…, Inline math, Figure…, Drawing…, Citation…, Link to page…, Callout, Table, Image upload, Code block, Footnote, Divider.
    - **Equation helper:** a LaTeX field with live MathML, a palette (Greek, operators, fractions, sums/integrals, matrices, cases, arrows, accents), validation messages from `mathml.py` with the hint, "Describe in words" (llm, optional), and display/inline plus a name for references.
@@ -322,16 +328,16 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
    4. Build the site.
    5. Update the wiki files (index, log entry `publish | Title`, passages).
    6. Optional: "Ask the model for links and topics" shows the ingest proposals as accept/reject cards before committing.
-   7. `git add` the page, its figures/drawings/uploads and references, wiki/index.md and wiki/log.md, then `git commit -m "Publish: <title>"`.
+   7. Check who commits (`publish.author`, or git's name and email) before staging anything; then `git add` the page, its figures/drawings/uploads and references, wiki/index.md and wiki/log.md, and `git commit -m "Publish: <title>"`. If any step fails before the commit, the page and the wiki files are put back as they were and nothing stays staged. A renamed page stages the removal of its old file only when git tracked that file.
    8. `git push` to the branch the current one tracks (`git push <remote> HEAD:<branch>`, so a local `work` tracking `origin/main` works; with no upstream, `git push -u origin HEAD`), then the optional `publish.command`.
    9. Show the live URL.
    - **Unpublish** sets status back to draft and runs steps 4–8.
-   - **Schedule** sets a future date: the page goes live on the first build after it. The README explains a daily cron build on Vercel or Netlify, and the GitHub Pages workflow has a daily schedule.
+   - **Schedule** sets a future date: the page goes live on the first build on or after it. The GitHub Pages workflow builds daily, so there it appears on its day. Vercel and Netlify build only on a push: without a daily build hook (README, "Scheduled posts need a build on their day": a build hook called by a small GitHub Actions cron) the page appears with the next push after its date. The Editor's publish summary says so.
 
 ## Theme and look
 
 The look is calm and editorial: a reading column of about 720 px, a generous serif for text and a clean sans for the UI. Figures may break out to about 1000 px.
-- **Colour:** `tokens.css` derives everything from one `--accent`, with light and dark palettes (`prefers-color-scheme` plus a toggle stored in localStorage).
+- **Colour:** `tokens.css` derives everything from one `--accent` on a light paper palette (the theme has no dark mode; the Editor has its own light and dark).
 - **Pages:**
   - **Home:** intro, latest posts, series, a small map teaser.
   - **Lists:** cards with summary, topics and reading time.
@@ -364,6 +370,11 @@ python -m bazinga publish <file>                   the Editor's publish pipeline
 
 ## Tests (tests/, unittest, must pass before a deploy)
 
+The tests that build the example site use their own copy of it, `tests/fixtures/example-site/` (site.yml, content,
+figures, drawings, static), never the site's own files, so a site that removed or replaced the example pages (a
+portfolio-only site, say) still passes; the site's own figures are still tested when it has any. When the example
+content changes, copy it into the fixture too.
+
 The tests cover:
 - the math cases (every pre-processing rule, the rejection list, error messages with line numbers);
 - the Markdown extensions;
@@ -371,12 +382,18 @@ The tests cover:
 - graph edges and backlinks;
 - the wiki files (index, llms.txt layout, passages);
 - `retrieve` ranking on a fixture;
-- the figure contract plus every figure in `figures/` at defaults, presets and random states (< 30 ms, no NaN, valid SVG);
+- the figure contract plus every figure in `figures/` at defaults, presets and random states (no NaN, valid SVG; the < 30 ms budget with `BAZINGA_PERF_TESTS=1`);
 - drawings;
 - the Editor security (Host, Origin, token, path traversal, no Editor files in `_site`);
 - the publish pipeline in a temporary git repo (a dry run with no push);
 - the example site building end to end;
 - `node --check` on every JS file when node is available.
+
+**Speed checks are not part of the deploy gate.** The deploy configurations run the suite before building, and a slow or
+busy build machine must not fail a deploy, so every wall-clock assertion runs only with `BAZINGA_PERF_TESTS=1`
+(`BAZINGA_PERF_TESTS=1 python -m unittest discover tests`); without it the figure test's 30 ms budget is switched off
+(`BAZINGA_FIGURE_BUDGET_MS=inf`) and the correctness checks still run. `figure test` on the command line and in the
+Editor keeps the budget.
 
 ## Deploy
 

@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import json
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -48,6 +50,10 @@ def cmd_new(args, cfg) -> int:
         print(f"unknown kind {kind!r}; site.yml defines: {', '.join(cfg['kinds'])}", file=sys.stderr)
         return 2
     slug = args.slug or content.slugify(args.title)
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", slug or ""):
+        print(f"{slug!r} is not a page name: use lowercase letters, digits and dashes (no / or ..), "
+              "for example --slug my-first-post", file=sys.stderr)
+        return 2
     folder = cfg.content_dir / kind
     path = folder / f"{slug}.md"
     if path.exists():
@@ -57,8 +63,10 @@ def cmd_new(args, cfg) -> int:
     if not starter.exists():
         starter = Path(__file__).parent / "starters" / "post.md"
     text = starter.read_text(encoding="utf-8")
-    title = args.title.replace('"', '\\"')
-    text = text.replace("{{title}}", title).replace("{{date}}", date.today().isoformat())
+    title = " ".join(args.title.split())                 # one line
+    # a JSON string is a valid YAML double-quoted string: quotes, backslashes and the rest are escaped properly
+    text = text.replace('"{{title}}"', json.dumps(title, ensure_ascii=False)).replace("{{title}}", title)
+    text = text.replace("{{date}}", date.today().isoformat())
     folder.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     print(f"Created {path.relative_to(cfg.root)} (a draft). Preview it with: python -m bazinga serve --drafts")
@@ -89,38 +97,52 @@ def cmd_serve(args, cfg) -> int:
 
 def cmd_check(args, cfg) -> int:
     from . import checks
-    from .build import make_site_index
-    everything = []
-    for path in content.content_files(cfg):
-        try:
-            everything.append(content.load_file(path, cfg))
-        except content.ContentError as exc:
-            print(str(exc))
-    refs, topics = content.load_references(cfg), content.load_topics(cfg)
+    from .build import make_site_index  # noqa: F401 - the core build must be importable
+    root = cfg.root.resolve()
+
+    def rel(path):
+        path = Path(path).resolve()
+        return path.relative_to(root) if path.is_relative_to(root) else path
+
+    wanted = None
     if args.files:
         wanted = {Path(f).resolve() for f in args.files}
-        pages = []
         for f in wanted:
             if not f.exists():
                 print(f"{f}: no such file", file=sys.stderr)
                 return 2
-            match = [p for p in everything if Path(p.path).resolve() == f]
-            pages += match or [content.load_file(f, cfg)]
-    else:
-        pages = everything
+    everything, broken = [], []          # broken: (path, ContentError) for files that cannot be read at all
+    files = content.content_files(cfg)
+    for path in files + sorted((wanted or set()) - {Path(f).resolve() for f in files}):
+        try:
+            everything.append(content.load_file(path, cfg))
+        except content.ContentError as exc:
+            broken.append((Path(path).resolve(), exc))
+    try:
+        refs, topics = content.load_references(cfg), content.load_topics(cfg)
+    except content.ContentError as exc:
+        print(f"{rel(exc.path) if exc.path else ''}:{exc.line or ''}: error: {exc.message}"
+              + (f"\n    hint: {exc.hint}" if exc.hint else ""))
+        print("\nChecked 0 page(s): 1 error(s), 0 warning(s).")
+        return 1
+    pages = [p for p in everything if wanted is None or Path(p.path).resolve() in wanted]
     errors = warnings = 0
+    for path, exc in broken:
+        if wanted is not None and path not in wanted:
+            continue
+        print(checks.Issue("error", exc.line, exc.message, exc.hint, "parse").format(rel(path)))
+        errors += 1
     for page in pages:
         site = checks.site_for(page, everything, refs, topics, cfg)
         issues = checks.check_page(page, site)
-        rel = Path(page.path).resolve()
-        rel = rel.relative_to(cfg.root.resolve()) if rel.is_relative_to(cfg.root.resolve()) else rel
         for issue in issues:
             if args.errors_only and issue.level != "error":
                 continue
-            print(issue.format(rel))
+            print(issue.format(rel(page.path)))
         errors += sum(1 for i in issues if i.level == "error")
         warnings += sum(1 for i in issues if i.level == "warning")
-    print(f"\nChecked {len(pages)} page(s): {errors} error(s), {warnings} warning(s).")
+    count = len(pages) + sum(1 for path, _ in broken if wanted is None or path in wanted)
+    print(f"\nChecked {count} page(s): {errors} error(s), {warnings} warning(s).")
     return 1 if errors else 0
 
 
@@ -152,7 +174,16 @@ def cmd_figure(args, cfg) -> int:
         except figs.FigureError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 1
-        print(f"Created {Path(path).relative_to(cfg.root)}. Use it in a post with ::figure {args.name}")
+        rel = Path(path).relative_to(cfg.root) if Path(path).is_relative_to(cfg.root) else path
+        if Path(path).parent.name == "drawings":          # a drawing starter: ::drawing <file>.<function>
+            import ast
+            fns = [n.name for n in ast.parse(Path(path).read_text(encoding="utf-8")).body
+                   if isinstance(n, ast.FunctionDef) and not n.name.startswith("_")]
+            use = f"::drawing {args.name}.{fns[0] if fns else '<function>'}"
+            more = f" (its functions: {', '.join(fns)})" if len(fns) > 1 else ""
+            print(f"Created {rel}. Use it in a post with {use}{more}")
+        else:
+            print(f"Created {rel}. Use it in a post with ::figure {args.name}")
         return 0
     if args.action == "list":
         return figs.cli_list(cfg)
@@ -255,7 +286,7 @@ def parser() -> argparse.ArgumentParser:
     p.add_argument("--drafts", action="store_true", help="also show drafts and scheduled pages (local preview)")
     p.add_argument("--no-editor", "--no-studio", dest="no_studio", action="store_true",
                    help="do not start the Editor (no Write button)")
-    p.add_argument("--studio-port", type=int, default=None,
+    p.add_argument("--editor-port", "--studio-port", dest="studio_port", type=int, default=None,
                    help="port of the Editor on 127.0.0.1 (default: the serve port + 1, or a free one)")
     p.set_defaults(fn=cmd_serve)
 
@@ -286,7 +317,8 @@ def parser() -> argparse.ArgumentParser:
         ("editor", "studio.server", "main", "The Editor (bazinga/studio/)", "the Editor, the local writing window"),
         ("studio", "studio.server", "main", "The Editor (bazinga/studio/)", "the same as editor"),
         ("publish", "studio.publish", "cli_main", "Publishing (bazinga/studio/publish.py)", "publish one page"),
-        ("wiki", "llm", "cli", "The wiki tools (bazinga/llm.py)", "index, ingest, lint, highlights, describe"),
+        ("wiki", "llm", "cli", "The wiki tools (bazinga/llm.py)",
+         "index, query, ingest, lint, highlights, describe, equation, figure, log"),
     ]:
         p = sub.add_parser(name, help=help_text, add_help=False)
         p.add_argument("rest", nargs=argparse.REMAINDER)
@@ -335,13 +367,15 @@ def main(argv=None) -> int:
         origin = (getattr(args, "origin", None) or config.origin_from_env()) if args.fn is cmd_build else None
         cfg = config.load(root, origin=origin)
     except config.ConfigError as exc:
-        print(f"site.yml: {exc}", file=sys.stderr)
+        print(str(exc) if str(exc).startswith("site.yml") else f"site.yml: {exc}", file=sys.stderr)
         return 2
     if getattr(args, "kind", "x") is None:
         args.kind = next(iter(cfg["kinds"]))
     try:
         return int(args.fn(args, cfg) or 0)
     except content.ContentError as exc:
+        if exc.path and Path(exc.path).resolve().is_relative_to(root):
+            exc.path = Path(exc.path).resolve().relative_to(root)
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:

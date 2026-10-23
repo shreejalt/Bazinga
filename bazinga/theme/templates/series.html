@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {#- Every series (/series/) or one series with its parts in reading order and their highlights. -#}
-{% block cta %}{% if one %}<a class="cta" href="{{ base }}/series/">All series</a>{% else %}<a class="cta" href="{{ base }}/">Home</a>{% endif %}<a class="cta" href="{{ base }}/explore/">Explore</a>{% endblock %}
+{% block cta %}{% if one %}<a class="cta" href="{{ base }}/series/">All series</a>{% else %}<a class="cta" href="{{ base }}/">Home</a>{% endif %}{% if features.explore %}<a class="cta" href="{{ base }}/explore/">Explore</a>{% endif %}{% endblock %}
 
 {% block content %}
 {% if not one %}

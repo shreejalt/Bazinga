@@ -14,6 +14,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bazinga import diagram_text as dt  # noqa: E402
 
 from diagram_checks import problems  # noqa: E402
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parent.parent
 SVG = "{http://www.w3.org/2000/svg}"
@@ -21,7 +26,7 @@ SVG = "{http://www.w3.org/2000/svg}"
 
 def guide_blocks():
     """Every ```diagram block of the guide (the ones between ~~~ are the same text shown as source)."""
-    text = (ROOT / "content" / "reads" / "drawing-diagrams.md").read_text(encoding="utf-8")
+    text = (ROOT / "tests" / "fixtures" / "example-site" / "content" / "reads" / "drawing-diagrams.md").read_text(encoding="utf-8")
     text = re.sub(r"^~~~markdown\n.*?^~~~$", "", text, flags=re.S | re.M)
     return re.findall(r"^```diagram([^\n]*)\n(.*?)^```$", text, flags=re.S | re.M)
 
@@ -219,6 +224,7 @@ class Accessible(unittest.TestCase):
         self.assertEqual(root.get("width"), root.get("viewBox").split()[2])
 
 
+@perf_only
 class Speed(unittest.TestCase):
     def test_examples_draw_quickly(self):
         for ex in dt.EXAMPLES:

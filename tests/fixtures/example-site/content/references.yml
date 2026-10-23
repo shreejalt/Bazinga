@@ -1,0 +1,38 @@
+# The citation library. Cite an entry in a page with [@KEY] or [@KEY, p. 4]; the page gets a numbered reference list.
+# Add papers with:  python -m bazinga cite <arXiv id or DOI>   (or the Editor's citation panel)
+# Each entry: title, authors (list), year, and at least one of arxiv / doi / url; venue is optional.
+
+Vaswani17:
+  title: "Attention Is All You Need"
+  authors: [Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin]
+  year: 2017
+  venue: "Advances in Neural Information Processing Systems (NeurIPS)"
+  arxiv: "1706.03762"
+
+Hinton15:
+  title: "Distilling the Knowledge in a Neural Network"
+  authors: [Geoffrey Hinton, Oriol Vinyals, Jeff Dean]
+  year: 2015
+  venue: "NIPS Deep Learning and Representation Learning Workshop"
+  arxiv: "1503.02531"
+
+He15:
+  title: "Deep Residual Learning for Image Recognition"
+  authors: [Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun]
+  year: 2015
+  venue: "IEEE Conference on Computer Vision and Pattern Recognition (CVPR) 2016"
+  arxiv: "1512.03385"
+
+Kingma14:
+  title: "Adam: A Method for Stochastic Optimization"
+  authors: [Diederik P. Kingma, Jimmy Ba]
+  year: 2014
+  venue: "International Conference on Learning Representations (ICLR) 2015"
+  arxiv: "1412.6980"
+
+Tancik20:
+  title: "Fourier Features Let Networks Learn High Frequency Functions in Low Dimensional Domains"
+  authors: [Matthew Tancik, Pratul P. Srinivasan, Ben Mildenhall, Sara Fridovich-Keil, Nithin Raghavan, Utkarsh Singhal, Ravi Ramamoorthi, Jonathan T. Barron, Ren Ng]
+  year: 2020
+  venue: "Advances in Neural Information Processing Systems (NeurIPS) 33"
+  arxiv: "2006.10739"

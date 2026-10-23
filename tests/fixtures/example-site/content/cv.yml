@@ -1,0 +1,72 @@
+# The CV page (/cv/). Replace every example below with your own record; the page lays it out the same way.
+# Optional per role: `tags` (topic slugs from content/topics.yml: they link to the topic pages), `pages` (ids of pages
+# on this site about that work, e.g. project:bazinga), `used` (the tools and methods the role's lines name), and
+# `link` ({label, url}: one more page or address for the role). The build refuses unknown tags and page ids.
+
+contact:
+  email: you@example.com
+  links:
+    - {label: github.com/your-handle, url: "https://github.com/your-handle"}
+    - {label: linkedin.com/in/your-handle, url: "https://www.linkedin.com/in/your-handle/"}
+
+experience:
+- org: Example Labs
+  role: Machine Learning Engineer
+  place: Remote
+  period: January 2024 – Present
+  points:
+  - Built and maintain the training and evaluation pipeline for the team's vision models.
+  - Cut the time from a labelled batch to a deployed model from days to hours with scheduled, tested jobs.
+  - Write the internal notes that later become the explainers on this site.
+  tags: [computer-vision, training, tools]
+  pages: [project:bazinga]
+  used: [PyTorch, Docker, evaluation dashboards]
+- org: Sample Analytics
+  role: Data Scientist
+  place: City, Country
+  period: June 2021 – December 2023
+  points:
+  - Designed experiments and the dashboards that reported them to the product teams.
+  - Moved the forecasting models from notebooks into tested, scheduled jobs.
+  tags: [optimization, visualization]
+  used: [Python, SQL, Airflow]
+- org: Example University
+  role: Research Assistant
+  place: City, Country
+  period: September 2019 – May 2021
+  points:
+  - Ran the experiments for a study on small vision models and wrote up the results.
+  - Taught the lab sessions of an introductory machine learning course.
+  tags: [neural-networks, training]
+
+education:
+- degree: MSc, Computer Science
+  school: Example University
+  place: City, Country
+  period: 2019 – 2021
+- degree: BSc, Mathematics
+  school: Sample College
+  place: City, Country
+  period: 2015 – 2019
+
+patents: []          # {number, title, note, url} each; an empty list hides the section
+
+achievements:        # {what, when, detail} each
+- what: Graduate research scholarship
+  when: 2019–21
+  detail: For a study on efficient vision models
+- what: Best project award
+  when: '2019'
+  detail: Final-year project, Sample College
+
+skills:              # items: a comma-separated list
+- area: Languages
+  items: Python, C++, SQL, JavaScript
+- area: Frameworks
+  items: PyTorch, NumPy, scikit-learn
+- area: Tools
+  items: Git, Docker, Linux
+
+open_source:         # text, and optionally page: the id of the page on this site about it
+- text: A template for technical writing with real equations, interactive figures and a map of the site
+  page: project:bazinga

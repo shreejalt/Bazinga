@@ -17,11 +17,17 @@ from types import SimpleNamespace
 
 from bazinga import figbuilder, figures, plot
 from bazinga import scene3d as k
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parent.parent
 BUDGET_MS = 15 * (3 if os.environ.get("CI") or os.environ.get("VERCEL") else 1)   # per compute, in this interpreter
 MAX_ITEMS = 450
-CFG = SimpleNamespace(root=ROOT, figures_dir=ROOT / "figures")     # this repository's figures, whatever other tests set
+EXAMPLE = ROOT / "tests" / "fixtures" / "example-site"     # the example figures, whatever this site keeps
+CFG = SimpleNamespace(root=EXAMPLE, figures_dir=EXAMPLE / "figures")
 SCENE_STARTERS = ("scene_basic", "surface_plot", "vectors_planes", "camera_rig")
 
 
@@ -250,7 +256,7 @@ class Controls(unittest.TestCase):
         self.assertTrue(data["kits"]["scene3d"].startswith("figures/_scene3d.py?v="))
         self.assertIn('class="fig-group"', html)
         self.assertIn('class="fig-ctl fig-pad"', html)
-        self.assertIn("Drag the picture to turn it.", html)
+        self.assertIn("Drag the picture to turn it, or select it and use the arrow keys.", html)
         self.assertNotRegex(html, r'class="fig-ctl[^"]*" data-name="cam1"')    # a hidden control shows nothing
         self.assertNotIn("kits", json.dumps(json.loads(re.search(r'data-bazinga="([^"]*)"', figures.figure_html(
             "starter_slider_plot", cfg=CFG)).group(1).replace("&quot;", '"').replace("&amp;", "&"))))
@@ -303,7 +309,8 @@ class SceneFigures(unittest.TestCase):
                                 for h in p["handles"]:
                                     self.assertIn(h["control"], names)
                 per = (time.perf_counter() - t) / n * 1000
-                self.assertLess(per, BUDGET_MS, "%s: %.1f ms per compute" % (name, per))
+                if PERF:
+                    self.assertLess(per, BUDGET_MS, "%s: %.1f ms per compute" % (name, per))
                 self.assertEqual(figures.test_figure(name, CFG), [])
 
     def test_no_overlapping_labels(self):

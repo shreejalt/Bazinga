@@ -9,11 +9,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bazinga import config, content
 from bazinga.markdown import references
 
-from test_core_support import REPO, post, render_text  # noqa: E402
+from test_core_support import EXAMPLE, post, render_text  # noqa: E402
 
 
 def other(slug="other", title="Other Page", status=None, date="2020-01-01"):
-    cfg = config.load(REPO)
+    cfg = config.load(EXAMPLE)
     fields = {"status": status} if status else {}
     return content.parse(post(title=title, date=date, **fields), Path(f"content/reads/{slug}.md"), cfg)
 
@@ -97,6 +97,31 @@ class Links(unittest.TestCase):
         self.assertEqual(r.issues[0].code, "cite-unknown")
 
 
+class SectionText(unittest.TestCase):
+    """Docs audit: a callout's title and its first line ran together in the passages ("at onceHow")."""
+
+    def test_blocks_are_spaced(self):
+        _, r = render_text("## Temperature\n\n> [!KEY] Two things at once\n> How confident it looks.\n\n- one\n- two\n")
+        text = next(s["text"] for s in r.sections if s["title"] == "Temperature")
+        self.assertIn("at once How confident", text)
+        self.assertIn("one two", text)
+        _, r = render_text("## A\n\nThe **bold**, and a word*s*, `code`.\n")      # inline stays joined
+        self.assertIn("The bold, and a words, code.", next(s["text"] for s in r.sections if s["title"] == "A"))
+
+    def test_wiki_query_lists_each_section_once(self):
+        import contextlib
+        import io
+        from bazinga import llm
+        cfg = config.load(EXAMPLE)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            llm.cli(["query", "what does the temperature do to the softmax"], cfg)
+        sources = [l for l in out.getvalue().splitlines() if l.startswith("- ")]
+        self.assertTrue(sources)
+        self.assertEqual(len(sources), len(set(sources)))
+        self.assertNotIn("onceHow", out.getvalue())
+
+
 class Blocks(unittest.TestCase):
     def test_callouts(self):
         _, r = render_text("> [!TIP]\n> One.\n\n> [!KEY] Remember this\n> Two.\n\n> [!WARNING]\n> Three.\n")
@@ -139,7 +164,7 @@ class Blocks(unittest.TestCase):
 
     def test_figure_and_drawing_hooks(self):
         _, r = render_text("::figure softmax_temperature | start: Sharp\n\n::drawing pipeline.overview | Cap\n",
-                           cfg=config.load(REPO))
+                           cfg=config.load(EXAMPLE))
         self.assertEqual(r.figures, ["softmax_temperature"])
         self.assertEqual(r.drawings, ["pipeline.overview"])
 

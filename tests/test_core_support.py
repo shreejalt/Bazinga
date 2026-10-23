@@ -8,6 +8,9 @@ from bazinga import config, content
 from bazinga.markdown import SiteIndex, render
 
 REPO = Path(__file__).resolve().parents[1]
+# A copy of the example site (site.yml, content, figures, drawings, static) for the tests that build it. The tests use
+# this copy, not the site's own files, so a site with its own pages (or none of the examples) still passes them.
+EXAMPLE = Path(__file__).resolve().parent / "fixtures" / "example-site"
 
 SITE_YML = """
 site: {name: Test Site, author: Ada Lovelace, origin: "https://test.example", description: "A test site."}
@@ -57,7 +60,7 @@ def cleanup(root: Path) -> None:
 
 def render_text(body: str, cfg=None, others=(), preview=False):
     """Render a body as a published post of a throwaway site; returns (page, Rendered)."""
-    cfg = cfg or config.load(REPO)
+    cfg = cfg or config.load(EXAMPLE)
     page = content.parse(post(body=body), Path("content/reads/t.md"), cfg)
     refs = {"Vaswani17": {"title": "Attention Is All You Need", "authors": ["A. Vaswani"], "year": 2017,
                           "arxiv": "1706.03762"},
@@ -70,8 +73,8 @@ def render_text(body: str, cfg=None, others=(), preview=False):
 def copy_example(dest: Path) -> Path:
     """Copy the example site (config, content, figures, drawings, static) into ``dest``."""
     for name in ("site.yml",):
-        shutil.copy(REPO / name, dest / name)
+        shutil.copy(EXAMPLE / name, dest / name)
     for name in ("content", "figures", "drawings", "static"):
-        if (REPO / name).exists():
-            shutil.copytree(REPO / name, dest / name, ignore=shutil.ignore_patterns("__pycache__"))
+        if (EXAMPLE / name).exists():
+            shutil.copytree(EXAMPLE / name, dest / name, ignore=shutil.ignore_patterns("__pycache__"))
     return dest

@@ -7,11 +7,15 @@ export class ApiError extends Error {
   constructor(status, message) { super(message); this.status = status; }
 }
 
+// The write key is in this page only (a <meta> the server writes); every write carries it.
+const meta = (name) => { const m = document.querySelector(`meta[name="${name}"]`); return m ? m.getAttribute("content") : ""; };
+const WRITE_KEY = meta("bazinga-write");
+const writeHeaders = () => ({ "Content-Type": "application/json", "X-Bazinga-Write": WRITE_KEY });
+
 export async function api(path, body) {
   const opts = body === undefined
     ? { method: "GET", credentials: "same-origin" }
-    : { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body) };
+    : { method: "POST", credentials: "same-origin", headers: writeHeaders(), body: JSON.stringify(body) };
   let res;
   try { res = await fetch(path, opts); }
   catch (e) { throw new ApiError(0, "The Editor is not running. Start it again from the terminal."); }
@@ -24,8 +28,7 @@ export async function api(path, body) {
 // POST that answers with server-sent events; calls onEvent(name, data) for each.
 export async function stream(path, body, onEvent) {
   const res = await fetch(path, {
-    method: "POST", credentials: "same-origin",
-    headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    method: "POST", credentials: "same-origin", headers: writeHeaders(), body: JSON.stringify(body),
   });
   if (!res.ok || !res.body) {
     let msg = `Request failed (${res.status})`;
@@ -51,6 +54,32 @@ export async function stream(path, body, onEvent) {
       try { onEvent(name, JSON.parse(data)); } catch (e) { onEvent(name, data); }
     }
   }
+}
+
+// --- preview frames --------------------------------------------------------------------------------------------------
+// Previews (pages, figures, drawings) are served from a second port, so their scripts cannot reach the Editor. The
+// Editor cannot look inside them either: they report their height and scroll by messages (bridge.js).
+export const PREVIEW_ORIGIN = `${location.protocol}//${location.hostname}:${meta("bazinga-preview-port") || location.port}`;
+export const previewURL = (path) => (/^https?:/.test(path) ? path : PREVIEW_ORIGIN + path);
+
+const frames = new Map();   // iframe -> onMessage
+window.addEventListener("message", (e) => {
+  if (e.origin !== PREVIEW_ORIGIN || !e.data || typeof e.data.bz !== "string") return;
+  for (const [frame, onMessage] of frames) {
+    if (!frame.isConnected) { if (frame.dataset.linked === "1") frames.delete(frame); continue; }
+    frame.dataset.linked = "1";
+    if (frame.contentWindow === e.source) { onMessage(e.data); return; }
+  }
+});
+// Listen to one frame's messages; returns send(msg) for messages to it.
+export function frameLink(frame, onMessage) {
+  frames.set(frame, onMessage);
+  return (msg) => { try { if (frame.contentWindow) frame.contentWindow.postMessage(msg, PREVIEW_ORIGIN); } catch (e) { /* gone */ } };
+}
+// Frames grow to fit what they show, within limits.
+export function fitFrame(frame, min = 140, max = 1600) {
+  frameLink(frame, (m) => { if (m.bz === "size") frame.style.height = Math.min(max, Math.max(min, +m.height || 0)) + "px"; });
+  return frame;
 }
 
 // --- DOM ---------------------------------------------------------------------------------------------------------

@@ -4,4 +4,8 @@ PyYAML==6.0.3
 Jinja2==3.1.6
 latex2mathml==3.81.1
 Pygments==2.21.0
-numpy==2.5.4        # only for figures that declare REQUIRES = ["numpy"] (the fourier_series example)
+# numpy is used only by figures that declare REQUIRES = ["numpy"] (the fourier_series example). numpy 2.5 needs
+# Python 3.12, so 3.11 gets 2.4.6. Without numpy the site still builds: such a figure is shown as a note in the
+# built page, and it still draws in the reader's browser (which loads numpy itself).
+numpy==2.5.4; python_version >= "3.12"
+numpy==2.4.6; python_version < "3.12"

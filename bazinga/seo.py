@@ -46,8 +46,8 @@ def cut(text: str, limit: int = DESCRIPTION_MAX) -> str:
 def share_image(cfg, page: Page | None) -> str:
     if page is not None and page.cover:
         return absolute(cfg, "/" + page.cover.lstrip("/"))
-    avatar = cfg["site"].get("avatar")
-    if avatar and (cfg.root / str(avatar)).exists():
+    avatar = str(cfg["site"].get("avatar") or "").lstrip("/")      # static/a.png and /static/a.png both work
+    if avatar and (cfg.root / avatar).exists():
         return absolute(cfg, "/" + str(avatar).lstrip("/"))
     return ""
 
@@ -108,8 +108,8 @@ def jsonld(cfg, page: Page | None = None, url: str = "/", kind: str = "website")
     else:
         data = {"@context": "https://schema.org", "@type": "WebPage", "url": absolute(cfg, url),
                 "isPartOf": {"@type": "WebSite", "name": cfg["site"]["name"], "url": cfg["site"]["origin"] + "/"}}
-    # "</" inside a script block would end it early.
-    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    # "</script" would end the block early and "<!--" would change how it is parsed: no "<" goes in as itself
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
 
 
 # ---------------------------------------------------------------------------------------------- files at the root

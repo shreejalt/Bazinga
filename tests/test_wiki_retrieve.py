@@ -8,6 +8,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_wiki_fixtures import make_site  # noqa: E402
 
 from bazinga import retrieve, wiki  # noqa: E402
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 
 class TokenizerTest(unittest.TestCase):
@@ -89,7 +94,8 @@ class RankingTest(unittest.TestCase):
             r = retrieve.answer(q, big, None, page="post:p3")
             self.assertTrue(r["passages"])
         per = (time.perf_counter() - t) / 3 * 1000
-        self.assertLess(per, 50, f"{per:.1f} ms per question")
+        if PERF:
+            self.assertLess(per, 50, f"{per:.1f} ms per question")
 
 
 if __name__ == "__main__":

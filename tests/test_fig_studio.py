@@ -13,12 +13,17 @@ from bazinga import figbuilder
 from bazinga.studio.api import Editor
 from bazinga.studio.security import Refused
 from bazinga.studio.server import ROUTES_GET, ROUTES_POST, StudioServer
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 def make_site(root):
-    shutil.copy(ROOT / "site.yml", root / "site.yml")
+    shutil.copy(ROOT / "tests" / "fixtures" / "example-site" / "site.yml", root / "site.yml")
     (root / "content" / "reads").mkdir(parents=True)
     (root / "figures").mkdir()
     shutil.copy(ROOT / "bazinga" / "starters" / "figures" / "slider_plot.py", root / "figures" / "wave.py")
@@ -119,6 +124,16 @@ class Handlers(unittest.TestCase):
         self.assertTrue(good["ok"])
         self.assertIn("frame", good)
 
+    def test_frames_load_the_stylesheets_in_the_site_order(self):
+        """Docs audit: figure.css after site.css put a 2rem tan gap between readout tiles in the Editor's frames."""
+        from unittest import mock
+        from bazinga.studio import api as studio_api
+        _, html = self.studio.draft_frame("wave", {})
+        with mock.patch.object(studio_api.engine, "worker", return_value={"ok": True, "html": "<p>x</p>"}):
+            _, html2 = self.studio.frame("figure", "wave", {})
+        for page in (html, html2):
+            self.assertLess(page.index("/assets/css/figure.css"), page.index("/assets/css/site.css"))
+
     def test_save_code(self):
         src = figbuilder.generate(figbuilder.default_spec("bars"))
         res = self.studio.figure_save_code({"name": "budget", "source": src, "create": True})
@@ -147,15 +162,17 @@ class OverHttp(unittest.TestCase):
         shutil.rmtree(cls.tmp, ignore_errors=True)
 
     def request(self, method, path, body=None, cookie=True):
-        conn = http.client.HTTPConnection("127.0.0.1", self.server.port, timeout=60)
-        h = {"Host": f"127.0.0.1:{self.server.port}"}
+        # previews (frames and the files they load) are on the preview port; the API is on the Editor's port
+        port = self.server.preview_port if path.startswith(("/frame/", "/_draft/")) else self.server.port
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=60)
+        h = {"Host": f"127.0.0.1:{port}"}
         if cookie:
             h["Cookie"] = f"{self.server.cookie}={self.server.token}"
         raw = None
         if body is not None:
             raw = json.dumps(body).encode()
             h.update({"Content-Type": "application/json", "Origin": f"http://127.0.0.1:{self.server.port}",
-                      "Content-Length": str(len(raw))})
+                      "X-Bazinga-Write": self.server.write_key, "Content-Length": str(len(raw))})
         conn.request(method, path, body=raw, headers=h)
         res = conn.getresponse()
         data = res.read()

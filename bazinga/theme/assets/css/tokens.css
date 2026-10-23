@@ -1,6 +1,7 @@
 /* The theme's colours and fonts, as CSS variables. site.yml (theme:) overrides any of them: accent -> --blue,
    accent_dark -> --blue-d, ground, paper, tint, ink, ink_2, ink_3, rule_2, rule_3, ref, alert, and the fonts
-   font_text -> --serif, font_code -> --mono, font_math -> --math. base.html writes those after this file. */
+   font_text -> --serif, font_ui -> --mono (rail, labels, memo pages), font_code -> --code (code), font_math -> --math,
+   and width -> --width (the reading column). base.html writes those after this file. */
 :root{
   --blue:#0F52BA; --blue-d:#0B3F91;
   --ground:#E6DECD; --paper:#FBF7EC; --tint:#F2EBDB; --on-dark:#FBF7EC;
@@ -8,6 +9,7 @@
   --rule-2:#CBC1AD; --rule-3:#E4DBC9; --ref:#A34A12; --alert:#B8241A;
   --serif:"STIX Two Text",Georgia,"Times New Roman",serif;
   --mono:"Courier Prime","Courier New",Courier,monospace;
+  --code:var(--mono);
   --math:"STIX Two Math","Cambria Math","Latin Modern Math",serif;
   color-scheme:light;
 }
@@ -16,6 +18,6 @@
 :root{
   --bg:var(--paper); --surface:var(--tint); --surface-2:var(--rule-3); --text:var(--ink); --text-muted:var(--ink-2);
   --text-faint:var(--ink-3); --border:var(--rule-2); --border-strong:var(--ink); --accent:var(--blue);
-  --accent-soft:var(--tint); --font-text:var(--serif); --font-ui:var(--mono); --font-code:var(--mono);
+  --accent-soft:var(--tint); --font-text:var(--serif); --font-ui:var(--mono); --font-code:var(--code);
   --font-math:var(--math);
 }

@@ -20,7 +20,7 @@ from .security import Refused, atomic_write
 _ARXIV = re.compile(r"(?:arxiv\.org/(?:abs|pdf|html)/|arxiv:\s*)?(\d{4}\.\d{4,5}|[a-z\-]+(?:\.[A-Z]{2})?/\d{7})"
                     r"(?:v\d+)?(?:\.pdf)?", re.I)
 _DOI = re.compile(r"(10\.\d{4,9}/[^\s\"<>]+)", re.I)
-UA = "BazingaStudio/1.0 (local citation lookup; mailto:unknown@example.com)"
+UA = "Bazinga/0.1 (static-site engine; citation lookup)"
 
 
 def parse_query(q: str) -> tuple[str, str]:

@@ -14,6 +14,11 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 from bazinga import figures
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 GOOD = '''
 TITLE = "Good"
@@ -164,7 +169,7 @@ class Contract(unittest.TestCase):
         problems = figures.test_figure("nanfig", self.site.cfg)
         self.assertTrue(any("NaN" in p for p in problems), problems)
         self.site.add("slow", GOOD.replace("return {", "import time; time.sleep(0.04)\n    return {"))
-        problems = figures.test_figure("slow", self.site.cfg, n_random=1)
+        problems = figures.test_figure("slow", self.site.cfg, n_random=1, budget_ms=figures.BUDGET_MS)  # 40 ms > 30
         self.assertTrue(any("budget" in p for p in problems), problems)
 
     def test_cache_reloads_on_change(self):

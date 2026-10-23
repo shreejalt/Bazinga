@@ -94,8 +94,9 @@ svg.addEventListener('pointerleave',()=>clearTimeout(timer));
 svg.addEventListener('focusin',e=>{const g=e.target.closest('.n');if(g)hover(g.dataset.id);});
 let lastPointer='mouse';
 svg.addEventListener('pointerdown',e=>{lastPointer=e.pointerType;});
+svg.addEventListener('touchstart',()=>{lastPointer='touch';},{passive:true});   // Safari's click after a tap says "mouse"
 svg.addEventListener('click',e=>{const g=e.target.closest('.n');if(!g)return;
- const touch=(e.pointerType||lastPointer)==='touch';
+ const touch=lastPointer==='touch'||e.pointerType==='touch';
  if(touch&&M.shown!==g.dataset.id){e.preventDefault();show(g.dataset.id);}});   // on touch: the first tap shows, the second opens
 q('#m-clear').onclick=()=>{M.q='';M.tag='';q('#m-find').value='';q('#m-tag').value='';paint();};
 q('#m-find').oninput=e=>{M.q=e.target.value.trim().toLowerCase();M.shown=null;clearPlay();paint();};

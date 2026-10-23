@@ -2,8 +2,12 @@
 
 ``python -m bazinga editor [--port N] [--no-browser]`` binds 127.0.0.1 (a random free port unless ``--port``),
 prints ``http://127.0.0.1:<port>/?token=<random>`` and opens the browser. Every request goes through
-:meth:`Handler.guard`: Host allowlist, then the token cookie, then (for writes) Origin / Sec-Fetch-Site and a JSON
-body. No CORS headers are sent, ever. See security.py for the reasons.
+:meth:`Handler.guard`: Host allowlist, then the token cookie, then (for writes) Origin / Sec-Fetch-Site, the write
+key and a JSON body. No CORS headers are sent, ever. See security.py for the reasons.
+
+Previews (``/preview/<id>``, ``/frame/...``) and the files they load are served by a second server on another port
+(:class:`PreviewServer`): a preview runs the page's scripts and its figures' code, and on another origin those
+cannot read the Editor or write through it. The preview frames talk to the Editor by messages only (bridge.js).
 """
 from __future__ import annotations
 
@@ -76,13 +80,38 @@ class StudioServer(ThreadingHTTPServer):
     daemon_threads = True
     allow_reuse_address = False
 
-    def __init__(self, root: Path, port: int = 0, token: str | None = None):
+    def __init__(self, root: Path, port: int = 0, token: str | None = None, preview_port: int = 0):
         super().__init__(("127.0.0.1", port), Handler)
         self.port = self.server_address[1]
         self.token = token or security.new_token()
+        self.write_key = security.new_token()      # given only to the Editor's own page (see security.py, rule 4)
         self.studio = Editor(root)
         self.cookie = security.cookie_name(self.port)
         self._index = None
+        try:
+            self.preview = PreviewServer(self, preview_port)
+        except BaseException:
+            super().server_close()
+            raise
+        self.preview_port = self.preview.port
+        self._preview_thread = None
+
+    def serve_forever(self, poll_interval=0.5):
+        self._preview_thread = threading.Thread(target=self.preview.serve_forever,
+                                                kwargs={"poll_interval": poll_interval}, daemon=True)
+        self._preview_thread.start()
+        try:
+            super().serve_forever(poll_interval)
+        finally:
+            self.preview.shutdown()
+
+    def server_close(self):
+        super().server_close()
+        if getattr(self, "preview", None) is not None:      # not there when the port was busy
+            self.preview.server_close()
+
+    def preview_origins(self) -> list[str]:
+        return [f"http://127.0.0.1:{self.preview_port}", f"http://localhost:{self.preview_port}"]
 
     @property
     def url(self) -> str:
@@ -95,12 +124,15 @@ class StudioServer(ThreadingHTTPServer):
             script = f'<script type="importmap">{m}</script>'
             digest = base64.b64encode(hashlib.sha256(m.encode()).digest()).decode()
             html = (STATIC_DIR / "index.html").read_text(encoding="utf-8")
-            html = html.replace("<!--IMPORTMAP-->", script).replace("{{FONTS}}", FONTS_CSS)
+            metas = (f'<meta name="bazinga-write" content="{self.write_key}">'
+                     f'<meta name="bazinga-preview-port" content="{self.preview_port}">')
+            html = html.replace("<!--IMPORTMAP-->", metas + script).replace("{{FONTS}}", FONTS_CSS)
             csp = ("default-src 'none'; "
                    f"script-src 'self' 'sha256-{digest}' https://esm.sh; "
                    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
                    "font-src https://fonts.gstatic.com data:; img-src 'self' data: blob:; "
-                   "connect-src 'self' https://esm.sh; frame-src 'self'; base-uri 'none'; form-action 'none'; "
+                   "connect-src 'self' https://esm.sh; frame-src " + " ".join(self.preview_origins()) + "; "
+                   "base-uri 'none'; form-action 'none'; "
                    "frame-ancestors 'none'")
             self._index = (html, csp)
         return self._index
@@ -132,7 +164,7 @@ ROUTES_POST.update({"/api/diagram/render": "diagram_render"})
 
 class Handler(BaseHTTPRequestHandler):
     server: StudioServer
-    server_version = "BazingaStudio"
+    server_version = "BazingaEditor"
     sys_version = ""
     protocol_version = "HTTP/1.0"
 
@@ -186,7 +218,7 @@ class Handler(BaseHTTPRequestHandler):
             if not security.same_token(cookies.get(self.server.cookie), self.server.token):
                 raise Refused(401, "Open the Editor with the link printed in the terminal.")
             if write:
-                security.check_write(self.headers, port)
+                security.check_write(self.headers, port, self.server.write_key)
             return True
         except Refused as exc:
             self.refuse(exc)
@@ -252,10 +284,10 @@ class Handler(BaseHTTPRequestHandler):
     def _read_json(self) -> dict:
         path = urlsplit(self.path).path
         limit = UPLOAD_BODY_LIMIT if path == "/api/upload" else BODY_LIMIT
-        try:
-            length = int(self.headers.get("Content-Length") or "x")
-        except ValueError:
-            raise Refused(411, "A JSON body with a length is required.") from None
+        raw_length = (self.headers.get("Content-Length") or "").strip()
+        if not raw_length.isdigit() or not raw_length.isascii():
+            raise Refused(411, "A JSON body with a length is required.")
+        length = int(raw_length)
         if length > limit:
             raise Refused(413, "That request is too large." if path != "/api/upload" else
                           f"Images can be at most {security.UPLOAD_LIMIT // (1024 * 1024)} MB.")
@@ -290,32 +322,19 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(200, getattr(studio, ROUTES_GET[path])(q))
         if path.startswith("/api/"):
             raise Refused(404, "Unknown address.")
-        frame = {"X-Frame-Options": "SAMEORIGIN", "Content-Security-Policy": "frame-ancestors 'self'"}
-        m = re.fullmatch(r"/preview/([a-z0-9-]+:[a-z0-9][a-z0-9-]*)/?", path)
-        if m:
-            status, html = studio.preview_get(m.group(1))
-            return self.send(status, html, "text/html; charset=utf-8", frame)
-        m = re.fullmatch(r"/frame/draft/([a-z][a-z0-9_]*)", path)
-        if m:
-            status, html = studio.draft_frame(m.group(1), q)
-            return self.send(status, html, "text/html; charset=utf-8", frame)
-        m = re.fullmatch(r"/frame/(figure|drawing)/([A-Za-z0-9_.]+)", path)
-        if m:
-            status, html = studio.frame(m.group(1), m.group(2), q)
-            return self.send(status, html, "text/html; charset=utf-8", frame)
-        pid = studio.route_page(path)
-        if pid:
-            status, html = studio.preview_get(pid)
-            return self.send(status, html, "text/html; charset=utf-8", frame)
-        draft = studio.draft_file(path)
-        if draft is not None:
-            return self.send(200, draft.read_bytes(), guess_type(draft))
-        gen = studio.generated_asset(path)
-        if gen is not None:
-            return self.send(200, gen[0], gen[1])
-        f = studio.preview_file(path)
-        if f is not None:
-            return self.send(200, f.read_bytes(), guess_type(f))
+        # The Editor's own origin serves its page, its API and stylesheets only. Everything that can run a page's
+        # scripts (previews, figure frames, site files) lives on the preview port.
+        if re.fullmatch(r"/assets/css/[A-Za-z0-9_.-]+\.css", path):
+            gen = studio.generated_asset(path)
+            if gen is not None:
+                return self.send(200, gen[0], gen[1])
+            f = studio.preview_file(path)
+            if f is not None:
+                return self.send(200, f.read_bytes(), guess_type(f))
+        if path.startswith(("/preview/", "/frame/")):
+            host = (self.headers.get("Host") or "127.0.0.1").rsplit(":", 1)[0]
+            target = f"http://{host}:{self.server.preview_port}{self.path}"
+            return self.send(303, b"", "text/plain", {"Location": target})
         raise Refused(404, "Not found.")
 
     def _publish_stream(self, data):
@@ -339,6 +358,103 @@ class Handler(BaseHTTPRequestHandler):
             self.server.studio.publish_run(data, emit)
         except Refused as exc:
             emit("done", {"ok": False, "error": exc.message})
+
+
+class PreviewServer(ThreadingHTTPServer):
+    """The second port: previews of pages and figures, and the files they load. Read-only (GET and HEAD)."""
+    daemon_threads = True
+    allow_reuse_address = False
+
+    def __init__(self, editor: StudioServer, port: int = 0):
+        super().__init__(("127.0.0.1", port), PreviewHandler)
+        self.port = self.server_address[1]
+        self.editor = editor
+        self.studio = editor.studio
+
+    @property
+    def quiet(self):
+        return getattr(self.editor, "quiet", False)
+
+
+BRIDGE = STATIC_DIR / "bridge.js"
+
+
+class PreviewHandler(Handler):
+    """Serves what a preview frame loads. It shares the Editor's token cookie (cookies are per host, not per port)
+    but has no write routes, and its pages may be framed only by the Editor."""
+    server: PreviewServer
+
+    def guard(self, write: bool) -> bool:
+        try:
+            security.check_host(self.headers.get("Host"), self.server.port)
+            if write:
+                raise Refused(405, "Previews are read-only.")
+            cookies = security.parse_cookies(self.headers.get("Cookie"))
+            if not security.same_token(cookies.get(self.server.editor.cookie), self.server.editor.token):
+                raise Refused(401, "Open the Editor with the link printed in the terminal.")
+            return True
+        except Refused as exc:
+            self.refuse(exc)
+            return False
+
+    def refuse(self, exc: Refused):
+        from .api import _message_page
+        self.send(exc.status, _message_page("Bazinga Editor", exc.message), "text/html; charset=utf-8")
+
+    def _editor_origin(self) -> str:
+        host = (self.headers.get("Host") or "127.0.0.1").rsplit(":", 1)[0].lower()
+        if host not in ("127.0.0.1", "localhost"):
+            host = "127.0.0.1"
+        return f"http://{host}:{self.server.editor.port}"
+
+    def _page(self, status: int, html: str):
+        """A preview page: the bridge to the Editor added, framed only by the Editor, no top navigation or forms."""
+        import html as _h
+        origin = self._editor_origin()
+        tag = f'<script src="/_studio/bridge.js" data-editor="{_h.escape(origin)}"></script>'
+        i = html.lower().rfind("</body>")
+        html = html[:i] + tag + html[i:] if i >= 0 else html + tag
+        ancestors = " ".join(f"http://{h}:{self.server.editor.port}" for h in ("127.0.0.1", "localhost"))
+        csp = ("sandbox allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads; "
+               f"frame-ancestors {ancestors}; form-action 'none'; base-uri 'self'")
+        return self.send(status, html, "text/html; charset=utf-8", {"Content-Security-Policy": csp})
+
+    def _get(self):
+        url = urlsplit(self.path)
+        path = unquote(url.path)
+        if "\x00" in path or "/../" in path + "/" or "\\" in path:
+            raise Refused(400, "Invalid address.")
+        q = {k: v[0] for k, v in parse_qs(url.query).items()}
+        studio = self.server.studio
+        if path == "/_studio/bridge.js":
+            return self.send(200, BRIDGE.read_bytes(), "text/javascript; charset=utf-8")
+        m = re.fullmatch(r"/preview/([a-z0-9-]+:[a-z0-9][a-z0-9-]*)/?", path)
+        if m:
+            return self._page(*studio.preview_get(m.group(1)))
+        m = re.fullmatch(r"/frame/draft/([a-z][a-z0-9_]*)", path)
+        if m:
+            return self._page(*studio.draft_frame(m.group(1), q))
+        m = re.fullmatch(r"/frame/(figure|drawing)/([A-Za-z0-9_.]+)", path)
+        if m:
+            return self._page(*studio.frame(m.group(1), m.group(2), q))
+        pid = studio.route_page(path)
+        if pid:
+            return self._page(*studio.preview_get(pid))
+        draft = studio.draft_file(path)
+        if draft is not None:
+            return self.send(200, draft.read_bytes(), guess_type(draft))
+        gen = studio.generated_asset(path)
+        if gen is not None:
+            return self.send(200, gen[0], gen[1])
+        f = studio.preview_file(path)
+        if f is not None:
+            ctype = guess_type(f)
+            extra = {}
+            if ctype.startswith(("text/html", "image/svg")):
+                # a site file opened on its own still cannot frame-escape or post forms
+                extra["Content-Security-Policy"] = "sandbox allow-scripts allow-same-origin; form-action 'none'"
+            return self.send(200, f.read_bytes(), ctype, extra)
+        raise Refused(404, "Not found.")
 
 
 def main(argv=None) -> int:
@@ -369,7 +485,7 @@ def main(argv=None) -> int:
     try:
         server.serve_forever(poll_interval=0.3)
     except KeyboardInterrupt:
-        print("\nStudio stopped.")
+        print("\nThe Editor stopped.")
     finally:
         server.server_close()
     return 0

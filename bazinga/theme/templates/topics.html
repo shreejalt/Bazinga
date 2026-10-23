@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {#- Every topic, grouped as in content/topics.yml (topics no page uses are left out). -#}
-{% block cta %}<a class="cta" href="{{ base }}/">Home</a><a class="cta" href="{{ base }}/explore/">Explore</a>{% endblock %}
+{% block cta %}<a class="cta" href="{{ base }}/">Home</a>{% if features.explore %}<a class="cta" href="{{ base }}/explore/">Explore</a>{% endif %}{% endblock %}
 
 {% block content %}
 <section class="sec" id="top">
   <h1 class="pagetitle">Topics</h1>
-  <p class="lead-s">One page per concept: the pages about it in the order to read them, and the interactive figures pulled from those pages. The map at <a href="{{ base }}/explore/">Explore</a> shows how they connect.</p>
+  <p class="lead-s">One page per concept: the pages about it in the order to read them, and the interactive figures pulled from those pages.{% if features.explore %} The map at <a href="{{ base }}/explore/">Explore</a> shows how they connect.{% endif %}</p>
   {% for group, slugs in groups if slugs %}
   <h2 class="lab">{{ group }}</h2>
   <ul class="rel">

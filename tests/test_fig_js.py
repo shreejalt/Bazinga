@@ -14,7 +14,7 @@ FILES = [JS / "figure.js", JS / "pyworker.js"]
 class Scripts(unittest.TestCase):
     @unittest.skipUnless(shutil.which("node"), "node is not installed")
     def test_node_check(self):
-        for f in FILES:
+        for f in sorted(JS.glob("*.js")):           # every theme script, not a list that can fall behind
             with self.subTest(file=f.name):
                 r = subprocess.run(["node", "--check", str(f)], capture_output=True, text=True)
                 self.assertEqual(r.returncode, 0, r.stderr)
@@ -28,6 +28,14 @@ class Scripts(unittest.TestCase):
     def test_module_worker(self):
         self.assertIn('{ type: "module" }', (JS / "figure.js").read_text())
         self.assertNotIn("importScripts", (JS / "pyworker.js").read_text())
+
+    def test_3d_pictures_turn_from_the_keyboard(self):
+        """E-3: a 3-D figure's picture takes focus and turns with the arrow keys, and says where it turned."""
+        src = (JS / "figure.js").read_text()
+        block = src[src.index("the picture itself takes focus"):src.index("a focused handle moves with the arrow keys")]
+        for needle in ("stage.tabIndex = 0", 'setAttribute("aria-label"', "ArrowLeft", "ArrowUp", "self.set(c.name",
+                       'setAttribute("aria-live", "polite")', '"Turned to "'):
+            self.assertIn(needle, block)
 
     def test_visible_text_is_plain(self):
         src = (JS / "figure.js").read_text()

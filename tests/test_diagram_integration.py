@@ -111,13 +111,14 @@ class CodeRoute(unittest.TestCase):
             draw.tree(42)
 
     def test_example_drawing(self):
-        sys.path.insert(0, str(ROOT))
+        example = str(ROOT / "tests" / "fixtures" / "example-site")     # the example drawings, whatever this site keeps
+        sys.path.insert(0, example)
         try:
             from drawings import diagrams
             for narrow in (0, 1):
                 ET.fromstring(diagrams.stages(narrow=narrow))
         finally:
-            sys.path.remove(str(ROOT))
+            sys.path.remove(example)
 
     def test_the_older_kit_still_draws_the_same(self):
         d = draw.Diagram(600)
@@ -173,7 +174,8 @@ class StudioPanel(unittest.TestCase):
         raw = None
         if body is not None:
             raw = json.dumps(body).encode()
-            headers.update({"Content-Type": "application/json", "Origin": f"http://127.0.0.1:{port}"})
+            headers.update({"Content-Type": "application/json", "Origin": f"http://127.0.0.1:{port}",
+                            "X-Bazinga-Write": self.server.write_key})
         conn.request(method, path, body=raw, headers=headers)
         res = conn.getresponse()
         data = res.read()

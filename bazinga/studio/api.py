@@ -77,7 +77,7 @@ class Editor:
                   "prefix": pages.page_id(cfg, k, "x")[:-2]} for k, v in cfg["kinds"].items()]
         return {
             "site": {"name": cfg["site"]["name"], "origin": cfg.origin, "author": cfg["site"]["author"]},
-            "accent": cfg["theme"]["accent"], "mode": cfg["theme"]["mode"],
+            "accent": cfg["theme"]["accent"],
             "kinds": kinds, "llm": llm_on,
             "available": {m: engine.available(m) for m in ("markdown", "checks", "build", "figures", "drawings",
                                                            "mathml", "wiki")},
@@ -279,7 +279,14 @@ class Editor:
             if n:
                 atomic_write(other, new_text)
                 changed.append(str(other.relative_to(self.root)))
-        # remember the old file so the next publish stages its removal
+        # remember the old file so the next publish stages its removal -- only when git knows it (an untracked
+        # page has nothing to remove, and naming it to `git add` would stop the publish)
+        old_rel = str(path.relative_to(self.root))
+        try:
+            tracked = publish.git(self.root, "ls-files", "--error-unmatch", "--", old_rel,
+                                  check=False).returncode == 0
+        except (OSError, Exception):  # noqa: BLE001 - no git, or not a repository
+            tracked = False
         renames = self.root / ".studio" / "renames.json"
         renames.parent.mkdir(exist_ok=True)
         try:
@@ -287,8 +294,7 @@ class Editor:
         except (OSError, ValueError):
             data_r = {}
         olds = data_r.pop(pid, [])
-        old_rel = str(path.relative_to(self.root))
-        data_r[new_id] = [o for o in olds + [old_rel] if o != str(new_path.relative_to(self.root))]
+        data_r[new_id] = [o for o in olds + ([old_rel] if tracked else []) if o != str(new_path.relative_to(self.root))]
         atomic_write(renames, json.dumps(data_r, indent=1))
         self.buffers.pop(pid, None)
         note = (f"The live address changes from {cfg.origin}/{kind}/{pid.split(':', 1)[1]}/ to "
@@ -478,15 +484,14 @@ class Editor:
             raise
         except Exception as exc:  # noqa: BLE001
             raise Refused(502, f"The draft could not be made: {exc}") from None
+        # Model-written code is never run before the author has read it: it comes back as text, and runs only when
+        # the author presses Run (the figure check) or saves it. The gate says what in it a figure does not need.
         unsafe = draft_gate(src)
+        problems = ["Written from your description and not run yet. Read it, then run it to test it."]
         if unsafe:
-            # Model-written code is only run when it sticks to plain computation; otherwise the author reads it first.
-            return {"ok": False, "source": src, "ran": False,
-                    "problems": ["This draft was not run, because it " + "; it ".join(unsafe) + ". Read it; if it "
-                                 "is what you want, save it (saving runs its test)."]}
-        res = self._test_in_temp("figure-test", {"name": name}, f"figures/{name}.py", src)
-        res["source"] = src
-        return res
+            problems.append("It does things a figure does not need: it " + "; it ".join(unsafe)
+                            + ". Remove them before you run it.")
+        return {"ok": False, "ran": False, "source": src, "problems": problems, "unsafe": unsafe}
 
     def _test_in_temp(self, op, args, rel, src) -> dict:
         """Test unsaved code in a throwaway site folder, so nothing is written until the author saves."""
@@ -674,7 +679,7 @@ class Editor:
             inner = ('<div class="frame-error"><strong>This could not be drawn.</strong><pre>'
                      + _html.escape(str(detail)[-3000:]) + "</pre></div>")
         css = "".join(f'<link rel="stylesheet" href="/assets/css/{n}">' for n in
-                      ("tokens.css", "site.css", "math.css", "figure.css", "diagram.css") if (ENGINE_DIR / "theme/assets/css" / n).exists()
+                      ("tokens.css", "figure.css", "math.css", "site.css", "diagram.css") if (ENGINE_DIR / "theme/assets/css" / n).exists()
                       or (self.root / "theme/assets/css" / n).exists())
         js = '<script src="/assets/js/figure.js" defer></script>' if kind == "figure" else ""
         return 200, ("<!doctype html><html lang=en" + (f' data-theme="{theme}"' if theme else "") + "><head>"
@@ -734,32 +739,85 @@ class Editor:
         return None
 
 
-DRAFT_IMPORTS = {"math", "cmath", "random", "statistics", "itertools", "functools", "collections", "dataclasses",
-                 "typing", "fractions", "decimal", "numpy", "bazinga", "__future__"}
-DRAFT_CALLS = {"open", "exec", "eval", "compile", "__import__", "globals", "locals", "vars", "input", "breakpoint",
-               "memoryview", "setattr", "delattr"}
+# What a model-written figure may use. Everything else is reported, and the draft is not run until it is gone.
+DRAFT_IMPORTS = {"math", "random", "statistics", "__future__"}
+DRAFT_KITS = {"bazinga.scene3d", "bazinga.plot"}
+DRAFT_NUMPY = {"numpy"}                  # only when the figure declares REQUIRES = ["numpy"]
+DRAFT_NAMES = {"open", "exec", "eval", "compile", "__import__", "globals", "locals", "vars", "input", "breakpoint",
+               "memoryview", "getattr", "setattr", "delattr", "hasattr", "type", "object", "super", "classmethod",
+               "staticmethod", "property", "help", "exit", "quit", "dir", "id", "__builtins__", "__loader__",
+               "__spec__"}
+# numpy functions that read or write files, run code or reach outside the figure
+NUMPY_BLOCKED = {"load", "loads", "save", "savez", "savez_compressed", "savetxt", "loadtxt", "genfromtxt", "fromfile",
+                 "tofile", "memmap", "fromregex", "DataSource", "lib", "ctypeslib", "testing", "f2py", "distutils",
+                 "show_config", "get_include", "dump", "dumps", "frombuffer", "from_dlpack", "info", "source",
+                 "who", "lookfor", "char", "rec", "ma", "polynomial", "emath", "typing", "core", "_core"}
+
+
+def _declared_requires(tree) -> list[str]:
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "REQUIRES" for t in node.targets):
+            try:
+                value = ast.literal_eval(node.value)
+            except ValueError:
+                return []
+            return [str(v) for v in value] if isinstance(value, (list, tuple)) else []
+    return []
 
 
 def draft_gate(src: str) -> list[str]:
-    """Why model-written figure code should not be run automatically (empty: plain computation only)."""
+    """What in model-written figure code a figure does not need (empty: plain computation with the allowed modules).
+
+    An allowlist: imports of math, random, statistics and the figure kits (bazinga.scene3d, bazinga.plot) only, numpy
+    only when the figure declares ``REQUIRES = ["numpy"]`` and then without its file and code functions; no
+    getattr/eval/exec/open and friends, and no double-underscore names or attributes."""
     try:
         tree = ast.parse(src)
     except SyntaxError as exc:
         return [f"has a syntax error on line {exc.lineno}"]
+    allowed = set(DRAFT_IMPORTS)
+    if "numpy" in _declared_requires(tree):
+        allowed |= DRAFT_NUMPY
+    numpy_names = set()
     out = []
     for n in ast.walk(tree):
-        mods = []
         if isinstance(n, ast.Import):
-            mods = [a.name.split(".")[0] for a in n.names]
+            for a in n.names:
+                if a.name in allowed or a.name in DRAFT_KITS:
+                    if a.name == "numpy":
+                        numpy_names.add(a.asname or "numpy")
+                else:
+                    out.append(f"imports {a.name}")
         elif isinstance(n, ast.ImportFrom):
-            mods = [(n.module or "").split(".")[0]] if n.level == 0 else ["(relative import)"]
-        for m in mods:
-            if m not in DRAFT_IMPORTS:
-                out.append(f"imports {m}")
-        if isinstance(n, ast.Name) and n.id in DRAFT_CALLS:
-            out.append(f"uses {n.id}()")
-        if isinstance(n, ast.Attribute) and n.attr.startswith("__") and n.attr.endswith("__"):
-            out.append(f"reaches into {n.attr}")
+            mod = n.module or ""
+            if n.level:
+                out.append("uses a relative import")
+            elif mod == "bazinga":
+                for a in n.names:
+                    if f"bazinga.{a.name}" not in DRAFT_KITS:
+                        out.append(f"imports bazinga.{a.name}")
+            elif mod in DRAFT_KITS or mod in allowed:
+                for a in n.names:
+                    if a.name == "*" or a.name.startswith("_"):
+                        out.append(f"imports {a.name} from {mod}")
+                    elif mod == "numpy" and a.name in NUMPY_BLOCKED:
+                        out.append(f"imports numpy.{a.name}")
+            else:
+                out.append(f"imports {mod}")
+        elif isinstance(n, ast.Name):
+            if n.id in DRAFT_NAMES:
+                out.append(f"uses {n.id}")
+            elif n.id.startswith("__") and n.id != "__name__":
+                out.append(f"uses {n.id}")
+        elif isinstance(n, ast.Attribute):
+            if n.attr.startswith("_"):
+                out.append(f"reaches into .{n.attr}")
+            elif n.attr in NUMPY_BLOCKED and isinstance(n.value, ast.Name) and n.value.id in numpy_names:
+                out.append(f"uses {n.value.id}.{n.attr}")
+            elif n.attr in ("tofile", "dump", "dumps"):
+                out.append(f"uses .{n.attr}")
+        elif isinstance(n, (ast.Global, ast.Nonlocal)):
+            pass
     return list(dict.fromkeys(out))
 
 

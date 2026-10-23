@@ -103,5 +103,104 @@ class VercelFunctionTest(unittest.TestCase):
         self.assertTrue(hasattr(mod.handler, "do_GET") and hasattr(mod.handler, "do_POST"))
 
 
+class VercelFunctionOverHttp(unittest.TestCase):
+    """api/ask.py driven over HTTP (B1): the data address never comes from the request, links stay on the site,
+    the cache is per address, and the body length must be a plain number."""
+
+    def setUp(self):
+        import shutil
+        import tempfile
+        import threading
+        from http.server import ThreadingHTTPServer
+        from unittest import mock
+        path = Path(__file__).resolve().parent.parent / "api" / "ask.py"
+        spec = importlib.util.spec_from_file_location("api_ask_http", path)
+        self.mod = mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        self.tmp = Path(tempfile.mkdtemp(prefix="ask-fn-"))
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        mod.ROOT = self.tmp                       # no local _site/data: the function must fetch
+        mod._cache["cfg"] = {"site": {"origin": "https://example.com"}}
+        self.fetched = []
+        good = {"id": "read:a", "title": "A", "url": "/reads/a/", "section": "s", "anchor": "s",
+                "text": "softmax temperature attention softmax temperature"}
+        full = dict(good, id="read:b", url="https://site.test/reads/b/")
+        evil = [dict(good, id="read:x", url="javascript:alert(document.domain)"),
+                dict(good, id="read:y", url="//evil.example/x"), dict(good, id="read:z", url="https://evil.example/")]
+        self.evil = evil
+
+        def fake_fetch(url):
+            self.fetched.append(url)
+            return [good, full] + evil if url.endswith("passages.json") else {}
+        mod._fetch = fake_fetch
+        env = mock.patch.dict(os.environ, {"LLM_API_KEY": "k", "LLM_MODEL": "m/x"}, clear=False)
+        env.start()
+        self.addCleanup(env.stop)
+        os.environ.pop("SITE_URL", None)
+        ask_server.reset_limits()
+        self.srv = ThreadingHTTPServer(("127.0.0.1", 0), mod.handler)
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        self.addCleanup(self.srv.server_close)
+        self.addCleanup(self.srv.shutdown)
+
+    def post(self, body, headers=None, raw=None):
+        import http.client
+        c = http.client.HTTPConnection("127.0.0.1", self.srv.server_address[1], timeout=10)
+        data = raw if raw is not None else json.dumps(body).encode()
+        h = {"Content-Type": "application/json", "Content-Length": str(len(data))}
+        h.update(headers or {})
+        c.putrequest("POST", "/api/ask/", skip_host="Host" in h)
+        for k, v in h.items():
+            c.putheader(k, v)
+        c.endheaders(data)
+        r = c.getresponse()
+        out = r.status, json.loads(r.read() or b"{}")
+        c.close()
+        return out
+
+    def test_host_is_never_the_data_address(self):
+        status, out = self.post({"q": "softmax temperature"}, {"Host": "attacker.example",
+                                                                "X-Forwarded-Host": "attacker.example"})
+        self.assertEqual(status, 503)
+        self.assertIn("SITE_URL", out["error"])
+        self.assertEqual(self.fetched, [])
+
+    def test_site_address_and_links_on_the_site_only(self):
+        from unittest import mock
+        os.environ["SITE_URL"] = "https://site.test/"
+        self.addCleanup(os.environ.pop, "SITE_URL", None)
+        loaded = self.mod._loader(self.mod._base())()
+        self.assertEqual(self.fetched[0], "https://site.test/data/passages.json")
+        self.assertEqual([p["url"] for p in loaded["passages"]], ["/reads/a/", "https://site.test/reads/b/"])
+        with mock.patch.object(ask_server, "handle", return_value=(200, {"ok": True})) as h:
+            self.post({"q": "x"}, {"Host": "attacker.example"})
+        self.assertEqual(h.call_args[0][4]()["passages"], loaded["passages"])
+        # the cache is kept per site address
+        self.assertIn("https://site.test", self.mod._cache["data"])
+        self.assertNotIn("https://attacker.example", self.mod._cache["data"])
+
+    def test_body_length_must_be_a_number(self):
+        for length in ("-1", "abc", "1e3"):
+            with self.subTest(length=length):
+                status, _ = self.post(None, {"Content-Length": length}, raw=b"{}")
+                self.assertEqual(status, 411)
+
+    def test_ask_js_keeps_links_on_the_site(self):
+        import shutil
+        import subprocess
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node is not installed")
+        js = (Path(__file__).resolve().parent.parent / "bazinga/theme/assets/js/ask.js").read_text(encoding="utf-8")
+        line = next(x for x in js.splitlines() if x.strip().startswith("const siteURL ="))
+        for use in ("passages: onSite(passages)", "onSite((res && res.passages)", "const src = onSite(r.sources)"):
+            self.assertIn(use, js)
+        prog = ("const location = {origin: 'https://site.test'};" + line +
+                "console.log(JSON.stringify(['/a/', 'https://site.test/b/', 'javascript:alert(1)', '//evil/x',"
+                "'https://evil.example/', 'https://site.test.evil/x', ' javascript:x'].map(siteURL)));")
+        out = subprocess.run([node, "-e", prog], capture_output=True, text=True, check=True).stdout
+        self.assertEqual(json.loads(out), ["/a/", "https://site.test/b/", None, None, None, None, None])
+
+
 if __name__ == "__main__":
     unittest.main()

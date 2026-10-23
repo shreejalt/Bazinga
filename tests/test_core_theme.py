@@ -71,6 +71,9 @@ class ExampleTheme(unittest.TestCase):
         page = self.html("papers/attention-is-all-you-need/index.html")
         self.assertIn("Explains: <a href=\"https://arxiv.org/abs/1706.03762\">Attention Is All You Need</a>", page)
         self.assertIn("[Page 3]", page)                                          # one ::pagebreak: three pages
+        import re
+        footers = re.findall(r'<div class="pagebreak">.*?\[Page (\d+)\]', page)
+        self.assertEqual(footers, ["1", "2"])        # page 1 (contents) and the ::pagebreak (page 2); the end says 3
         self.assertNotIn("pagebreak-slot", page)
         lst = self.html("papers/index.html")
         self.assertIn("<b>Attention Is All You Need</b>", lst)
@@ -110,6 +113,28 @@ class ExampleTheme(unittest.TestCase):
 
 
 class ThemeRules(unittest.TestCase):
+    def test_no_links_to_parts_that_are_switched_off(self):
+        """Docs audit: with features ask/explore/series off, pages still linked to /ask/, /explore/ and /series/."""
+        from test_core_support import SITE_YML
+        yml = SITE_YML + ("features: {ask: false, explore: false, series: false, feed: false}\n"
+                          "nav:\n  - {label: Home, href: /}\n  - {label: Writing, href: /posts/}\n"
+                          "  - {label: Series, href: /series/}\n  - {label: Explore, href: /explore/}\n"
+                          "  - {label: Ask, href: /ask/}\n")
+        root = make_site({"posts/a": post("Alpha"), "posts/b": post("Beta", builds_on="[post:a]")}, site_yml=yml)
+        try:
+            cfg = config.load(root)
+            build.build(cfg, quiet=True)
+            pages = [f for f in cfg.out_dir.rglob("*.html")]
+            self.assertTrue(pages)
+            for f in pages:
+                html = f.read_text(encoding="utf-8")
+                for href in ("/ask/", "/explore/", "/series/"):
+                    with self.subTest(page=str(f.relative_to(cfg.out_dir)), href=href):
+                        self.assertNotRegex(html, r'href="[^"]*%s' % re.escape(href))
+                self.assertNotIn("Ask the map", html)
+        finally:
+            cleanup(root)
+
     def test_list_with_many_pages(self):
         root = make_site({f"posts/p{i:02d}": post(f"Post {i}", date=f"2020-01-{i + 1:02d}") for i in range(12)})
         try:
@@ -138,6 +163,55 @@ class ThemeRules(unittest.TestCase):
             self.assertIn("Nope99", str(ctx.exception))
         finally:
             cleanup(root)
+
+
+class Stylesheet(unittest.TestCase):
+    """E-2: the rail is light now, so it keeps the global blue focus ring, and its dark-rail colours are gone."""
+
+    def test_rail_keeps_the_global_focus_ring(self):
+        import re
+        css = (Path(__file__).resolve().parent.parent / "bazinga/theme/assets/css/site.css").read_text(encoding="utf-8")
+        self.assertIn(":focus-visible{outline:2px solid var(--blue)", css)
+        self.assertNotRegex(css, r"\.rail[^{]*:focus-visible\s*\{[^}]*outline-color")
+        first = css.split("/* ---------- man-page sections", 1)[0]
+        self.assertNotIn("var(--on-dark)", first.split(".rail{", 1)[1])   # dead dark-rail colours are gone
+
+
+class TouchScreens(unittest.TestCase):
+    """M4 and the theme minors from the device audit (measured in WebKit on iPhone sizes when they were fixed)."""
+
+    def setUp(self):
+        css_dir = Path(__file__).resolve().parent.parent / "bazinga/theme/assets/css"
+        self.site = (css_dir / "site.css").read_text(encoding="utf-8")
+        self.fig = (css_dir / "figure.css").read_text(encoding="utf-8")
+        start = self.site.index("/* ---------- touch screens:")
+        self.block = self.site[start:]
+
+    def test_no_zoom_on_focus(self):
+        import re
+        coarse = self.block[self.block.index("@media (pointer:coarse){"):]
+        rule = re.search(r"\n  ([^{]+)\{font-size:16px\}", coarse)
+        self.assertIsNotNone(rule)
+        for sel in ("input", "select", "textarea", ".askpanel .askrow .find", ".finder select", ".pick select"):
+            self.assertIn(sel, rule.group(1).split(","))
+
+    def test_targets_and_layout(self):
+        self.assertIn(".askpanel-x{min-width:36px;min-height:36px", self.block)
+        self.assertIn(".askpanel-h{position:sticky", self.block)
+        self.assertIn('.fig input[type="range"]{height:36px}', self.block)       # after site.css's own 22px
+        self.assertIn(".fig-play, .fig-preset, .fig-reset { min-height: 36px; }", self.fig)
+        self.assertIn(".refs li{grid-template-columns:6ch minmax(0,1fr)}", self.block)
+        self.assertIn("body.post .rail nav{-webkit-mask-image:linear-gradient", self.block)
+
+
+class MapTouch(unittest.TestCase):
+    def test_first_tap_on_a_phone_shows_connections(self):
+        """M1: Safari's click after a tap reports pointerType "mouse", so the tap must be remembered from the
+        pointerdown/touchstart, not read from the click."""
+        js = (Path(__file__).resolve().parent.parent / "bazinga/theme/assets/js/explore.js").read_text(encoding="utf-8")
+        self.assertIn("const touch=lastPointer==='touch'||e.pointerType==='touch';", js)
+        self.assertIn("addEventListener('touchstart',()=>{lastPointer='touch';}", js)
+        self.assertNotIn("(e.pointerType||lastPointer)", js)
 
 
 class LocalWriteButton(unittest.TestCase):
@@ -172,6 +246,31 @@ class LocalWriteButton(unittest.TestCase):
             with self.assertRaises(urllib.error.HTTPError) as ctx:
                 opener.open(req)
             self.assertEqual(ctx.exception.code, 403)
+        finally:
+            if httpd:
+                httpd.shutdown()
+                httpd.server_close()
+            cleanup(root)
+
+
+    def test_local_ask_needs_a_plain_body_length(self):
+        """B4/A8: Content-Length -1 made the dev server read until the client hung up; "abc" crashed the handler."""
+        import http.client
+        root = make_site({"posts/a": post("A")})
+        httpd = None
+        try:
+            state = serve.State(config.load(root))
+            httpd = ThreadingHTTPServer(("127.0.0.1", 0), serve.make_handler(state))
+            threading.Thread(target=httpd.serve_forever, daemon=True).start()
+            for length in ("-1", "abc", "1e3"):
+                with self.subTest(length=length):
+                    c = http.client.HTTPConnection("127.0.0.1", httpd.server_address[1], timeout=5)
+                    c.putrequest("POST", "/api/ask/")
+                    c.putheader("Content-Type", "application/json")
+                    c.putheader("Content-Length", length)
+                    c.endheaders(b"{}")
+                    self.assertEqual(c.getresponse().status, 411)
+                    c.close()
         finally:
             if httpd:
                 httpd.shutdown()

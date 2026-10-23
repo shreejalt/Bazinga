@@ -198,7 +198,7 @@ textarea.input { resize: vertical; line-height: 1.5; }
 .modal-foot { display: flex; align-items: center; gap: 8px; padding: 14px 22px; border-top: 1px solid var(--line); }
 
 /* --- library ------------------------------------------------------------------------------------------------ */
-.library { min-height: 100vh; }
+.library { min-height: 100vh; min-height: 100dvh; }
 .lib-top {
   position: sticky; top: 0; z-index: 5; height: var(--top); display: flex; align-items: center; justify-content: space-between;
   padding: 0 28px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid transparent;
@@ -212,8 +212,10 @@ textarea.input { resize: vertical; line-height: 1.5; }
 .lib-head h1 { font: 700 40px/1.1 var(--serif); letter-spacing: -.02em; }
 .lib-lead { margin-top: 10px; color: var(--ink-2); font: 17px/1.55 var(--serif); max-width: 38em; }
 .lib-controls { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); margin-bottom: 8px; flex-wrap: wrap; }
-.tabs { display: flex; gap: 2px; }
+.tabs { display: flex; gap: 2px; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
 .tab {
+  flex: none; white-space: nowrap;
   border: 0; background: none; padding: 10px 12px 12px; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent;
   margin-bottom: -1px; display: inline-flex; gap: 7px; align-items: center;
 }
@@ -244,12 +246,12 @@ textarea.input { resize: vertical; line-height: 1.5; }
 .empty-art { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 6px; }
 
 /* --- editor ------------------------------------------------------------------------------------------------- */
-.editor { height: 100vh; display: grid; grid-template-rows: var(--top) auto minmax(0, 1fr); }
+.editor { height: 100vh; height: 100dvh; display: grid; grid-template-rows: var(--top) auto minmax(0, 1fr); }
 .ed-top {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 14px 0 10px;
   border-bottom: 1px solid var(--line); background: var(--bg); z-index: 4;
 }
-.ed-top-left, .ed-top-right { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.ed-top-left, .ed-top-right { display: flex; align-items: center; gap: 6px; flex: none; }   /* never squeezed over each other */
 .ed-top .sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 6px; }
 .save-state { font-size: 12.5px; color: var(--muted); margin-left: 6px; white-space: nowrap; }
 .save-state.saving::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 6px; vertical-align: 1px; animation: pulse 1s infinite; }
@@ -262,6 +264,7 @@ textarea.input { resize: vertical; line-height: 1.5; }
 
 .ed-main {
   --split: 52%; min-height: 0; display: grid; position: relative;
+  grid-row: 3;   /* the last row, also when the conflict banner above it is hidden (a hidden banner takes no row) */
   grid-template-columns: minmax(0, var(--split)) 1px minmax(0, 1fr);
   grid-template-areas: "write split preview";
 }
@@ -637,7 +640,9 @@ textarea.input { resize: vertical; line-height: 1.5; }
 @media (max-width: 980px) {
   .ed-main, .ed-main.with-drawer { grid-template-columns: minmax(0, 1fr); grid-template-areas: "write"; }
   .ed-main .preview, .ed-main .splitter { display: none; }
-  .ed-main.only-preview { grid-template-areas: "preview"; }
+  .ed-main.only-preview { grid-template-columns: minmax(0, 1fr); grid-template-areas: "preview"; }   /* beats the 0 0 1fr above */
+  .ed-top { overflow-x: auto; scrollbar-width: none; }   /* narrow screens: the buttons scroll inside the bar */
+  .ed-top::-webkit-scrollbar { display: none; }
   .ed-main.only-preview .preview { display: flex; }
   .ed-main.only-preview .write { display: none; }
   .ed-main .drawer { position: absolute; right: 0; top: 0; bottom: 0; width: min(380px, 92vw); box-shadow: var(--shadow-3); z-index: 6; }

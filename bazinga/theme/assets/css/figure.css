@@ -403,3 +403,10 @@
 .dg .dg-label { fill: var(--fig-ink-2); }
 .dg .dg-note { fill: var(--fig-ink-3); font-style: italic; }
 .dg .s-solid .dg-text-sub { fill: rgb(255 255 255 / .86); }
+
+/* touch screens: controls a finger can hit (at least 36 px tall) */
+@media (pointer: coarse) {
+  .fig input[type="range"] { height: 36px; }
+  .fig-play, .fig-preset, .fig-reset { min-height: 36px; }
+  .fig-seg span { min-height: 36px; display: inline-flex; align-items: center; }
+}

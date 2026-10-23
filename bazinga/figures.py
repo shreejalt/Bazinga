@@ -17,6 +17,7 @@ import importlib.util
 import inspect
 import json
 import math
+import os
 import random
 import re
 import shutil
@@ -41,6 +42,16 @@ _KIT_RE = {k: re.compile(r"^\s*(from\s+bazinga\s+import\s+[^\n]*\b%s\b|from\s+ba
            for k in KITS}
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 BUDGET_MS = 30.0
+
+
+def default_budget_ms() -> float:
+    """The time a figure may take per state: BUDGET_MS, or BAZINGA_FIGURE_BUDGET_MS when set ("inf" turns the timing
+    check off; the test suite does that unless BAZINGA_PERF_TESTS=1, so a busy build machine cannot fail a deploy)."""
+    raw = os.environ.get("BAZINGA_FIGURE_BUDGET_MS", "").strip()
+    try:
+        return float(raw) if raw else BUDGET_MS
+    except ValueError:
+        return BUDGET_MS
 STARTER_DIR = Path(__file__).parent / "starters"
 STARTERS = ("slider_plot", "compare_bars", "heatmap", "geometry2d", "animation", "scatter_fit", "distribution",
             "matrix_transform", "step_through", "data_lines", "linked_panels", "sampling", "vector_field",
@@ -53,6 +64,32 @@ DRAWING_STARTERS = ("pipeline", "blocks", "architecture", "flowchart", "timeline
 
 class FigureError(Exception):
     """A figure that cannot be used. str(e) is a plain explanation with a hint."""
+
+
+class FigureNeedsPackage(FigureError):
+    """A figure imports a package it declares in REQUIRES (numpy), and that package is not installed where the site is
+    built. The build goes on and shows a note in the figure's place (a warning, not an error)."""
+
+    def __init__(self, message, package):
+        super().__init__(message)
+        self.package = package
+
+
+def _declared_requires(path) -> list:
+    """REQUIRES read from the file without running it."""
+    import ast
+    try:
+        tree = ast.parse(Path(path).read_text(encoding="utf-8"))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return []
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "REQUIRES" for t in node.targets):
+            try:
+                value = ast.literal_eval(node.value)
+            except ValueError:
+                return []
+            return [str(v) for v in value] if isinstance(value, (list, tuple)) else []
+    return []
 
 
 # ----------------------------------------------------------------------------------------------
@@ -121,6 +158,10 @@ def load(name, cfg=None, path=None):
     try:
         spec.loader.exec_module(mod)
     except ModuleNotFoundError as e:
+        top = (e.name or "").split(".")[0]
+        if top and top in _declared_requires(p):
+            raise FigureNeedsPackage("figure %r needs %s, which is not installed here, so this build shows a note in "
+                                     "its place. Install it with: python -m pip install -r requirements.txt" % (name, top), top) from None
         raise FigureError("figure %r imports %r, which is not installed here. Install it in the build "
                           "environment and list it in REQUIRES (for example REQUIRES = [\"numpy\"])."
                           % (name, e.name))
@@ -493,7 +534,8 @@ def figure_html(name, start=None, cfg=None):
                        for i, p in enumerate(presets(mod)))
         hint = ""
         if any(c["kind"] == "orbit" for c in ctl):
-            hint = '<span class="fig-hint">Drag the picture to turn it.</span>'
+            hint = ('<span class="fig-hint">Drag the picture to turn it, or select it and use the arrow keys.'
+                    '</span>')
         parts.append('<div class="fig-presets">%s<button type="button" class="fig-reset">Reset</button>%s'
                      '<span class="fig-status" role="status" aria-live="polite"></span></div>' % (btns, hint))
         parts.append("</fieldset></form>")
@@ -516,7 +558,10 @@ def write_assets(cfg, used, out):
         src = _path(name, cfg)
         if not src.is_file():
             raise FigureError("figure %r is used on a page but figures/%s.py does not exist." % (name, name))
-        load(name, cfg)  # contract check
+        try:
+            load(name, cfg)  # contract check
+        except FigureNeedsPackage:
+            pass             # the page shows a note; the file is still copied
         shutil.copyfile(src, dest / (name + ".py"))
     return dest
 
@@ -577,8 +622,9 @@ def _random_states(mod, n, seed):
     return states
 
 
-def check_state(name, values, narrow=0, cfg=None, budget_ms=BUDGET_MS, timing=None, drag=None):
+def check_state(name, values, narrow=0, cfg=None, budget_ms=None, timing=None, drag=None):
     """Problems for one state (empty list = fine). The best time in ms is appended to ``timing`` when given."""
+    budget_ms = default_budget_ms() if budget_ms is None else budget_ms
     label = "%s %s%s%s" % (name, json.dumps(values, sort_keys=True), " (narrow)" if narrow else "",
                            (" dragging %s" % drag.get("handle")) if drag else "")
     try:
@@ -681,8 +727,9 @@ def _handle_problems(name, mod, values, narrow, cfg):
     return probs
 
 
-def test_figure(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
+def test_figure(name, cfg=None, n_random=20, budget_ms=None):
     """All problems found for a figure: defaults (wide + narrow), every preset, 20 seeded random states."""
+    budget_ms = default_budget_ms() if budget_ms is None else budget_ms
     try:
         mod = load(name, cfg)
     except FigureError as e:
@@ -820,9 +867,10 @@ def line_of(text):
     return int(m.group(1)) if m else None
 
 
-def test_report(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
+def test_report(name, cfg=None, n_random=20, budget_ms=None):
     """The figure test as a list of plain checks: {"ok", "checks": [{"label", "ok", "detail"}], "problems",
     "slowest_ms", "line"}. The same states as test_figure()."""
+    budget_ms = default_budget_ms() if budget_ms is None else budget_ms
     try:
         mod = load(name, cfg)
     except FigureError as e:

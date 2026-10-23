@@ -7,6 +7,11 @@ import unittest
 import xml.etree.ElementTree as ET
 
 from bazinga import plot
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 XS = [i / 20 for i in range(101)]
 
@@ -157,6 +162,7 @@ class Layout(unittest.TestCase):
         svg, _ = plot.render({"panels": [{"kind": "xy", "x": Arr(XS), "series": [{"name": "y", "y": Arr(XS)}]}]})
         parse(svg)
 
+    @perf_only
     def test_fast(self):
         spec = {"panels": [xy_spec()["panels"][0], {"kind": "heatmap", "matrix": [[i * j for j in range(12)] for i in range(12)]}]}
         t = time.perf_counter()

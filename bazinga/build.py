@@ -296,6 +296,15 @@ class Builder:
     def load(self) -> None:
         cfg = self.cfg
         everything = content.load_pages(cfg, drafts=True)
+        # A page that does not say status: draft but has a status or a date the build cannot read would quietly
+        # never go out (a typo such as "publshed" or 2026/01/05): that stops a production build, with file:line.
+        unreadable = [(self._rel(p.path), checks.Issue("error", line, msg + " (so this page would not be published)",
+                                                       hint, "front-matter"))
+                      for p in everything if not p.meant_draft for line, msg, hint in p.hidden_by]
+        if unreadable and self.strict:
+            raise BuildError(unreadable)
+        for path, issue in unreadable:
+            note(issue.format(path), self.notes, self.quiet)
         self.pages = everything if self.drafts else [p for p in everything if p.public]
         hidden = [] if self.drafts else [p for p in everything if not p.public]
         self.topics = content.load_topics(cfg)
@@ -493,9 +502,21 @@ class Builder:
         return labels
 
     # ---- shared template context
+    # nav items for parts of the site a feature switch turns off: they are left out of the rail
+    FEATURE_PAGES = {"/ask/": "ask", "/explore/": "explore", "/series/": "series", "/feed.xml": "feed"}
+
     @property
     def site_nav(self) -> list:
-        return [(str(n["href"]), str(n["label"])) for n in self.cfg["nav"]]
+        feats = self.cfg["features"]
+        out = []
+        for n in self.cfg["nav"]:
+            href = str(n["href"])
+            path = href.split("?", 1)[0].split("#", 1)[0]
+            path = path if path.endswith((".xml", "/")) else path + "/"
+            if not feats.get(self.FEATURE_PAGES.get(path, ""), True):
+                continue
+            out.append((href, str(n["label"])))
+        return out
 
     def links_list(self) -> list:
         links = self.cfg["site"].get("links") or {}
@@ -515,11 +536,14 @@ class Builder:
         if not theme.get("accent_dark"):
             out.append("--blue-d:color-mix(in srgb,var(--blue) 78%,black)")
         fonts = {"font_text": ("--serif", 'Georgia,"Times New Roman",serif'),
-                 "font_code": ("--mono", '"Courier New",Courier,monospace'),
+                 "font_ui": ("--mono", '"Courier New",Courier,monospace'),
+                 "font_code": ("--code", '"Courier New",Courier,monospace'),
                  "font_math": ("--math", '"STIX Two Math","Cambria Math","Latin Modern Math",serif')}
         for key, (var, fallback) in fonts.items():
             if theme.get(key):
                 out.append(f'{var}:"{theme[key]}",{fallback}')
+        if theme.get("width"):
+            out.append(f"--width:{int(theme['width'])}px")
         return ";".join(out)
 
     def base_context(self, url: str, title: str, description: str, page: Page | None = None,
@@ -582,7 +606,7 @@ class Builder:
 
         def pagebreak(n):
             return (f'<div class="pagebreak"><span>{html_lib.escape(surname)}</span><span>Informational</span>'
-                    f'<span>[Page {n - 1}]</span></div><div class="pagetop"><span>{html_lib.escape(initial)}. '
+                    f'<span>[Page {n}]</span></div><div class="pagetop"><span>{html_lib.escape(initial)}. '
                     f'{html_lib.escape(surname)}</span><span>{month_year(page.date)}</span></div>')
         if role == "project":
             body, headings, last = r.html, [{"id": t["id"], "text": t["text"], "page": 1} for t in r.toc
@@ -687,7 +711,10 @@ class Builder:
             return
         try:
             import yaml
-            cv = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            cv = content.load_yaml(path.read_text(encoding="utf-8"), "content/cv.yml") or {}
+        except content.ContentError as exc:
+            self.problem("content/cv.yml" + (f":{exc.line}" if exc.line else ""), exc.message, exc.hint)
+            return
         except Exception as exc:                                       # noqa: BLE001
             self.problem("content/cv.yml", f"cv.yml is not valid YAML: {exc}")
             return
@@ -760,7 +787,7 @@ class Builder:
             return {}
         try:
             import yaml
-            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            data = content.load_yaml(path.read_text(encoding="utf-8"), path.name) or {}
         except Exception as exc:                                       # noqa: BLE001 - optional file
             note(f"{path.name} could not be read ({exc}); its highlights are skipped", self.notes, self.quiet)
             return {}
@@ -900,7 +927,13 @@ class Builder:
             if used:
                 note("bazinga/figures.py is not there yet; figures stay static", self.notes, self.quiet)
             return
-        figmod.write_assets(self.cfg, used, self.out)
+        # a figure that does not exist was already reported on its page (an error, or a note in a draft build);
+        # copy the ones that do
+        present = {n for n in used if figmod._path(n, self.cfg).is_file()}
+        try:
+            figmod.write_assets(self.cfg, present, self.out)
+        except figmod.FigureError as exc:
+            self.problem("figures/", str(exc))
 
     def write_data(self) -> None:
         """What the theme's scripts read: the preview cards (data/site.js), the map and every page's view."""

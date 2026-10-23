@@ -14,17 +14,14 @@ h1,h2,h3{margin:0;font-weight:400}
 
 /* ---------- frame: recycled-paper ground, rail, paper sheet ---------- */
 .shell{display:grid;grid-template-columns:268px minmax(0,1fr);max-width:1440px;margin:0 auto}
-.rail{position:sticky;top:0;align-self:start;height:100vh;padding:40px 20px 40px 40px;color:var(--on-dark);
+.rail{position:sticky;top:0;align-self:start;height:100vh;padding:40px 20px 40px 40px;
   font-family:var(--mono);font-size:13px;letter-spacing:.09em;text-transform:uppercase;display:flex;flex-direction:column}
-.rail .brand{font-weight:700;color:var(--on-dark);text-decoration:none;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.45);margin-bottom:22px}
+.rail .brand{font-weight:700;text-decoration:none;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.45);margin-bottom:22px}
 .rail nav{display:flex;flex-direction:column;gap:2px}
-.rail nav a{color:var(--on-dark);text-decoration:none;padding:5px 8px;margin-left:-8px}
-.rail nav a:hover{background:rgba(255,255,255,.16)}
-.rail nav a[aria-current="true"]{background:var(--paper);color:var(--blue)}
+.rail nav a{text-decoration:none;padding:5px 8px;margin-left:-8px}
 .rail .sep{border-top:1px solid rgba(255,255,255,.45);margin:22px 0 16px}
-.rail .cta{display:block;border:1px solid var(--ink);color:var(--on-dark);text-decoration:none;font-weight:700;padding:10px 12px;margin-bottom:8px}
-.rail .cta:hover{background:var(--paper);color:var(--blue)}
-.rail .tiny{margin-top:auto;font-size:11.5px;letter-spacing:.06em;opacity:.9;text-transform:none;line-height:1.5}
+.rail .cta{display:block;border:1px solid var(--ink);text-decoration:none;font-weight:700;padding:10px 12px;margin-bottom:8px}
+.rail .tiny{margin-top:auto;font-size:11.5px;letter-spacing:.06em;text-transform:none;line-height:1.5}
 .sheet{background:var(--paper);margin:40px 40px 40px 20px;padding:36px clamp(22px,5vw,76px) 64px;min-width:0}
 
 /* ---------- man-page sections ---------- */
@@ -41,6 +38,7 @@ pre,code,.mono{font-family:var(--mono)}
 body{font-variant-ligatures:none}
 pre{margin:0;font-size:15.5px;line-height:1.5;white-space:pre;overflow-x:auto}
 code{font-size:.9em}
+pre,code,kbd,samp{font-family:var(--code,var(--mono))}
 .note{font-family:var(--mono);font-size:13.5px;line-height:1.55;color:var(--ink-2);margin-top:12px;max-width:74ch}
 .btnrow{display:flex;gap:14px;flex-wrap:wrap;margin:22px 0 4px}
 .btn{font-family:var(--mono);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;
@@ -99,7 +97,7 @@ a.cite{font-family:var(--mono);font-size:.88em;color:var(--ref);white-space:nowr
 a.xr{font-family:var(--mono);font-size:.9em;font-weight:700;white-space:nowrap}
 
 /* ---------- memo (RFC) ---------- */
-.memo{font-family:var(--mono);font-size:16.5px;line-height:1.62;max-width:78ch;margin:0 auto}
+.memo{font-family:var(--mono);font-size:16.5px;line-height:1.62;max-width:var(--width,78ch);margin:0 auto}
 .memo .hdr{display:flex;justify-content:space-between;gap:24px;white-space:pre-wrap}
 .memo .hdr .rt{text-align:right}
 .memo h1{font-family:var(--mono);font-weight:700;font-size:clamp(22px,2.6vw,29px);line-height:1.3;text-align:center;margin:44px auto 40px;max-width:30ch;text-wrap:balance}
@@ -231,7 +229,7 @@ ul.plain{margin:0;padding-left:1.1em}
 
 
 /* ---------- pages built from markdown ---------- */
-.prose{max-width:780px}
+.prose{max-width:var(--width,780px)}
 .prose h2{font-family:var(--serif);font-weight:700;font-size:16px;letter-spacing:.1em;text-transform:uppercase;margin:54px 0 14px;scroll-margin-top:24px}
 .prose h3{font-weight:700;font-size:24px;line-height:1.25;margin:34px 0 10px}
 .prose img{max-width:100%;height:auto;border:1px solid var(--rule-2);margin:8px 0}
@@ -275,7 +273,6 @@ tr.more-row{display:none}
 /* ---------- polish pass ---------- */
 html{scrollbar-color:var(--rule-2) var(--ground)}
 input,textarea{caret-color:var(--blue)}
-.rail :focus-visible{outline-color:var(--on-dark)}                    /* a blue ring on the blue rail was invisible */
 .about{max-width:70ch;margin-top:40px}
 .about p:last-child{margin-bottom:0}
 .job ul{max-width:72ch}
@@ -757,8 +754,8 @@ a.eqref{font-family:var(--mono);font-size:.9em;font-weight:700;white-space:nowra
 .callout p:last-child{margin-bottom:10px}
 /* code */
 .code-block{margin:16px 0;position:relative}
-.code-block pre{background:var(--tint);padding:14px 16px;border:1px solid var(--rule-2);overflow-x:auto;white-space:pre;font-family:var(--mono);font-size:14.5px;line-height:1.45}
-.code-block code,p code,li code,td code{font-family:var(--mono)}
+.code-block pre{background:var(--tint);padding:14px 16px;border:1px solid var(--rule-2);overflow-x:auto;white-space:pre;font-family:var(--code,var(--mono));font-size:14.5px;line-height:1.45}
+.code-block code,p code,li code,td code{font-family:var(--code,var(--mono))}
 mark{background:#F3E2A9;color:inherit;padding:0 2px}
 /* tables written in Markdown: datasheet style, scrolling inside the column on phones */
 .table-wrap{overflow-x:auto;margin:16px 0 6px;max-width:100%}
@@ -875,3 +872,26 @@ svg.links .bx.soft rect{fill-opacity:.85}
 .rail .made{display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-decoration:none}
 .rail .made img{border-radius:5px;flex:none}
 .rail .made:hover{color:var(--accent)}
+
+/* ---------- phones: more width for figures (their smallest text is then about 10 px on a 360-px screen) ---------- */
+@media (max-width:600px){
+  .sheet,body.mappage .sheet{margin:0 8px 8px}
+  .sheet{padding:22px 14px 44px}
+  .memo .body > .fig,.memo .body > .drawing,.memo .body > figure.drawing{margin-left:0}
+}
+
+/* ---------- touch screens: no zoom on focus, fingers-sized targets (device audit) ---------- */
+@media (pointer:coarse){
+  input,select,textarea,.find,.askrow .find,.askpanel .askrow .find,.ctl select,.finder select,.pick select{font-size:16px}  /* iOS zooms into anything smaller */
+  .fig input[type="range"]{height:36px}
+  .fig input[type="range"]::-webkit-slider-thumb{width:22px;height:22px;margin-top:-9px}
+}
+.askpanel-x{min-width:36px;min-height:36px;display:inline-grid;place-items:center}
+.askpanel{max-height:min(70vh,640px);max-height:min(70dvh,640px)}
+.askpanel-h{position:sticky;top:-14px;z-index:1;background:var(--paper);margin:-14px -16px 6px;padding:14px 16px 4px}   /* stays in view, also above a phone keyboard */
+@media (max-width:700px){.askpanel{max-height:72vh;max-height:72dvh}}
+@media (max-width:600px){.refs li{grid-template-columns:6ch minmax(0,1fr)}}
+@media (max-width:980px){
+  /* a post's section list scrolls sideways on phones: fade its right edge so that shows */
+  body.post .rail nav{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);padding-right:24px}
+}

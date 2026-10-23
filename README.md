@@ -13,7 +13,8 @@ project come from simple files. Posts are Markdown: equations render properly, d
 text, figures have sliders readers can move, and the whole site works as a wiki that readers can ask questions. Use
 all of it, or only the portfolio.
 
-You need Python 3.11 or newer. There is no Node and no bundler.
+You need Python 3.11 or newer. There is no Node and no bundler. (numpy is installed too, for the one example figure
+that uses it: version 2.5 on Python 3.12 and newer, 2.4 on 3.11.)
 
 ## 1. Start
 
@@ -38,7 +39,8 @@ Open http://127.0.0.1:8000. You see the example site, and it rebuilds whenever y
 Only want a portfolio? Delete the example posts in `content/reads/`, `content/papers/` and `content/elsewhere/`, keep
 the `projects` kind in `site.yml`, trim `nav:` to Home, Projects and CV, and set
 `features: {ask: false, explore: false, series: false, feed: false, llms_txt: true, credit: true}`. The build tells you if anything still points at
-a page you removed.
+a page you removed. The tests keep passing: they build their own copy of the example site
+(`tests/fixtures/example-site/`), not your pages, so your host's deploy (which runs them first) is not affected.
 
 ## 3. Write a post
 
@@ -246,6 +248,30 @@ the root of 127.0.0.1.
 | GitHub Pages | Settings → Pages → Source: GitHub Actions. The workflow (`.github/workflows/pages.yml`) fills in the address, including the `/<repo>/` path. |
 | Custom domain | Set `site.origin` to it (on GitHub Pages the workflow picks the domain up by itself). |
 | Anywhere | `python -m bazinga build` (or `--origin https://…` for another address), then upload `_site/`. |
+
+**Scheduled posts need a build on their day.** A scheduled post goes live on the first build on or after its date.
+The GitHub Pages workflow builds every day by itself. Vercel and Netlify build only when you push, so give them a
+daily build:
+
+1. Make a build hook: on Vercel, Project → Settings → Git → Deploy Hooks (branch `main`); on Netlify, Site
+   configuration → Build & deploy → Build hooks. Copy the URL it gives you.
+2. In your GitHub repository, add it as a secret named `BUILD_HOOK_URL` (Settings → Secrets and variables → Actions).
+3. Add `.github/workflows/daily-build.yml`:
+
+```yaml
+name: Daily build
+on:
+  schedule: [{cron: "17 5 * * *"}]     # every day at 05:17 UTC
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS -X POST "$HOOK"
+        env: {HOOK: "${{ secrets.BUILD_HOOK_URL }}"}
+```
+
+Without a daily build, a scheduled post appears with your next push after its date.
 
 ## Folders
 

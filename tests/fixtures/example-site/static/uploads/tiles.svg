@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 260" role="img" aria-labelledby="t">
+  <title id="t">A mosaic of rounded tiles in shades of blue, a few of them linked by thin lines</title>
+  <rect width="640" height="260" fill="#eef1fb"/>
+  <g stroke="#9aa9e6" stroke-width="2" fill="none">
+    <path d="M120 70 L250 130 L380 70 L520 150"/>
+    <path d="M250 130 L320 200"/>
+  </g>
+  <g>
+    <rect x="90" y="40" width="60" height="60" rx="12" fill="#3b5bdb"/>
+    <rect x="220" y="100" width="60" height="60" rx="12" fill="#5c76e0"/>
+    <rect x="350" y="40" width="60" height="60" rx="12" fill="#3b5bdb"/>
+    <rect x="490" y="120" width="60" height="60" rx="12" fill="#8197ea"/>
+    <rect x="290" y="170" width="60" height="60" rx="12" fill="#a9b7f1"/>
+    <rect x="40" y="160" width="44" height="44" rx="10" fill="#c9d2f6"/>
+    <rect x="560" y="40" width="44" height="44" rx="10" fill="#c9d2f6"/>
+    <rect x="430" y="196" width="36" height="36" rx="8" fill="#dbe1f9"/>
+  </g>
+</svg>

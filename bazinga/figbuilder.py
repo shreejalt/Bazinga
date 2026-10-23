@@ -488,10 +488,13 @@ class _Codegen(ast.NodeTransformer):
     def visit_BinOp(self, node):
         node.left, node.right = self.visit(node.left), self.visit(node.right)
         if isinstance(node.op, ast.Pow):
-            # 9 ** 9 ** 9 with whole numbers would be computed exactly (and take forever); as a float it overflows
-            # at once and the point is simply left out.
-            if isinstance(node.left, ast.Constant) and isinstance(node.left.value, int):
+            # (9*9) ** 999999999 with whole numbers would be computed exactly (and take forever, whatever the left
+            # side is made of); as a float it overflows at once and the point is simply left out.
+            if isinstance(node.left, ast.Constant) and isinstance(node.left.value, (int, float)) \
+                    and not isinstance(node.left.value, bool):
                 node.left = ast.Constant(float(node.left.value))
+            elif not isinstance(node.left, ast.Name):          # a control's value is already a number of its own
+                node.left = ast.Call(ast.Name("float", ast.Load()), [node.left], [])
         return node
 
 

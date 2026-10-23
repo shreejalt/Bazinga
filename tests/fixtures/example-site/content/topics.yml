@@ -1,0 +1,23 @@
+# The only topics pages may use (front matter: topics: [slug, slug]). Each topic gets a hub page at /topics/<slug>/.
+# Groups only organise the /topics/ page. Add, rename or remove freely; the build tells you about pages that still
+# use a removed slug (with a "did you mean").
+groups:
+  - name: Foundations
+    topics:
+      - {slug: linear-algebra, label: Linear algebra, blurb: "Vectors, matrices and the geometry behind them."}
+      - {slug: probability, label: Probability, blurb: "Distributions, expectations and how uncertainty is measured."}
+      - {slug: optimization, label: Optimization, blurb: "Finding good parameters: gradients, step sizes and convergence."}
+      - {slug: information-theory, label: Information theory, blurb: "Entropy, cross-entropy and what a model is surprised by."}
+      - {slug: signals, label: Signals, blurb: "Waves, frequencies and building functions out of sines."}
+  - name: Machine learning
+    topics:
+      - {slug: neural-networks, label: Neural networks, blurb: "Layers, activations and how networks are trained."}
+      - {slug: attention, label: Attention, blurb: "Weighting inputs by relevance, the core of transformers."}
+      - {slug: transformers, label: Transformers, blurb: "The architecture built from attention and feed-forward blocks."}
+      - {slug: computer-vision, label: Computer vision, blurb: "Teaching models to understand images and video."}
+      - {slug: training, label: Training, blurb: "Losses, schedules, regularisation and the craft of making models learn."}
+  - name: Craft
+    topics:
+      - {slug: writing, label: Writing, blurb: "How to explain technical ideas clearly."}
+      - {slug: visualization, label: Visualization, blurb: "Figures that make an idea visible, and how to build them."}
+      - {slug: tools, label: Tools, blurb: "The software behind the work, this site included."}

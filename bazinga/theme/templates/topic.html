@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {#- One topic hub: the pages on it in reading order, the live figures those pages use, and the topics that go with it. -#}
-{% block cta %}<a class="cta" href="{{ base }}/topics/">All topics</a><a class="cta" href="{{ base }}/explore/?tag={{ slug }}">On the map</a>{% endblock %}
+{% block cta %}<a class="cta" href="{{ base }}/topics/">All topics</a>{% if features.explore %}<a class="cta" href="{{ base }}/explore/?tag={{ slug }}">On the map</a>{% endif %}{% endblock %}
 
 {% block content %}
 <section class="sec" id="top">

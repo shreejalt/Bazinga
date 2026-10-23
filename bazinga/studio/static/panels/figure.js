@@ -2,7 +2,7 @@
 // at the cursor, optionally opened at a preset), and three ways to make one: fill in a form (no code), start from
 // an example (code), or describe it (when suggestions are on). Code opens in an editor beside a live preview with
 // the figure's test in plain words; a failing line is marked.
-import { api, store, h, clear, fill, modal, icon, toast, debounce, modKey } from "../lib.js";
+import { api, store, h, clear, fill, modal, icon, toast, debounce, modKey, fitFrame, previewURL } from "../lib.js";
 import { codeEditor, goToLine } from "../cm.js";
 import { isDark } from "../studio.js";
 import { builderForm, nameFromTitle } from "./figbuilder.js";
@@ -33,22 +33,6 @@ function picture(type) {
   return svg;
 }
 
-// Frames grow to fit the figure they show.
-function fitFrame(frame) {
-  const size = () => {
-    try {
-      const d = frame.contentDocument;
-      if (!d || !d.documentElement) return;
-      frame.style.height = Math.min(1600, Math.max(140, d.documentElement.scrollHeight)) + "px";
-    } catch (e) { /* not ready */ }
-  };
-  frame.addEventListener("load", () => {
-    size();
-    try { new ResizeObserver(size).observe(frame.contentDocument.body); } catch (e) { /* older browsers */ }
-  });
-  return frame;
-}
-
 // A stage that swaps in a new frame only once it has loaded, so the preview never flashes empty.
 function stage() {
   const el = h("div.fg-stage");
@@ -76,7 +60,7 @@ function stage() {
 }
 
 function theme() { return isDark() ? "dark" : "light"; }
-function withTheme(url) { return url + (url.includes("?") ? "&" : "?") + "theme=" + theme(); }
+function withTheme(url) { return previewURL(url + (url.includes("?") ? "&" : "?") + "theme=" + theme()); }
 
 function checksList(report) {
   if (!report) return null;
@@ -406,11 +390,11 @@ export async function open(ed) {
     const checks = h("div.fg-checks-box");
     const note = h("div.fg-note");
     let dirty = unsaved;
-    let autoRun = !(draft && draft.ran === false);   // a model's draft that is not plain computation runs only on request
+    let autoRun = !draft;   // a model's draft is never run before the author has read it and pressed Run
     let created = !unsaved;
     const saveBtn = h("button.btn", { type: "button", onclick: () => save(false) }, h("span", "Save"), h("kbd", `${modKey()} S`));
     const insertBtn = h("button.btn.primary", { type: "button", onclick: () => save(true) }, icon("plus", 16), h("span.long", "Save and place in the text"), h("span.short", "Save, place"));
-    const runBtn = h("button.btn", { type: "button", hidden: autoRun, onclick: () => { autoRun = true; runBtn.hidden = true; check.flush(); } }, icon("play", 16), h("span", "Run it to check"));
+    const runBtn = h("button.btn", { type: "button", hidden: autoRun, onclick: () => { autoRun = true; runBtn.hidden = true; check.flush(); } }, icon("play", 16), h("span", draft ? "I have read it: run it" : "Run it to check"));
 
     // the failing line, marked in the editor
     const setBad = StateEffect.define();
@@ -429,7 +413,7 @@ export async function open(ed) {
 
     if (made === "edited") note.append(h("p", icon("info", 15), " This figure was made with the form and then changed by hand, so it opens as code. Your changes are kept."));
     if (fromBuilder) note.append(h("p", icon("info", 15), " This is the code the form wrote. Once you change it here, the form will not open this figure again."));
-    if (draft && draft.ran === false) note.append(h("p.warn", icon("alert", 15), " ", (draft.problems || [])[0] || "Read this draft before running it."));
+    if (draft) for (const p of (draft.problems && draft.problems.length ? draft.problems : ["Read this draft before running it."])) note.append(h("p.warn", icon("alert", 15), " ", p));
     if (fresh) note.append(h("p", icon("info", 15), " The comments explain each part. Change something and the preview follows."));
 
     fill(main, crumbs(created ? h("button.fg-crumb", { type: "button", onclick: () => go(detail, name) }, name) : name, "Code"),
