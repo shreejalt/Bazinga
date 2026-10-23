@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="documentation/assets/brand/banner-dark.gif">
-    <img src="documentation/assets/brand/banner-light.gif" width="100%" alt="Bazinga: a Vulcan-salute hand holding a pencil, beside a small post whose equation types in, whose live figure slides a box while its loss curve updates, and whose map of linked posts lights up.">
+    <img src="documentation/assets/brand/banner-light.gif" width="100%" alt="Bazinga: numbered dots joined one by one by a pencil turn out to be a Vulcan-salute hand, which becomes the Bazinga logo, beside the line Live long and connect the dots.">
   </picture>
 </p>
 
