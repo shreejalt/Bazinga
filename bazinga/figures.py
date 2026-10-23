@@ -534,7 +534,8 @@ def figure_html(name, start=None, cfg=None):
                        for i, p in enumerate(presets(mod)))
         hint = ""
         if any(c["kind"] == "orbit" for c in ctl):
-            hint = '<span class="fig-hint">Drag the picture to turn it.</span>'
+            hint = ('<span class="fig-hint">Drag the picture to turn it, or select it and use the arrow keys.'
+                    '</span>')
         parts.append('<div class="fig-presets">%s<button type="button" class="fig-reset">Reset</button>%s'
                      '<span class="fig-status" role="status" aria-live="polite"></span></div>' % (btns, hint))
         parts.append("</fieldset></form>")

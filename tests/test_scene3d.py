@@ -255,7 +255,7 @@ class Controls(unittest.TestCase):
         self.assertTrue(data["kits"]["scene3d"].startswith("figures/_scene3d.py?v="))
         self.assertIn('class="fig-group"', html)
         self.assertIn('class="fig-ctl fig-pad"', html)
-        self.assertIn("Drag the picture to turn it.", html)
+        self.assertIn("Drag the picture to turn it, or select it and use the arrow keys.", html)
         self.assertNotRegex(html, r'class="fig-ctl[^"]*" data-name="cam1"')    # a hidden control shows nothing
         self.assertNotIn("kits", json.dumps(json.loads(re.search(r'data-bazinga="([^"]*)"', figures.figure_html(
             "starter_slider_plot", cfg=CFG)).group(1).replace("&quot;", '"').replace("&amp;", "&"))))

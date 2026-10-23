@@ -241,7 +241,7 @@ def compute(t=1.0, k=0, log=0, _narrow=0):    # pure: same inputs → same spec;
 `bazinga/scene3d.py` (standard library only) builds 3-D scenes: points, lines, boxes, planes, curves, surfaces
 `z = f(x, y)`, vectors, axes with ticks, labels, measurements and cameras with the picture they take. `Scene.render()`
 returns a `scene3d` panel that `plot.py` draws; the kit ships as `/figures/_scene3d.py` and is imported as
-`bazinga.scene3d` both at build time and in the browser. Controls `orbit` (turn by dragging the picture), `pad` and
+`bazinga.scene3d` both at build time and in the browser. Controls `orbit` (turn by dragging the picture, or by focusing it and using the arrow keys), `pad` and
 `hidden` (points moved by their handles), `_drag` and `state` in `compute()`. Starters: `scene_basic`, `surface_plot`,
 `vectors_planes`, `camera_rig`; the form has a "3-D scene" type. `figure test` also drags every handle.
 

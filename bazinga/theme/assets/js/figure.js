@@ -470,6 +470,34 @@
     stage.addEventListener("pointercancel", end);
     stage.addEventListener("lostpointercapture", end);
 
+    // keyboard: the picture itself takes focus and turns with the arrow keys (left/right turn it, up/down tilt it)
+    if (this.orbit && this.el.querySelector("g.s3")) {
+      stage.tabIndex = 0;
+      stage.setAttribute("role", "group");
+      stage.setAttribute("aria-label", "3-D picture. Left and right arrow keys turn it; up and down tilt it.");
+      var said = document.createElement("span");     // its own live region: the figure's status line is rewritten
+      said.className = "fig-said";
+      said.setAttribute("role", "status");
+      said.setAttribute("aria-live", "polite");
+      said.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap";
+      this.el.appendChild(said);
+      stage.addEventListener("keydown", function (e) {
+        if (e.target !== stage || e.altKey || e.ctrlKey || e.metaKey) return;
+        var step = e.shiftKey ? 2 : 10;
+        var d = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step / 2], ArrowDown: [0, step / 2] }[e.key];
+        if (!d) return;
+        e.preventDefault();
+        self.stopPlay();
+        startWorker();
+        var c = self.orbit, lo = (c.el_range || [-89, 89])[0], hi = (c.el_range || [-89, 89])[1];
+        var v = self.values[c.name] || [0, 0];
+        var az = ((v[0] + d[0] + 180) % 360 + 360) % 360 - 180;
+        var el = Math.min(hi, Math.max(lo, v[1] + d[1]));
+        self.set(c.name, [Math.round(az * 10) / 10, Math.round(el * 10) / 10]);
+        said.textContent = "Turned to " + Math.round(az) + "°, tilted " + Math.round(el) + "°.";
+      });
+    }
+
     // a focused handle moves with the arrow keys
     stage.addEventListener("keydown", function (e) {
       var h = e.target.closest && e.target.closest("g.s3-handle");
