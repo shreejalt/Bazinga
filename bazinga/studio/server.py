@@ -107,7 +107,8 @@ class StudioServer(ThreadingHTTPServer):
 
     def server_close(self):
         super().server_close()
-        self.preview.server_close()
+        if getattr(self, "preview", None) is not None:      # not there when the port was busy
+            self.preview.server_close()
 
     def preview_origins(self) -> list[str]:
         return [f"http://127.0.0.1:{self.preview_port}", f"http://localhost:{self.preview_port}"]

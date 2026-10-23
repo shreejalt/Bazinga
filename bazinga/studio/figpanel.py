@@ -207,7 +207,7 @@ class FigurePanel:
             inner = d["html"]
         theme = q.get("theme") if q.get("theme") in ("light", "dark") else ""
         css = "".join(f'<link rel="stylesheet" href="/assets/css/{n}">' for n in
-                      ("tokens.css", "site.css", "math.css", "figure.css")
+                      ("tokens.css", "figure.css", "math.css", "site.css")   # the order base.html uses
                       if (ENGINE_DIR / "theme/assets/css" / n).exists() or (self.root / "theme/assets/css" / n).exists())
         return 200, ("<!doctype html><html lang=en" + (f' data-theme="{theme}"' if theme else "") + "><head>"
                      "<meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'>"

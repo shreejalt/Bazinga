@@ -924,7 +924,13 @@ class Builder:
             if used:
                 note("bazinga/figures.py is not there yet; figures stay static", self.notes, self.quiet)
             return
-        figmod.write_assets(self.cfg, used, self.out)
+        # a figure that does not exist was already reported on its page (an error, or a note in a draft build);
+        # copy the ones that do
+        present = {n for n in used if figmod._path(n, self.cfg).is_file()}
+        try:
+            figmod.write_assets(self.cfg, present, self.out)
+        except figmod.FigureError as exc:
+            self.problem("figures/", str(exc))
 
     def write_data(self) -> None:
         """What the theme's scripts read: the preview cards (data/site.js), the map and every page's view."""

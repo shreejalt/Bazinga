@@ -5,6 +5,10 @@ pull the new version in.
 
 ## 2026-10-23
 
+- **Fewer crashes:** `build --drafts` with a draft that names a figure that does not exist reports it on that page
+  instead of stopping with a traceback; `serve` and the Editor on a port that is in use say so and suggest another.
+  The Editor's figure previews no longer show a tan bar between readout tiles (their stylesheets load in the site's
+  order).
 - **Small fixes from the documentation review:** `figure new <name> --from <drawing starter>` now tells you to use
   `::drawing <name>.<function>`; `wiki query` lists each section once and no longer runs a callout's title into its
   text ("at onceHow"); `wiki --help` lists every command, and its examples use a real page id

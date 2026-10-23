@@ -679,7 +679,7 @@ class Editor:
             inner = ('<div class="frame-error"><strong>This could not be drawn.</strong><pre>'
                      + _html.escape(str(detail)[-3000:]) + "</pre></div>")
         css = "".join(f'<link rel="stylesheet" href="/assets/css/{n}">' for n in
-                      ("tokens.css", "site.css", "math.css", "figure.css", "diagram.css") if (ENGINE_DIR / "theme/assets/css" / n).exists()
+                      ("tokens.css", "figure.css", "math.css", "site.css", "diagram.css") if (ENGINE_DIR / "theme/assets/css" / n).exists()
                       or (self.root / "theme/assets/css" / n).exists())
         js = '<script src="/assets/js/figure.js" defer></script>' if kind == "figure" else ""
         return 200, ("<!doctype html><html lang=en" + (f' data-theme="{theme}"' if theme else "") + "><head>"

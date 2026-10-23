@@ -290,6 +290,39 @@ class CommandLine(unittest.TestCase):
         self.assertIn("git push -u origin HEAD` ", src)
         self.assertNotIn("then publish again", src)
 
+    def test_draft_build_with_a_missing_figure_and_busy_ports(self):
+        """Docs audit: build --drafts crashed on a draft naming a missing figure; serve and the Editor on a busy port
+        ended in a traceback."""
+        import socket
+        root = make_site({"posts/a": post("A"), "posts/d": post("D", status="draft", body="::figure nope_missing\n")})
+        try:
+            code, out = self.run_cli("--root", str(root), "build", "--drafts")
+            self.assertEqual(code, 0, out)
+            self.assertIn("d.md:", out)
+            self.assertIn("no figure 'nope_missing'", out)
+            self.assertNotIn("Traceback", out)
+            code, out = self.run_cli("--root", str(root), "build")                  # the draft is not built
+            self.assertEqual(code, 0, out)
+            busy = socket.socket()
+            busy.bind(("127.0.0.1", 0))
+            busy.listen()
+            port = busy.getsockname()[1]
+            try:
+                code, out = self.run_cli("--root", str(root), "serve", "--port", str(port), "--no-editor")
+                self.assertEqual(code, 1, out)
+                self.assertIn(f"Port {port} is in use", out)
+                from bazinga.studio import server
+                err = io.StringIO()
+                with redirect_stderr(err), redirect_stdout(io.StringIO()):
+                    code = server.main(["--port", str(port), "--no-browser", "--root", str(root)])
+                self.assertEqual(code, 1)
+                self.assertIn(f"Cannot listen on 127.0.0.1:{port}", err.getvalue())
+                self.assertNotIn("Traceback", err.getvalue())
+            finally:
+                busy.close()
+        finally:
+            cleanup(root)
+
     def test_passthrough_keeps_options(self):
         with mock.patch("bazinga.cli._module") as module:
             module.return_value.main = mock.Mock(return_value=0)

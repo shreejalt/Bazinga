@@ -124,6 +124,16 @@ class Handlers(unittest.TestCase):
         self.assertTrue(good["ok"])
         self.assertIn("frame", good)
 
+    def test_frames_load_the_stylesheets_in_the_site_order(self):
+        """Docs audit: figure.css after site.css put a 2rem tan gap between readout tiles in the Editor's frames."""
+        from unittest import mock
+        from bazinga.studio import api as studio_api
+        _, html = self.studio.draft_frame("wave", {})
+        with mock.patch.object(studio_api.engine, "worker", return_value={"ok": True, "html": "<p>x</p>"}):
+            _, html2 = self.studio.frame("figure", "wave", {})
+        for page in (html, html2):
+            self.assertLess(page.index("/assets/css/figure.css"), page.index("/assets/css/site.css"))
+
     def test_save_code(self):
         src = figbuilder.generate(figbuilder.default_spec("bars"))
         res = self.studio.figure_save_code({"name": "budget", "source": src, "create": True})

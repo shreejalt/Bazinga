@@ -342,7 +342,16 @@ def serve(cfg=None, port: int = 8000, host: str = "127.0.0.1", watch_files: bool
     state = State(cfg, drafts)
     print(f"Building {cfg['site']['name']} …")
     rebuild(state)
-    httpd = DevServer((host, port), make_handler(state))
+    try:
+        httpd = DevServer((host, port), make_handler(state))
+    except OSError as exc:
+        import errno
+        if exc.errno == errno.EADDRINUSE:
+            print(f"\nPort {port} is in use (another `serve` may still be running). Stop it, or pick another port: "
+                  f"python -m bazinga serve --port {port + 10}", file=sys.stderr)
+        else:
+            print(f"\nCannot listen on {host}:{port}: {exc.strerror or exc}", file=sys.stderr)
+        return 1
     state.port = httpd.server_address[1]
     if studio and host in ("127.0.0.1", "localhost"):
         state.studio = start_studio(cfg, studio_port if studio_port is not None else state.port + 1)
