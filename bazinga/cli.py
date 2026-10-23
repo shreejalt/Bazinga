@@ -244,6 +244,9 @@ def parser() -> argparse.ArgumentParser:
     p = sub.add_parser("build", help="build the site into _site/")
     p.add_argument("--drafts", action="store_true", help="include drafts and scheduled pages (private previews only)")
     p.add_argument("--quiet", action="store_true")
+    p.add_argument("--origin", default=None, metavar="URL",
+                   help="the address the site is deployed at, instead of site.origin (also BAZINGA_ORIGIN or SITE_URL "
+                        "in the environment); a path such as https://you.github.io/repo puts every link under /repo")
     p.set_defaults(fn=cmd_build)
 
     p = sub.add_parser("serve", help="build, serve on 127.0.0.1 and rebuild on changes")
@@ -328,7 +331,9 @@ def main(argv=None) -> int:
     root = Path(args.root).resolve() if args.root else Path.cwd()
     config.set_root(root)
     try:
-        cfg = config.load(root)
+        # a build takes the site's address from --origin or the environment when a deploy sets it (GitHub Pages)
+        origin = (getattr(args, "origin", None) or config.origin_from_env()) if args.fn is cmd_build else None
+        cfg = config.load(root, origin=origin)
     except config.ConfigError as exc:
         print(f"site.yml: {exc}", file=sys.stderr)
         return 2

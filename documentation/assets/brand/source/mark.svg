@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><title>Bazinga</title>
+  <defs><clipPath id="tile"><rect width="512" height="512" rx="112"/></clipPath></defs>
+  <g clip-path="url(#tile)">
+  <rect width="512" height="512" fill="#0F52BA"/>
+  <g transform="translate(34 48) scale(0.78)">
+  <g fill="none" stroke="#1D1A15" stroke-width="20.5" stroke-linejoin="round">
+    <g transform="rotate(-10 236 300)">
+      <rect x="166" y="132" width="46" height="200" rx="23"/>
+      <rect x="213" y="98" width="47" height="234" rx="23.5"/>
+    </g>
+    <g transform="rotate(10 292 300)">
+      <rect x="268" y="102" width="47" height="230" rx="23.5"/>
+      <rect x="316" y="150" width="43" height="182" rx="21.5"/>
+    </g>
+    <path d="M172 280 C166 350 178 400 214 432 L218 700 L326 700 L328 430 C362 400 370 340 362 280 C330 262 210 262 172 280 Z"/>
+    <path d="M211.0 326.0 Q159.2 294.7 111.7 277.9 A22.0 22.0 0 0 0 89.7 316.1 Q130.3 344.7 181.0 378.0 Z"/></g>
+  <g fill="#FBF7EC" stroke="#FBF7EC" stroke-width="2">
+    <g transform="rotate(-10 236 300)">
+      <rect x="166" y="132" width="46" height="200" rx="23"/>
+      <rect x="213" y="98" width="47" height="234" rx="23.5"/>
+    </g>
+    <g transform="rotate(10 292 300)">
+      <rect x="268" y="102" width="47" height="230" rx="23.5"/>
+      <rect x="316" y="150" width="43" height="182" rx="21.5"/>
+    </g>
+    <path d="M172 280 C166 350 178 400 214 432 L218 700 L326 700 L328 430 C362 400 370 340 362 280 C330 262 210 262 172 280 Z"/>
+    <path d="M211.0 326.0 Q159.2 294.7 111.7 277.9 A22.0 22.0 0 0 0 89.7 316.1 Q130.3 344.7 181.0 378.0 Z"/></g>
+  <g stroke="#1D1A15" stroke-width="7" stroke-linecap="round" fill="none">
+    <line x1="212.5" y1="168" x2="212.5" y2="292" transform="rotate(-10 236 300)"/>
+    <line x1="315.5" y1="186" x2="315.5" y2="292" transform="rotate(10 292 300)"/></g>
+  </g>
+  <g>
+    <rect x="366.0" y="108" width="44" height="30" rx="11" fill="#E2707A" stroke="#1D1A15" stroke-width="10"/>
+    <rect x="366.0" y="138" width="44" height="20" fill="#C9CCD3" stroke="#1D1A15" stroke-width="10"/>
+    <rect x="366.0" y="158" width="44" height="240" fill="#F2B632" stroke="#1D1A15" stroke-width="10"/>
+    <rect x="371.0" y="162" width="11" height="232" fill="#F8D477"/>
+    <line x1="397.0" y1="162" x2="397.0" y2="394" stroke="#D99A1E" stroke-width="5"/>
+    <path d="M366.0 398 L388 460 L410.0 398 Z" fill="#F3D9A8" stroke="#1D1A15" stroke-width="10" stroke-linejoin="round"/>
+    <path d="M380.5 439 L388 460 L395.5 439 Z" fill="#1D1A15"/></g>
+  </g></svg>

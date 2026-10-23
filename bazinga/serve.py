@@ -4,6 +4,8 @@
   by polling modification times, so it needs no extra packages.
 - Live reload uses a tiny Server-Sent Events endpoint (``/__bazinga/events``). The script that listens to it is
   injected into HTML responses by this server only; built files never contain it.
+- The site is served at the root of 127.0.0.1 even when ``site.origin`` has a path (a GitHub Pages project site):
+  the configuration is loaded with ``local=True``, so the built links carry no base path.
 - Errors in pages do not stop the server: they are printed and shown in the page (a lenient build).
 - ``/api/ask/`` is passed to ``bazinga.ask_server.handle`` when that module exists, so the "written answer" can be
   tried locally.
@@ -84,7 +86,7 @@ def rebuild(state: State, quiet: bool = False) -> bool:
     from .build import BuildError, build
     t0 = time.perf_counter()
     try:
-        cfg = config.load(state.cfg.root)
+        cfg = config.load(state.cfg.root, local=True)
         state.cfg = cfg
         result = build(cfg, drafts=state.drafts, strict=False, dev=True, quiet=True)
     except (BuildError, config.ConfigError, Exception) as exc:                 # noqa: BLE001 - keep serving
@@ -333,7 +335,7 @@ def serve(cfg=None, port: int = 8000, host: str = "127.0.0.1", watch_files: bool
           drafts: bool = False, studio: bool = True, studio_port: int | None = None):
     """Build, then serve until Ctrl+C. With ``drafts`` the preview includes drafts and scheduled pages. With ``studio``
     (the default, and only when serving on this computer) the Editor starts too and the pages get a Write button."""
-    cfg = cfg or config.load()
+    cfg = cfg or config.load(local=True)
     state = State(cfg, drafts)
     print(f"Building {cfg['site']['name']} …")
     rebuild(state)

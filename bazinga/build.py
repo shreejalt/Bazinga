@@ -155,11 +155,11 @@ class Theme:
         return self.asset_path(rel) is not None
 
     def asset_url(self, rel: str) -> str:
-        """``/assets/<rel>?v=<hash>``: the hash changes when the file does, so browsers never use a stale copy."""
+        """``<base>/assets/<rel>?v=<hash>``: the hash changes when the file does, so browsers never use a stale copy."""
         if rel not in self._hash:
             path = self.asset_path(rel)
             self._hash[rel] = hashlib.sha256(path.read_bytes()).hexdigest()[:10] if path else "missing"
-        return f"/assets/{rel}?v={self._hash[rel]}"
+        return self.cfg.url(f"/assets/{rel}?v={self._hash[rel]}")
 
     def set_hash(self, rel: str, data: bytes) -> None:
         self._hash[rel] = hashlib.sha256(data).hexdigest()[:10]
@@ -174,6 +174,12 @@ class Theme:
         env.filters["month_year"] = month_year
         env.filters["full_date"] = full_date
         env.filters["extract_title"] = lambda key, refs: (refs.get(key) or {}).get("title", key)
+        # A site under a sub-path (site.origin https://you.github.io/repo): templates write every path on the site as
+        # {{ link(p.url) }} or {{ base }}/topics/ so that it starts with /repo. Globals, so imported macros see them.
+        env.globals["base"] = self.cfg.base
+        env.globals["link"] = self.cfg.url
+        env.filters["link"] = self.cfg.url
+        env.filters["links"] = lambda html: config.site_links(self.cfg.base, html)   # hand-written HTML in site.yml
         return env
 
     def copy_assets(self, out: Path) -> int:
@@ -271,6 +277,20 @@ class Builder:
         self._mapdata = None
         self.layout = None
         self.views: dict = {}
+
+    def link(self, path):
+        """A path on this site as the built files link to it (with the base path of a site under a sub-path)."""
+        return self.cfg.url(path)
+
+    def linked(self, obj):
+        """A copy of data the browser reads with every ``url`` that is a path on this site given the base path."""
+        if not self.cfg.base:
+            return obj
+        if isinstance(obj, dict):
+            return {k: (self.link(v) if k == "url" else self.linked(v)) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [self.linked(v) for v in obj]
+        return obj
 
     # ---- steps 2-5
     def load(self) -> None:
@@ -522,7 +542,7 @@ class Builder:
             "kinds_labels": {k: v["label"] for k, v in cfg["kinds"].items()},
             "dev": self.dev, "drafts": self.drafts, "year": date.today().year,
             "has_feed": bool(cfg["features"].get("feed")),
-            "markdown_url": (url + "index.md") if page is not None and not self.drafts else "",
+            "markdown_url": self.link(url + "index.md") if page is not None and not self.drafts else "",
             "rail_nav": self.site_nav if nav is None else nav, "here": here,
             "updated": date.today().strftime("%B %Y"),
             "author": author, "author_short": (f"{words[0][0]}. {words[-1]}" if len(words) > 1 else author),
@@ -549,7 +569,7 @@ class Builder:
         wider = self.broader(page, view)
         neigh = mapview.neighbors(self.mapdata, page.id)
         for o in neigh["out"] + neigh["in"]:
-            o["url"] = self.by_id[o["id"]].url if o["id"] in self.by_id else self.ref(o["id"][4:])["url"]
+            o["url"] = self.link(self.by_id[o["id"]].url) if o["id"] in self.by_id else self.ref(o["id"][4:])["url"]
         figure = Markup(mapview.links_figure(neigh, self.type_labels())) if neigh["out"] or neigh["in"] else ""
         refs = []
         for item in md.references(r, self.site):
@@ -658,7 +678,7 @@ class Builder:
         ctx = self.base_context("/", title, seo.describe(None, cfg), kind="home", nav=nav)
         ctx.update({"experience": experience,
                     "kind_buttons": [(f"/{k}/", s["label"]) for k, s in cfg["kinds"].items()],
-                    "intro": Markup(md.render_inline(home.get("intro") or "")) if home.get("intro") else ""})
+                    "intro": Markup(md.render_inline(home.get("intro") or "", cfg.base)) if home.get("intro") else ""})
         self.write("/", "home.html", ctx)
 
     def write_cv(self) -> None:
@@ -800,7 +820,7 @@ class Builder:
                                     seo.cut(f"{t['label']}: {n} page{'' if n == 1 else 's'} on this site in reading "
                                             "order, with the interactive figures that explain it."), here="/topics/")
             ctx.update({"slug": slug, "t": t, "parts": parts, "figures": figures, "near": near,
-                        "intro": Markup(md.render_inline(t["blurb"])) if t["blurb"] else ""})
+                        "intro": Markup(md.render_inline(t["blurb"], self.cfg.base)) if t["blurb"] else ""})
             self.write(f"/topics/{slug}/", "topic.html", ctx)
         ctx = self.base_context("/topics/", "Topics", seo.cut("Every topic on this site: the pages about it in "
                                                                "reading order and the figures that explain it."),
@@ -888,14 +908,14 @@ class Builder:
         (data / "view").mkdir(parents=True, exist_ok=True)
         dump = lambda path, obj: path.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")),  # noqa: E731
                                                  encoding="utf-8")
-        (data / "site.js").write_text("window.SITE=" + json.dumps({"nodes": self.site_nodes(), "kinds": self.type_labels()},
+        (data / "site.js").write_text("window.SITE=" + json.dumps({"nodes": self.linked(self.site_nodes()), "kinds": self.type_labels()},
                                                                    ensure_ascii=False, separators=(",", ":"))
                                       .replace("</", "<\\/") + ";\n", encoding="utf-8")
         dump(data / "map.json", self.layout)
         dump(data / "mapdata.json", self.mapdata)
         dump(data / "series.json", mapview.find_series(self.mapdata))
         for p in self.pages:
-            dump(data / "view" / (p.id.replace(":", "-") + ".json"), self.view(p.id))
+            dump(data / "view" / (p.id.replace(":", "-") + ".json"), self.linked(self.view(p.id)))
         (self.out / "figures").mkdir(parents=True, exist_ok=True)
         shutil.copyfile(Path(mapview.__file__), self.out / "figures" / "_mapview.py")
 
@@ -960,8 +980,8 @@ class Builder:
         self.views = {}
         self.layout = mapview.layout(self.mapdata)
         stamp = hashlib.sha256(json.dumps(self.mapdata, sort_keys=True, default=str).encode()).hexdigest()[:10]
-        self.site_data_url = f"/data/site.js?v={stamp}"
-        self.mapview_url = f"/figures/_mapview.py?v={hashlib.sha256(Path(mapview.__file__).read_bytes()).hexdigest()[:10]}"
+        self.site_data_url = self.link(f"/data/site.js?v={stamp}")
+        self.mapview_url = self.link(f"/figures/_mapview.py?v={hashlib.sha256(Path(mapview.__file__).read_bytes()).hexdigest()[:10]}")
         self.theme.set_hash("css/pygments.css", md.pygments_css().encode())
 
     def run(self, out: Path | None = None) -> BuildResult:

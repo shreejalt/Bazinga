@@ -30,6 +30,7 @@ from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 
 from .checks import Issue
+from .config import site_links, site_url
 from .content import slugify
 from .mathml import MathError, looks_like_money, split_tag_label, to_mathml
 
@@ -96,6 +97,7 @@ class _Renderer:
 
     def __init__(self, page, site: SiteIndex):
         self.page, self.site = page, site
+        self.base = site_base(site.cfg)
         self.issues: list = []
         self.tokens: dict = {}      # token -> html
         self.plain: dict = {}       # token -> plain text (for sections, toc, slugs)
@@ -437,7 +439,7 @@ class _Renderer:
         if ident not in self.mentions:
             self.mentions.append(ident)
         label = text or target.title or ident
-        return self.token(f'<a class="xref" href="{target.url}" data-id="{htmllib.escape(ident)}">'
+        return self.token(f'<a class="xref" href="{site_url(self.base, target.url)}" data-id="{htmllib.escape(ident)}">'
                           f"{htmllib.escape(label)}</a>", label)
 
     def _citation(self, inner: str, i: int) -> str:
@@ -637,6 +639,14 @@ class _Headings(Treeprocessor):
                            for s in sections if s["id"] or " ".join(s["text"]).strip()]
 
 
+def site_base(cfg) -> str:
+    """The path the site is served under (``cfg.base``), "" without a configuration."""
+    try:
+        return str(((cfg or {}).get("site") or {}).get("base") or "")
+    except AttributeError:
+        return ""
+
+
 class _BazingaExtension(Extension):
     def __init__(self, renderer: _Renderer):
         super().__init__()
@@ -665,7 +675,9 @@ def render(page, site: SiteIndex) -> Rendered:
     r.toc, r.sections = [], []
     source = r.prepass(page.body)
     r.resolve_eqrefs()
-    body_html = _markdown(r).convert(source)
+    # links and images written as paths on this site (Markdown or raw HTML) get the base path of a site under one;
+    # code is still a placeholder here, so examples in code blocks stay as written
+    body_html = site_links(r.base, _markdown(r).convert(source))
     html_out = r.fill(body_html)
     cites = list(r.cites)
     for key in page.cites:
@@ -736,9 +748,10 @@ def format_reference_html(ref: dict) -> str:
             f'<span class="ref-title">{title_html}</span>.{venue}')
 
 
-def render_inline(text: str) -> str:
-    """Render a short Markdown snippet (site intro, summaries) without the page extensions' bookkeeping."""
-    return pymd.markdown(text or "", extensions=["smarty"], output_format="html")
+def render_inline(text: str, base: str = "") -> str:
+    """Render a short Markdown snippet (site intro, summaries) without the page extensions' bookkeeping. Links to
+    paths on this site get ``base`` (the site's base path)."""
+    return site_links(base, pymd.markdown(text or "", extensions=["smarty"], output_format="html"))
 
 
 def pygments_css() -> str:

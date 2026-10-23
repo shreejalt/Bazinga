@@ -9,8 +9,10 @@ The site root is the current working directory unless :func:`set_root` (tests) o
 from __future__ import annotations
 
 import copy
+import os
 import re
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import yaml
 
@@ -116,7 +118,17 @@ class Config(dict):
 
     @property
     def origin(self) -> str:
+        """Where the site lives, with its path if it has one (``https://alice.github.io/notes``)."""
         return self["site"]["origin"]
+
+    @property
+    def base(self) -> str:
+        """The path the site is served under: ``/notes`` for ``https://alice.github.io/notes``, else ``""``."""
+        return self["site"].get("base", "")
+
+    def url(self, path: str) -> str:
+        """A path on this site as the built pages link to it: :func:`site_url` with this site's base."""
+        return site_url(self.base, path)
 
 
 class _Section(dict):
@@ -153,8 +165,46 @@ def deep_merge(base: dict, over: dict) -> dict:
     return out
 
 
-def load(root=None) -> Config:
-    """Read ``<root>/site.yml`` (optional), merge it over DEFAULTS and validate it."""
+ORIGIN_ENV = ("BAZINGA_ORIGIN", "SITE_URL")   # `bazinga build` takes site.origin from these when set (first wins)
+
+
+def origin_from_env(environ=None) -> str | None:
+    """The address a deploy sets for ``python -m bazinga build`` (``BAZINGA_ORIGIN``, else ``SITE_URL``), or None."""
+    environ = os.environ if environ is None else environ
+    for name in ORIGIN_ENV:
+        if (environ.get(name) or "").strip():
+            return environ[name].strip()
+    return None
+
+
+def site_url(base: str, path):
+    """``/reads/x/`` -> ``/notes/reads/x/`` when the site lives under ``/notes``. Anything that is not a path on this
+    site (``https://…``, ``//host/…``, ``#id``, ``mailto:``, a relative path) is returned unchanged. Apply it once, where
+    a link is written: a site under ``/posts`` may well have a ``/posts/`` list of its own."""
+    if not base or not isinstance(path, str) or not path.startswith("/") or path.startswith("//"):
+        return path
+    return base + path
+
+
+_ATTR_PATH = re.compile(r"""(\s(?:href|src|poster|action)\s*=\s*)(["'])(/(?!/)[^"']*)\2""", re.I)
+
+
+def site_links(base: str, html: str) -> str:
+    """An HTML fragment written by hand or by Markdown (``<a href="/cv/">``) with each ``href``/``src``/``poster``/
+    ``action`` that is a path on this site given ``base``. Used once on each fragment, where it is rendered."""
+    if not base or not html:
+        return html
+    return _ATTR_PATH.sub(lambda m: m.group(1) + m.group(2) + base + m.group(3) + m.group(2), html)
+
+
+def load(root=None, local: bool = False, origin: str | None = None) -> Config:
+    """Read ``<root>/site.yml`` (optional), merge it over DEFAULTS and validate it.
+
+    ``origin`` replaces ``site.origin`` (``python -m bazinga build`` passes :func:`origin_from_env`, so a deploy can set
+    the address without editing site.yml). When the origin has a path (a GitHub Pages project site,
+    ``https://alice.github.io/notes``), every link the build writes starts with that path (``cfg.base``).
+    ``local=True`` (the development server and the Editor, which serve the site at the root of 127.0.0.1) keeps the
+    base empty."""
     root = Path(root).resolve() if root else ROOT
     path = root / "site.yml"
     data: dict = {}
@@ -168,10 +218,14 @@ def load(root=None) -> Config:
         if not isinstance(data, dict):
             raise ConfigError("site.yml must be a mapping of sections (site:, nav:, theme: ...)")
     merged = deep_merge(DEFAULTS, data)
+    if origin:
+        merged["site"]["origin"] = origin
     # A site that defines its own kinds replaces the default kinds instead of adding to them.
     if isinstance(data.get("kinds"), dict):
         merged["kinds"] = copy.deepcopy(data["kinds"])
     _validate(merged)
+    if local:
+        merged["site"]["base"] = ""
     return Config(merged, root)
 
 
@@ -181,6 +235,13 @@ def _validate(cfg: dict) -> None:
     site["origin"] = str(site.get("origin") or "https://example.com").rstrip("/")
     if not re.match(r"^https?://", site["origin"]):
         raise ConfigError(f"site.origin must start with http:// or https:// (got {site['origin']!r})")
+    parts = urlsplit(site["origin"])
+    if not parts.netloc or parts.query or parts.fragment:
+        raise ConfigError(f"site.origin must be an address such as https://example.com or "
+                          f"https://you.github.io/repo (got {site['origin']!r})")
+    # the path the site is served under ("" at the root of its host), without a trailing slash
+    site["base"] = "/".join(s for s in parts.path.split("/") if s)
+    site["base"] = "/" + site["base"] if site["base"] else ""
     for key in ("name", "author", "tagline", "description", "language"):
         site[key] = "" if site.get(key) is None else str(site[key])
     if not isinstance(site.get("links"), dict):

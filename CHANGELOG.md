@@ -1,0 +1,37 @@
+# Changelog
+
+What changed in Bazinga, newest first. If your site was made from an older copy, this is the list to read before you
+pull the new version in.
+
+## 2026-10-23
+
+- **Sites under a sub-path work.** If `site.origin` has a path (for example `https://you.github.io/notes`), every
+  link, asset, data file and figure module is placed under `/notes`. The GitHub Pages workflow fills in the address
+  by itself, so a project site works with no edits. `python -m bazinga build --origin …`, `BAZINGA_ORIGIN` or
+  `SITE_URL` set the address for one build. If you changed templates under `theme/`, write your own links with
+  `link()` or `{{ base }}`.
+- **Publish pushes where you expect.** It pushes to the branch your current one tracks, even when the names differ.
+  It no longer commits under a made-up email: set `publish.author` in `site.yml` or your git name and email first.
+- **`CLAUDE.md`** points coding agents to `AGENTS.md`, so its rules (you write and publish; models only propose)
+  apply to every agent.
+- **New look for the project:** the Bazinga logo (a Vulcan-salute hand with a pencil beside it), the tagline
+  "Live long and connect the dots.", and an animated README banner. Their files are in `documentation/assets/brand/`.
+
+## 2026-10-22
+
+- **3-D figures.** Surfaces, curves, planes, vectors, boxes, axes and cameras that readers turn by dragging, with
+  points they can move. Four new starters (`scene_basic`, `surface_plot`, `vectors_planes`, `camera_rig`) and a
+  "3-D scene" type in the figure form. `figure test` now also drags every handle.
+- **"Made with Bazinga"** link in the rail and the logo as the default tab icon. Turn the link off with
+  `features: {credit: false}`.
+
+## 2026-10-21
+
+- The writing window is called the **Editor** (`python -m bazinga editor`). The old name `studio` still works.
+
+## 2026-10-20
+
+- **First version**, then named Bazinga: Markdown posts with real equations, interactive figures (a form, starters,
+  or code), text diagrams, the map, Ask, the wiki files, series and topic pages, a CV page, and the local Editor that
+  publishes. Four new templates (your own data as lines, two linked panels, data piling up, a field of arrows) and a
+  page with every template working.

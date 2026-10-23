@@ -8,7 +8,8 @@ site:
   tagline: "Notes on the things I build and learn"   # a short line for search engines and the feed
   description: "Reads, paper explainers and projects in machine learning, with interactive figures and a map of how every page connects."
                                         # ≤155 characters: what search engines show for the home page
-  origin: "https://example.com"         # where the site will live, without a trailing slash (canonical links, sitemap)
+  origin: "https://example.com"         # where the site will live, without a trailing slash (canonical links, sitemap);
+                                        # a path (https://you.github.io/notes) serves every page under /notes
   language: en
   avatar: ""                            # optional: e.g. static/avatar.png (also the share image and favicon)
   links:                                # shown on the home page (in this order) and on the CV; leave empty to hide one

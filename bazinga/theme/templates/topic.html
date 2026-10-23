@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {#- One topic hub: the pages on it in reading order, the live figures those pages use, and the topics that go with it. -#}
-{% block cta %}<a class="cta" href="/topics/">All topics</a><a class="cta" href="/explore/?tag={{ slug }}">On the map</a>{% endblock %}
+{% block cta %}<a class="cta" href="{{ base }}/topics/">All topics</a><a class="cta" href="{{ base }}/explore/?tag={{ slug }}">On the map</a>{% endblock %}
 
 {% block content %}
 <section class="sec" id="top">
@@ -13,8 +13,8 @@
   <h2 class="lab">In reading order</h2>
   <ol class="path">
     {% for p in parts %}
-    <li><div><span class="n dim" style="font-family:var(--mono);margin-right:10px">{{ loop.index }}</span><a data-x="{{ p.id }}" href="{{ p.url }}">{{ p.title }}</a></div>
-      <div class="why">{{ p.kl }}{% if p.read_first %} · read first: {% for r in p.read_first %}<a data-x="{{ r.id }}" href="{{ r.url }}">{{ r.title }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</div></li>
+    <li><div><span class="n dim" style="font-family:var(--mono);margin-right:10px">{{ loop.index }}</span><a data-x="{{ p.id }}" href="{{ link(p.url) }}">{{ p.title }}</a></div>
+      <div class="why">{{ p.kl }}{% if p.read_first %} · read first: {% for r in p.read_first %}<a data-x="{{ r.id }}" href="{{ link(r.url) }}">{{ r.title }}</a>{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</div></li>
     {% endfor %}
   </ol>
 </section>
@@ -25,7 +25,7 @@
   <p class="lead-s" style="font-size:16.5px">Pulled from the pages above. Move a slider and the figure recomputes, exactly as on its page.</p>
   {% for f in figures %}
   <div class="pulled">
-    <p class="sub">From <a data-x="{{ f.from.id }}" href="{{ f.from.url }}{% if f.anchor %}#{{ f.anchor }}{% endif %}">{{ f.from.title }}</a>{% if f.section %} › {{ f.section }}{% endif %}</p>
+    <p class="sub">From <a data-x="{{ f.from.id }}" href="{{ link(f.from.url) }}{% if f.anchor %}#{{ f.anchor }}{% endif %}">{{ f.from.title }}</a>{% if f.section %} › {{ f.section }}{% endif %}</p>
     {{ f.html }}
   </div>
   {% endfor %}
@@ -35,7 +35,7 @@
 {% if near %}
 <section class="sec" id="near">
   <h2 class="lab">Tags that go with it</h2>
-  <p class="tags">{% for n in near %}<a class="tag" href="/topics/{{ n.slug }}/">{{ n.label }} <span class="dim">{{ n.shared }}</span></a>{% endfor %}</p>
+  <p class="tags">{% for n in near %}<a class="tag" href="{{ base }}/topics/{{ n.slug }}/">{{ n.label }} <span class="dim">{{ n.shared }}</span></a>{% endfor %}</p>
 </section>
 {% endif %}
 {% endblock %}

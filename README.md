@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="documentation/assets/brand/banner-dark.gif">
-    <img src="documentation/assets/brand/banner-light.gif" width="100%" alt="Bazinga: a Vulcan-salute hand holding a pencil, beside a small post whose equation types in, whose live figure slides a box while its loss curve updates, and whose map of linked posts lights up.">
+    <img src="documentation/assets/brand/banner-light.gif" width="100%" alt="Bazinga: numbered dots joined one by one by a pencil turn out to be a Vulcan-salute hand, which becomes the Bazinga logo, beside the line Live long and connect the dots.">
   </picture>
 </p>
 
@@ -227,12 +227,17 @@ committed. Any OpenAI-compatible service works, including a local one through Ol
 
 ## 9. Deploy
 
-| Host | How |
+`site.origin` in `site.yml` is the address the site lives at; canonical links, the sitemap and the feed use it, and a
+path in it (`https://you.github.io/notes`) puts every link under `/notes`. `python -m bazinga serve` always serves at
+the root of 127.0.0.1.
+
+| Host | What to set |
 |---|---|
-| Vercel | Import the repository. `vercel.json` runs the tests and the build. Written answers on Ask need the key set in the project. |
-| Netlify | Import the repository (`netlify.toml`). |
-| GitHub Pages | Settings → Pages → Source: GitHub Actions (`.github/workflows/pages.yml`). |
-| Anywhere | `python -m bazinga build`, then upload `_site/`. |
+| Vercel | Import the repository (`vercel.json` runs the tests and the build). Set `site.origin` to your domain. For written answers on Ask, set `llm.model` and add `LLM_API_KEY` (and optionally `SITE_URL`, the site's address) in Project → Settings → Environment Variables. |
+| Netlify | Import the repository (`netlify.toml`). Set `site.origin`. |
+| GitHub Pages | Settings → Pages → Source: GitHub Actions. The workflow (`.github/workflows/pages.yml`) fills in the address, including the `/<repo>/` path. |
+| Custom domain | Set `site.origin` to it (on GitHub Pages the workflow picks the domain up by itself). |
+| Anywhere | `python -m bazinga build` (or `--origin https://…` for another address), then upload `_site/`. |
 
 ## Folders
 

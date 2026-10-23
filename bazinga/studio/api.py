@@ -51,7 +51,7 @@ class Editor:
         mtime = p.stat().st_mtime if p.exists() else None
         if self._cfg is None or mtime != self._cfg_mtime:
             config.set_root(self.root)
-            self._cfg = config.load(self.root)
+            self._cfg = config.load(self.root, local=True)
             self._cfg_mtime = mtime
         return self._cfg
 

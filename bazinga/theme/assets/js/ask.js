@@ -11,8 +11,10 @@
    from them only, each cited. It appears only when the site has it switched on. Answers are never stored. */
 (function () {
   "use strict";
-  const PASSAGES = "/data/passages.json", GRAPH = "/data/graph.json", MAPDATA = "/data/mapdata.json";
-  const MODULE = "/figures/_retrieve.py", API = "/api/ask/";
+  // the path the site is served under: empty at the root of its host, /repo for a GitHub Pages project site
+  const BASE = (document.querySelector('meta[name="bazinga-base"]') || {}).content || "";
+  const PASSAGES = BASE + "/data/passages.json", GRAPH = BASE + "/data/graph.json", MAPDATA = BASE + "/data/mapdata.json";
+  const MODULE = BASE + "/figures/_retrieve.py", API = BASE + "/api/ask/";
   const PAGE = document.body.dataset.page || null, TITLE = document.body.dataset.title || "";
   const S = window.SITE || { nodes: {}, kinds: {} };
   const e = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -29,7 +31,7 @@
       .then(([passages, graph]) => ({ passages, graph })));
   }
   function loadMap() { return mapdata || (mapdata = getJSON(MAPDATA).catch(() => ({ items: [] }))); }
-  function viewOf(id) { return views[id] || (views[id] = getJSON("/data/view/" + id.replace(":", "-") + ".json")); }
+  function viewOf(id) { return views[id] || (views[id] = getJSON(BASE + "/data/view/" + id.replace(":", "-") + ".json")); }
   function apiStatus() {
     return api || (api = fetch(API, { headers: { Accept: "application/json" } })
       .then((r) => (r.ok ? r.json() : { on: false })).catch(() => ({ on: false })));
@@ -183,9 +185,9 @@
       items.forEach((x) => (x.topics || []).forEach((t) => { tags[t] = (tags[t] || 0) + 1; }));
       const groups = {};
       Object.keys(tags).forEach((t) => { const nd = S.nodes["topic:" + t] || { title: t, group: "" }; (groups[nd.group || "Topics"] = groups[nd.group || "Topics"] || []).push([t, nd.title, tags[t]]); });
-      return { html: `<div class="sub">This site</div><p>${parts.join(", ")}, all on one <a href="/explore/">map</a>: a page hangs from what it builds on.</p>` +
+      return { html: `<div class="sub">This site</div><p>${parts.join(", ")}, all on one <a href="${BASE}/explore/">map</a>: a page hangs from what it builds on.</p>` +
         (roots.length ? `<div class="sub" style="margin-top:12px">Where it starts</div><ol class="path">${roots.map((x) => `<li><div>${item(x.id)}</div><div class="why">${below[x.id]} page${below[x.id] === 1 ? "" : "s"} build on it</div></li>`).join("")}</ol>` : "") +
-        `<div class="sub" style="margin-top:12px">By topic</div>${Object.entries(groups).map(([g, ts]) => `<p class="why"><b>${e(g)}</b> · ${ts.map(([t, title, n]) => `<a href="/topics/${e(t)}/">${e(title)}</a> (${n})`).join(", ")}</p>`).join("")}` +
+        `<div class="sub" style="margin-top:12px">By topic</div>${Object.entries(groups).map(([g, ts]) => `<p class="why"><b>${e(g)}</b> · ${ts.map(([t, title, n]) => `<a href="${BASE}/topics/${e(t)}/">${e(title)}</a> (${n})`).join(", ")}</p>`).join("")}` +
         `<p class="why">Ask about any page by name, or open one and use the Ask button there: it then knows which page you mean.</p>`, shown, search: false };
     }
     if (it.kind === "connect") {
@@ -319,7 +321,7 @@
   // ------------------------------------------------------------------------------------- page and widget
   function start() {
     const page = document.getElementById("ask-form");
-    if (page && location.pathname.replace(/index\.html$/, "") === "/ask/") {
+    if (page && location.pathname.replace(/index\.html$/, "") === BASE + "/ask/") {
       const box = mount(document);
       const pre = new URLSearchParams(location.search).get("q");
       if (pre) { box.input.value = pre; box.input.focus(); if (!pre.endsWith(" ")) box.ask(pre); }
@@ -337,7 +339,7 @@
       <form class="askbox" id="ask-form" autocomplete="off"><div class="askrow"><input class="find" id="ask-q" type="search" placeholder="a paper, a concept, or what connects two pages …" aria-label="Your question" maxlength="300"><button class="chip" type="submit" id="ask-go">Ask</button><button class="chip" type="button" id="ask-model" hidden>Written answer <span class="left" id="ask-left"></span></button></div>
       <div class="chips examples" id="ask-eg">${eg.map(([l, q]) => `<button type="button" class="chip eg" data-q="${e(q)}">${e(l)}</button>`).join("")}</div></form>
       <div class="answer" id="ask-out" hidden></div><p class="pystat" id="ask-stat" hidden></p>
-      <p class="askpanel-more"><a href="/ask/">Open the Ask page →</a></p>`;
+      <p class="askpanel-more"><a href="${BASE}/ask/">Open the Ask page →</a></p>`;
     document.body.append(btn, panel);
     let box = null, opened = false;
     function open() {

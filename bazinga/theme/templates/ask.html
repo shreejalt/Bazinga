@@ -6,7 +6,7 @@
 <section class="sec" id="ask">
   <h1 class="pagetitle">Ask</h1>
   <p class="lead-s">Ask about anything written here. The answer is a set of pointers: the chain of links between two pages, what to read before or after one, or the sections where the words you used appear — all from the pages themselves, nothing made up. When the pointers are not enough, ask for a written answer: a few sentences put together from the closest passages, each one cited.</p>
-  <form class="askbox" id="ask-form" autocomplete="off" data-passages="/data/passages.json" data-graph="/data/graph.json">
+  <form class="askbox" id="ask-form" autocomplete="off" data-passages="{{ base }}/data/passages.json" data-graph="{{ base }}/data/graph.json">
     <div class="askrow">
       <input class="find" id="ask-q" type="search" placeholder="a paper, a concept, or what connects two pages …" aria-label="Your question" maxlength="300" autofocus>
       <button class="chip" type="submit" id="ask-go">Ask</button>
@@ -18,6 +18,6 @@
   </form>
   <div class="answer" id="ask-out" hidden></div>
   <p class="pystat" id="ask-stat" hidden></p>
-  <noscript><p class="fn">Asking needs JavaScript. You can still browse the <a href="/explore/">map</a> or the <a href="/topics/">topics</a>.</p></noscript>
+  <noscript><p class="fn">Asking needs JavaScript. You can still browse the <a href="{{ base }}/explore/">map</a> or the <a href="{{ base }}/topics/">topics</a>.</p></noscript>
 </section>
 {% endblock %}

@@ -13,7 +13,7 @@ from pathlib import Path
 def _cfg():
     from bazinga import config
     config.set_root(Path.cwd())
-    return config.load(Path.cwd())
+    return config.load(Path.cwd(), local=True)
 
 
 def op_figure_report(args):

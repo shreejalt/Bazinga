@@ -3,7 +3,7 @@
 {#- A read or a paper write-up, in the memo layout: header block, title, series strip, summary, contents with page
     numbers, the body, Connections, Papers, and the older/newer links. -#}
 {% block bodyclass %}post kind-{{ page.kind }}{% endblock %}
-{% block cta %}<a class="cta" href="{{ kind_list_url }}">All {{ kind_list_label|lower }}</a>{% endblock %}
+{% block cta %}<a class="cta" href="{{ link(kind_list_url) }}">All {{ kind_list_label|lower }}</a>{% endblock %}
 {% block tiny %}{{ page.date|full_date }}{% endblock %}
 
 {% block content %}
@@ -23,10 +23,10 @@
   <div class="hdr" style="white-space:normal">
     <div>
       <div>{{ kind_list_label }}, {{ site.name }}</div>
-      {% if explains %}<div>Explains: {% for e in explains %}<a href="{{ e.url }}">{{ e.title }}</a> ({{ e.authors }}, {{ e.year }}){% if not loop.last %}; {% endif %}{% endfor %}</div>{% endif %}
-      {% if series_info %}<div>Series: <a href="{{ series_info.url }}">{{ series_info.name }}</a>, part {{ series_info.part }} of {{ series_info.n }}</div>{% endif %}
-      <div>Tags: {% for t in page_topics %}<a href="/topics/{{ t.slug }}/" data-tag="{{ t.slug }}">{{ t.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</div>
-      {% if builds_on %}<div>Builds on: {% for b in builds_on %}<a data-x="{{ b.id }}" href="{{ b.url }}">{{ b.title }}</a>{% if not loop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+      {% if explains %}<div>Explains: {% for e in explains %}<a href="{{ link(e.url) }}">{{ e.title }}</a> ({{ e.authors }}, {{ e.year }}){% if not loop.last %}; {% endif %}{% endfor %}</div>{% endif %}
+      {% if series_info %}<div>Series: <a href="{{ link(series_info.url) }}">{{ series_info.name }}</a>, part {{ series_info.part }} of {{ series_info.n }}</div>{% endif %}
+      <div>Tags: {% for t in page_topics %}<a href="{{ base }}/topics/{{ t.slug }}/" data-tag="{{ t.slug }}">{{ t.label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</div>
+      {% if builds_on %}<div>Builds on: {% for b in builds_on %}<a data-x="{{ b.id }}" href="{{ link(b.url) }}">{{ b.title }}</a>{% if not loop.last %}; {% endif %}{% endfor %}</div>{% endif %}
       {% if meta.first_published %}<div>First published: {{ meta.first_published }}</div>{% endif %}
       {% if page.updated %}<div>Updated: {{ page.updated|full_date }}</div>{% endif %}
     </div>
@@ -34,7 +34,7 @@
   </div>
 
   <h1>{{ page.title }}</h1>
-  {% if series_info %}<ol class="series">{% for s in series_info.parts %}<li{% if s.id == page.id %} class="here"{% endif %}><span class="n">{{ s.part }}</span>{% if s.id == page.id %}<b>{{ s.title }}</b>{% else %}<a data-x="{{ s.id }}" href="{{ s.url }}">{{ s.title }}</a>{% endif %}</li>{% endfor %}</ol>{% endif %}
+  {% if series_info %}<ol class="series">{% for s in series_info.parts %}<li{% if s.id == page.id %} class="here"{% endif %}><span class="n">{{ s.part }}</span>{% if s.id == page.id %}<b>{{ s.title }}</b>{% else %}<a data-x="{{ s.id }}" href="{{ link(s.url) }}">{{ s.title }}</a>{% endif %}</li>{% endfor %}</ol>{% endif %}
 
   <h2 id="summary">Summary</h2>
   <div class="b"><p>{{ page.summary }}</p></div>
@@ -70,15 +70,15 @@
   {% if show_papers %}
   <h2 id="papers">{{ n_refs }}. Papers</h2>
   <ul class="refs">
-    {% for r in refs %}<li id="ref-{{ r.key }}"><span>[{{ r.n }}]</span><span>{{ r.authors }}, "{{ r.title }}", {% if r.url %}<a{% if not r.explained %} data-x="ref:{{ r.key }}"{% endif %} href="{{ r.url }}">{{ r.link }}</a>{% else %}{{ r.link }}{% endif %}, {{ r.year }}.{% for e in r.explained %} <a data-x="{{ e.id }}" href="{{ e.url }}">Explained here →</a>{% endfor %}</span></li>
+    {% for r in refs %}<li id="ref-{{ r.key }}"><span>[{{ r.n }}]</span><span>{{ r.authors }}, "{{ r.title }}", {% if r.url %}<a{% if not r.explained %} data-x="ref:{{ r.key }}"{% endif %} href="{{ link(r.url) }}">{{ r.link }}</a>{% else %}{{ r.link }}{% endif %}, {{ r.year }}.{% for e in r.explained %} <a data-x="{{ e.id }}" href="{{ link(e.url) }}">Explained here →</a>{% endfor %}</span></li>
     {% endfor %}
   </ul>
   {% endif %}
 
   <div class="pagebreak">
-    <span>{% if prev %}<a data-x="{{ prev.id }}" href="{{ prev.url }}">&lt;- Older</a>{% endif %}</span>
+    <span>{% if prev %}<a data-x="{{ prev.id }}" href="{{ link(prev.url) }}">&lt;- Older</a>{% endif %}</span>
     <span>[Page {{ last_page }}]</span>
-    <span>{% if next %}<a data-x="{{ next.id }}" href="{{ next.url }}">Newer -&gt;</a>{% endif %}</span>
+    <span>{% if next %}<a data-x="{{ next.id }}" href="{{ link(next.url) }}">Newer -&gt;</a>{% endif %}</span>
   </div>
 </article>
 {% endblock %}
