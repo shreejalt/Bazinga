@@ -4,6 +4,7 @@
    "chain between" and "in reading order" are computed in the browser by the same code the build uses). */
 (function(){
 const q=s=>document.querySelector(s);
+const BASE=(q('meta[name="bazinga-base"]')||{}).content||'';   // the path the site is served under, "" at the root
 const M={hover:null,shown:null,filter:'all',q:'',tag:'',nodes:{},edges:{},layout:null,views:{},topics:{}};
 const V=(window.BazingaConfig&&window.BazingaConfig.version)||'';
 const stat=q('#m-stat');
@@ -77,7 +78,7 @@ function play(m){clearPlay();if(!m)return;const svg=q('#m'),still=reduced();let 
 
 async function viewOf(id){
  if(M.views[id])return M.views[id];
- const r=await fetch('/data/view/'+id.replace(':','-')+'.json'+(V?'?v='+V:''));
+ const r=await fetch(BASE+'/data/view/'+id.replace(':','-')+'.json'+(V?'?v='+V:''));
  return (M.views[id]=await r.json());}
 let timer=null;
 function show(id){M.shown=id;const n=SITE.nodes[id]||{title:id};
@@ -102,7 +103,7 @@ q('#m-tag').onchange=e=>{M.tag=e.target.value;M.shown=null;clearPlay();paint();}
 document.querySelectorAll('.chip[data-f]').forEach(c=>c.onclick=()=>{M.filter=c.dataset.f;document.querySelectorAll('.chip[data-f]').forEach(x=>x.setAttribute('aria-pressed',x===c));paint();});
 
 const wanted=new URLSearchParams(location.search).get('tag');
-Promise.all([fetch('/data/map.json').then(r=>r.json()),fetch('/data/mapdata.json').then(r=>r.json())]).then(([L,D])=>{
+Promise.all([fetch(BASE+'/data/map.json').then(r=>r.json()),fetch(BASE+'/data/mapdata.json').then(r=>r.json())]).then(([L,D])=>{
  (D.items||[]).forEach(it=>{M.topics[it.id]=it.topics||[];});
  draw(L);
  if(wanted&&SITE.nodes['topic:'+wanted]){M.tag=wanted;q('#m-tag').value=wanted;paint();}
@@ -110,7 +111,7 @@ Promise.all([fetch('/data/map.json').then(r=>r.json()),fetch('/data/mapdata.json
 
 /* ---- series found in the map ---- */
 const box=q('#series');if(!box)return;
-const sOut=q('#s-out'),sStat=q('#s-stat'),mod=box.dataset.mapview||'/figures/_mapview.py';
+const sOut=q('#s-out'),sStat=q('#s-stat'),mod=box.dataset.mapview||BASE+'/figures/_mapview.py';
 function seriesHTML(list,heading){
  if(!list||!list.length)return `<p class="why">${esc(heading)}: nothing found.</p>`;
  return list.map(s=>`<div class="gen" data-ids="${esc(s.ids.join(' '))}"><div class="sub">${esc(s.name)} · ${s.length} parts${s.declared===false?' · found on the map, not yet declared':s.declared?' · declared':''}</div>
@@ -121,11 +122,11 @@ function showChain(ids){M.shown=null;paint();const set=new Set(ids);
 sOut.addEventListener('pointerover',e=>{const g=e.target.closest('.gen');if(g&&e.pointerType!=='touch')showChain(g.dataset.ids.split(' '));});
 async function runSeries(fn,args,heading){sStat.textContent='Finding the chains …';
  try{const py=window.Bazinga&&window.Bazinga.py;if(!py)throw new Error('not ready');
-  const r=await py.call(mod,fn,Object.assign({data:{$json:'/data/mapdata.json'}},args));
+  const r=await py.call(mod,fn,Object.assign({data:{$json:BASE+'/data/mapdata.json'}},args));
   const list=Array.isArray(r)?r:(r?[r]:[]);sOut.innerHTML=seriesHTML(list,heading);
   sStat.textContent=`${heading}: ${list.length} series.`;sStat.classList.add('live');}
  catch(e){sStat.textContent='Still getting ready; try again in a moment.';}}
 q('#s-between').onclick=()=>{const a=q('#s-from').value,b=q('#s-to').value;if(a&&b)runSeries('series_between',{start:a,end:b},'Chain between');};
 q('#s-bytag').onclick=()=>{const t=q('#s-tag').value;if(t)runSeries('series_for_tag',{tag:t},'In reading order');};
-fetch('/data/series.json').then(r=>r.json()).then(list=>{sOut.innerHTML=seriesHTML(list,'Found on the map');sStat.textContent=`Found on the map: ${list.length} series.`;sStat.classList.add('live');}).catch(()=>{});
+fetch(BASE+'/data/series.json').then(r=>r.json()).then(list=>{sOut.innerHTML=seriesHTML(list,'Found on the map');sStat.textContent=`Found on the map: ${list.length} series.`;sStat.classList.add('live');}).catch(()=>{});
 })();

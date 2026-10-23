@@ -15,11 +15,12 @@
 <meta name="author" content="{{ author }}">
 <meta name="color-scheme" content="light">
 <meta name="bazinga-pyodide" content="{{ vendor.pyodide_index }}">
-<meta name="bazinga-root" content="/">
+<meta name="bazinga-root" content="{{ base }}/">
+<meta name="bazinga-base" content="{{ base }}">
 {% if drafts %}<meta name="robots" content="noindex">
 {% endif %}
 <script type="application/ld+json">{{ jsonld|safe }}</script>
-{% if site.avatar %}<link rel="icon" href="/{{ site.avatar }}">
+{% if site.avatar %}<link rel="icon" href="{{ base }}/{{ site.avatar }}">
 {% else %}<link rel="icon" type="image/svg+xml" href="{{ asset('img/bazinga.svg') }}">
 {% endif %}
 {% for origin in vendor.font_preconnect %}
@@ -39,11 +40,11 @@
 {% endif %}
 {% if has_asset('css/wiki.css') %}<link rel="stylesheet" href="{{ asset('css/wiki.css') }}">
 {% endif %}
-{% if has_feed %}<link rel="alternate" type="application/atom+xml" title="{{ site.name }}" href="/feed.xml">
+{% if has_feed %}<link rel="alternate" type="application/atom+xml" title="{{ site.name }}" href="{{ base }}/feed.xml">
 {% endif %}
 {% if markdown_url %}<link rel="alternate" type="text/markdown" href="{{ markdown_url }}">
 {% endif %}
-{% if features.llms_txt %}<link rel="describedby" type="text/markdown" href="/llms.txt">
+{% if features.llms_txt %}<link rel="describedby" type="text/markdown" href="{{ base }}/llms.txt">
 {% endif %}
 <script src="{{ site_data }}"></script>
 <script src="{{ asset('js/site.js') }}"></script>
@@ -55,13 +56,13 @@
 <a class="skip" href="#main">Skip to the content</a>
 <div class="shell">
 <aside class="rail">
-  <a class="brand" href="/">{{ site.name }}</a>
+  <a class="brand" href="{{ base }}/">{{ site.name }}</a>
   <nav aria-label="Sections">
-    {% for href, label in rail_nav %}<a href="{{ href }}"{% if (here and href == here) or (not here and loop.first) %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
+    {% for href, label in rail_nav %}<a href="{{ link(href) }}"{% if (here and href == here) or (not here and loop.first) %} aria-current="true"{% endif %}>{{ label }}</a>{% endfor %}
   </nav>
   <div class="sep"></div>
   <!-- local-tools -->
-  {% if not here %}{% block cta %}<a class="cta" href="/">Home</a>{% endblock %}{% endif %}
+  {% if not here %}{% block cta %}<a class="cta" href="{{ base }}/">Home</a>{% endblock %}{% endif %}
   <p class="tiny">{% block tiny %}Updated {{ updated }}{% endblock %}</p>
   {% if features.credit %}<a class="made" href="https://github.com/shreejalt/Bazinga"><img src="{{ asset('img/bazinga.svg') }}" alt="" width="22" height="22">Made with Bazinga</a>{% endif %}
 </aside>

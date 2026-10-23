@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {#- The map. explore.js draws /data/map.json and plays each page's /data/view/<id>.json on hover or tap. -#}
-{% block cta %}<a class="cta" href="/">Home</a>{% endblock %}
+{% block cta %}<a class="cta" href="{{ base }}/">Home</a>{% endblock %}
 {% block bodyclass %}mappage{% endblock %}
 
 {% block content %}
 <section class="sec" id="explore">
   <h1 class="pagetitle">Explore</h1>
-  <p class="lead-s">Everything on this site, as one map. An item hangs from what it builds on. Hover an item and watch two things happen: first what is nearest to it lights up, ring by ring, each with its distance; then a dot walks the reading order through it, numbering every item on the way. Everything the two walks do not reach fades away until the next hover. Click to open it.{% if features.ask %} Have a question instead? <a href="/ask/">Ask</a>.{% endif %}</p>
+  <p class="lead-s">Everything on this site, as one map. An item hangs from what it builds on. Hover an item and watch two things happen: first what is nearest to it lights up, ring by ring, each with its distance; then a dot walks the reading order through it, numbering every item on the way. Everything the two walks do not reach fades away until the next hover. Click to open it.{% if features.ask %} Have a question instead? <a href="{{ base }}/ask/">Ask</a>.{% endif %}</p>
   <div class="finder">
     <input class="find" id="m-find" type="search" placeholder="search: a title or a word …" aria-label="Search the map">
     <select id="m-tag" aria-label="Show a tag"><option value="">Any tag</option>{% for group, slugs in groups %}{% set used = slugs|select('in', tag_counts)|list %}{% if used %}<optgroup label="{{ group }}">{% for slug in used %}<option value="{{ slug }}">{{ topics_map[slug].label }} ({{ tag_counts[slug] }})</option>{% endfor %}</optgroup>{% endif %}{% endfor %}</select>

@@ -19,7 +19,8 @@
 
   var DEFAULT_INDEX_URL = "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/";
   var script = document.currentScript;
-  var scriptSrc = (script && script.src) || (location.origin + "/assets/js/figure.js");
+  var scriptSrc = (script && script.src) ||
+    new URL("assets/js/figure.js", new URL(meta("bazinga-root") || "/", location.href)).href;
 
   function meta(name) {
     var m = document.querySelector('meta[name="' + name + '"]');

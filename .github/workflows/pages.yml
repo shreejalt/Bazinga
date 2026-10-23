@@ -25,7 +25,13 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements.txt
       - run: python -m unittest discover tests
+      # The address GitHub serves the site at: https://<user>.github.io/<repo> for a project site (every link then
+      # starts with /<repo>), or the custom domain when one is set. It replaces site.origin for this build only.
+      - id: pages
+        uses: actions/configure-pages@v5
       - run: python -m bazinga build
+        env:
+          BAZINGA_ORIGIN: ${{ steps.pages.outputs.base_url }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

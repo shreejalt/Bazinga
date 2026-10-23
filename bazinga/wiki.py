@@ -280,12 +280,27 @@ def write_site_files(cfg, pages, rendered, graph, out: Path):
     if llms_on:
         _write(out / "llms.txt", llms_txt(cfg, pages, graph))
         _write(out / "llms-full.txt", "\n\n---\n\n".join(docs))
-    ps = passages(pages, rendered or {})
+    # the browser follows these addresses: a site under a sub-path (cfg base) needs it in front of each
+    base = str(_get(cfg, "site", "base", default="") or "")
+    ps = _with_base(passages(pages, rendered or {}), base)
     _write(out / "data" / "passages.json", json.dumps(ps, ensure_ascii=False, separators=(",", ":")))
-    _write(out / "data" / "graph.json", json.dumps(graph.to_json(), ensure_ascii=False, separators=(",", ":")))
+    _write(out / "data" / "graph.json", json.dumps(_with_base(graph.to_json(), base), ensure_ascii=False,
+                                                   separators=(",", ":")))
     (out / "figures").mkdir(parents=True, exist_ok=True)
     shutil.copyfile(Path(__file__).with_name("retrieve.py"), out / "figures" / "_retrieve.py")
     return {"passages": len(ps), "pages": len(pages)}
+
+
+def _with_base(obj, base: str):
+    """``obj`` with every ``url`` that is a path on this site (``/reads/x/``) moved under ``base``."""
+    if not base:
+        return obj
+    if isinstance(obj, dict):
+        return {k: (base + v if k == "url" and isinstance(v, str) and v.startswith("/") and not v.startswith("//")
+                    else _with_base(v, base)) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_with_base(v, base) for v in obj]
+    return obj
 
 
 # ------------------------------------------------------------------------------------------------

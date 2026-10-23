@@ -227,12 +227,17 @@ committed. Any OpenAI-compatible service works, including a local one through Ol
 
 ## 9. Deploy
 
-| Host | How |
+`site.origin` in `site.yml` is the address the site lives at; canonical links, the sitemap and the feed use it, and a
+path in it (`https://you.github.io/notes`) puts every link under `/notes`. `python -m bazinga serve` always serves at
+the root of 127.0.0.1.
+
+| Host | What to set |
 |---|---|
-| Vercel | Import the repository. `vercel.json` runs the tests and the build. Written answers on Ask need the key set in the project. |
-| Netlify | Import the repository (`netlify.toml`). |
-| GitHub Pages | Settings → Pages → Source: GitHub Actions (`.github/workflows/pages.yml`). |
-| Anywhere | `python -m bazinga build`, then upload `_site/`. |
+| Vercel | Import the repository (`vercel.json` runs the tests and the build). Set `site.origin` to your domain. For written answers on Ask, set `llm.model` and add `LLM_API_KEY` (and optionally `SITE_URL`, the site's address) in Project → Settings → Environment Variables. |
+| Netlify | Import the repository (`netlify.toml`). Set `site.origin`. |
+| GitHub Pages | Settings → Pages → Source: GitHub Actions. The workflow (`.github/workflows/pages.yml`) fills in the address, including the `/<repo>/` path. |
+| Custom domain | Set `site.origin` to it (on GitHub Pages the workflow picks the domain up by itself). |
+| Anywhere | `python -m bazinga build` (or `--origin https://…` for another address), then upload `_site/`. |
 
 ## Folders
 

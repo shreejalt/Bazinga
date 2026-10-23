@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {#- Every series (/series/) or one series with its parts in reading order and their highlights. -#}
-{% block cta %}{% if one %}<a class="cta" href="/series/">All series</a>{% else %}<a class="cta" href="/">Home</a>{% endif %}<a class="cta" href="/explore/">Explore</a>{% endblock %}
+{% block cta %}{% if one %}<a class="cta" href="{{ base }}/series/">All series</a>{% else %}<a class="cta" href="{{ base }}/">Home</a>{% endif %}<a class="cta" href="{{ base }}/explore/">Explore</a>{% endblock %}
 
 {% block content %}
 {% if not one %}
@@ -11,11 +11,11 @@
   <div class="sindex">
   {% for s in series %}
     <article class="sblock">
-      <h2><a href="{{ s.url }}">{{ s.name }}</a></h2>
+      <h2><a href="{{ link(s.url) }}">{{ s.name }}</a></h2>
       {% if s.about %}<p class="about">{{ s.about }}</p>{% endif %}
       <p class="meta">{{ s.count }} parts{% if s.figures %} · {{ s.figures }} interactive figure{{ '' if s.figures == 1 else 's' }}{% endif %}{% if s.external %} · by {{ s.authors|join(", ") }}{% endif %}</p>
       <ol class="sparts">{% for p in s.parts %}<li><span class="n">{{ p.part }}</span><span>{{ p.title }}</span></li>{% endfor %}</ol>
-      <a class="go" href="{{ s.url }}">Open the series →</a>
+      <a class="go" href="{{ link(s.url) }}">Open the series →</a>
     </article>
   {% endfor %}
   </div>
@@ -28,13 +28,13 @@
   <h1 class="pagetitle">{{ one.name }}</h1>
   {% if one.about %}<p class="lead-s">{{ one.about }}</p>{% endif %}
   <p class="smeta">{{ one.count }} parts, in reading order{% if one.figures %} · {{ one.figures }} interactive figure{{ '' if one.figures == 1 else 's' }}{% endif %}{% if one.external %} · by {{ one.authors|join(", ") }}; each part opens where it was published{% endif %}</p>
-  <div class="btnrow"><a class="btn pri" href="{{ one.parts[0].url }}">Start with part 1</a></div>
+  <div class="btnrow"><a class="btn pri" href="{{ link(one.parts[0].url) }}">Start with part 1</a></div>
   <ol class="spine">
   {% for p in one.parts %}
     <li class="spart">
       <span class="num" aria-hidden="true">{{ p.part }}</span>
       <div class="sbody">
-        <h2><a data-x="{{ p.id }}" href="{{ p.url }}">{{ p.title }}</a></h2>
+        <h2><a data-x="{{ p.id }}" href="{{ link(p.url) }}">{{ p.title }}</a></h2>
         <p class="meta">Part {{ p.part }} · {{ p.kind_label }}{% if p.date %} · {{ p.date|month_year }}{% endif %}{% if p.figures %} · {{ p.figures }} interactive figure{{ "" if p.figures == 1 else "s" }}{% endif %}{% if not p.local %} · by {{ p.author or author }}{% if p.publication %} on {{ p.publication }}{% endif %} ↗{% endif %}</p>
         {% if p.highlights %}
         <ul class="hl">{% for h in p.highlights %}<li>{{ h }}</li>{% endfor %}</ul>
@@ -45,7 +45,7 @@
   </ol>
   {% if series|length > 1 %}
   <h2 class="lab" style="margin-top:48px">Other series</h2>
-  <ul class="rel">{% for s in series if s.slug != one.slug %}<li><div><a href="{{ s.url }}">{{ s.name }}</a></div><div class="why">{{ s.count }} parts</div></li>{% endfor %}</ul>
+  <ul class="rel">{% for s in series if s.slug != one.slug %}<li><div><a href="{{ link(s.url) }}">{{ s.name }}</a></div><div class="why">{{ s.count }} parts</div></li>{% endfor %}</ul>
   {% endif %}
 </section>
 {% endif %}

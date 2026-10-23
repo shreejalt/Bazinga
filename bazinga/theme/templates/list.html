@@ -2,7 +2,7 @@
 {#- The list of one kind: a filter box, a table (by role: reads, papers, projects or entries that live elsewhere),
     ten rows at a time with a pager (assets/js/pager.js), and the series in this kind. -#}
 {% block scripts %}<script src="{{ asset('js/pager.js') }}"></script>{% endblock %}
-{% block cta %}<a class="cta" href="/">Home</a><a class="cta" href="/explore/">Explore</a>{% endblock %}
+{% block cta %}<a class="cta" href="{{ base }}/">Home</a><a class="cta" href="{{ base }}/explore/">Explore</a>{% endblock %}
 
 {% block content %}
 <section class="sec" id="top">
@@ -13,11 +13,11 @@
   {% if role == "project" %}
   <div class="tblwrap"><table class="ds" id="t-list"><thead><tr><th>Project</th><th>In short</th><th>Type</th><th>Tags</th><th></th></tr></thead><tbody>
     {% for p in items %}<tr data-text="{{ (p.title ~ ' ' ~ p.summary ~ ' ' ~ p.project_type ~ ' ' ~ p.topics|map('replace', '-', ' ')|join(' '))|lower }}">
-      <td style="white-space:normal">{% if p.url %}<a data-x="{{ p.id }}" href="{{ p.url }}" style="white-space:normal">{{ p.title }}</a>{% else %}<b>{{ p.title }}</b>{% endif %}</td>
+      <td style="white-space:normal">{% if p.url %}<a data-x="{{ p.id }}" href="{{ link(p.url) }}" style="white-space:normal">{{ p.title }}</a>{% else %}<b>{{ p.title }}</b>{% endif %}</td>
       <td>{{ p.summary }}</td>
       <td class="dim" style="white-space:nowrap">{{ p.project_type }}</td>
-      <td class="tags">{% for t in p.topics %}<a class="tag" href="/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}</td>
-      <td style="white-space:nowrap">{% if p.local %}<a href="{{ p.url }}">Read →</a>{% elif p.github %}<a href="{{ p.github }}">GitHub ↗</a>{% else %}<span class="dim">—</span>{% endif %}</td>
+      <td class="tags">{% for t in p.topics %}<a class="tag" href="{{ base }}/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}</td>
+      <td style="white-space:nowrap">{% if p.local %}<a href="{{ link(p.url) }}">Read →</a>{% elif p.github %}<a href="{{ link(p.github) }}">GitHub ↗</a>{% else %}<span class="dim">—</span>{% endif %}</td>
     </tr>{% endfor %}
   </tbody></table></div>
   {% elif role == "paper" %}
@@ -25,36 +25,36 @@
     {% for p in items %}<tr data-text="{{ (p.title ~ ' ' ~ (p.explains|map('extract_title', refs_by_key)|join(' ')) ~ ' ' ~ p.topics|map('replace', '-', ' ')|join(' '))|lower }}">
       <td class="dim">{{ p.date|month_year }}</td>
       <td style="white-space:normal">{% for key in p.explains %}<b>{{ refs_by_key[key].title }}</b><br><span class="dim">{{ refs_by_key[key].authors }}, {{ refs_by_key[key].year }}</span>{% if not loop.last %}<br>{% endif %}{% endfor %}</td>
-      <td style="white-space:normal"><a data-x="{{ p.id }}" href="{{ p.url }}" style="white-space:normal">{{ p.title }}</a>{% if p.series %} <span class="dim">· {{ p.series.name }} {{ p.series.part }}/{{ p.series.n }}</span>{% endif %}{% if p.author %}<br><span class="dim">by {{ p.author }}{% if p.publication %}, on {{ p.publication }}{% endif %} ↗</span>{% endif %}</td>
-      <td class="tags">{% for t in p.topics %}<a class="tag" href="/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}</td>
+      <td style="white-space:normal"><a data-x="{{ p.id }}" href="{{ link(p.url) }}" style="white-space:normal">{{ p.title }}</a>{% if p.series %} <span class="dim">· {{ p.series.name }} {{ p.series.part }}/{{ p.series.n }}</span>{% endif %}{% if p.author %}<br><span class="dim">by {{ p.author }}{% if p.publication %}, on {{ p.publication }}{% endif %} ↗</span>{% endif %}</td>
+      <td class="tags">{% for t in p.topics %}<a class="tag" href="{{ base }}/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}</td>
     </tr>{% endfor %}
   </tbody></table></div>
   {% elif role == "external" %}
   <div class="tblwrap"><table class="ds" id="t-list"><thead><tr><th>Date</th><th>Article</th><th>Author</th><th>Tags</th></tr></thead><tbody>
     {% for r in items %}<tr data-text="{{ (r.title ~ ' ' ~ (r.author or author) ~ ' ' ~ r.publication ~ ' ' ~ r.topics|map('replace', '-', ' ')|join(' '))|lower }}">
       <td class="dim">{{ r.date|month_year }}</td>
-      <td style="white-space:normal"><a data-x="{{ r.id }}" href="{{ r.url }}" style="white-space:normal">{{ r.title }}</a>{% if r.series %} <span class="dim">· {{ r.series.name }} {{ r.series.part }}/{{ r.series.n }}</span>{% endif %} <span class="dim">↗</span>{% if r.publication %}<br><span class="dim">on {{ r.publication }}</span>{% endif %}</td>
+      <td style="white-space:normal"><a data-x="{{ r.id }}" href="{{ link(r.url) }}" style="white-space:normal">{{ r.title }}</a>{% if r.series %} <span class="dim">· {{ r.series.name }} {{ r.series.part }}/{{ r.series.n }}</span>{% endif %} <span class="dim">↗</span>{% if r.publication %}<br><span class="dim">on {{ r.publication }}</span>{% endif %}</td>
       <td class="dim" style="white-space:nowrap">{{ r.author or author }}</td>
-      <td class="tags">{% for t in r.topics %}<a class="tag" href="/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}</td>
+      <td class="tags">{% for t in r.topics %}<a class="tag" href="{{ base }}/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}</td>
     </tr>{% endfor %}
   </tbody></table></div>
   {% else %}
   <div class="tblwrap"><table class="ds" id="t-list"><thead><tr><th>Date</th><th>Title</th><th>Tags</th></tr></thead><tbody>
     {% for r in items %}<tr data-text="{{ (r.title ~ ' ' ~ r.topics|map('replace', '-', ' ')|join(' '))|lower }}">
       <td class="dim">{{ r.date|month_year }}</td>
-      <td><a data-x="{{ r.id }}" href="{{ r.url }}" style="white-space:normal">{{ r.title }}</a>{% if r.series %} <span class="dim">· {{ r.series.name }} {{ r.series.part }}/{{ r.series.n }}</span>{% endif %}{% if r.author %}<br><span class="dim">by {{ r.author }}{% if r.publication %}, on {{ r.publication }}{% endif %} ↗</span>{% elif not r.local %} <span class="dim">↗</span>{% endif %}</td>
-      <td class="tags">{% for t in r.topics %}<a class="tag" href="/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}</td>
+      <td><a data-x="{{ r.id }}" href="{{ link(r.url) }}" style="white-space:normal">{{ r.title }}</a>{% if r.series %} <span class="dim">· {{ r.series.name }} {{ r.series.part }}/{{ r.series.n }}</span>{% endif %}{% if r.author %}<br><span class="dim">by {{ r.author }}{% if r.publication %}, on {{ r.publication }}{% endif %} ↗</span>{% elif not r.local %} <span class="dim">↗</span>{% endif %}</td>
+      <td class="tags">{% for t in r.topics %}<a class="tag" href="{{ base }}/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}</td>
     </tr>{% endfor %}
   </tbody></table></div>
   {% endif %}
   <div class="pager" id="pager" data-word="{{ word }}" hidden><button type="button" class="chip pg-prev">← Previous</button><span class="pg-n"></span><button type="button" class="chip pg-next">Next →</button></div>
   <p class="fn" id="list-count">{{ items|length }} {{ word }}{% if role != "project" %}, newest first{% endif %}.</p>
-  {% if role in ("read", "paper") and external_kinds %}<p class="fn">Articles that live on other sites, by other writers too, are listed under {% for k, label in external_kinds %}<a href="/{{ k }}/">{{ label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}; they open where they were published.</p>{% endif %}
+  {% if role in ("read", "paper") and external_kinds %}<p class="fn">Articles that live on other sites, by other writers too, are listed under {% for k, label in external_kinds %}<a href="{{ base }}/{{ k }}/">{{ label }}</a>{% if not loop.last %}, {% endif %}{% endfor %}; they open where they were published.</p>{% endif %}
   {% if series %}
   <h2 class="lab" style="margin-top:44px">Series</h2>
   {% for name, parts in series.items() %}
   <p class="sub">{{ name }} · {{ parts|length }} parts, in order</p>
-  <ol class="series">{% for p in parts %}<li><span class="n">{{ loop.index }}</span><a data-x="{{ p.id }}" href="{{ p.url }}">{{ p.title }}</a></li>{% endfor %}</ol>
+  <ol class="series">{% for p in parts %}<li><span class="n">{{ loop.index }}</span><a data-x="{{ p.id }}" href="{{ link(p.url) }}">{{ p.title }}</a></li>{% endfor %}</ol>
   {% endfor %}
   {% endif %}
 </section>

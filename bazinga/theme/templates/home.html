@@ -2,8 +2,8 @@
 {#- Home: who you are (photo, tagline, lead, about), a pointer to the map, experience (each role opens), education,
     contact. Every field comes from site.yml `home:`; a section without its fields is left out. -#}
 {% block cta %}
-  {% if features.explore %}<a class="cta" href="/explore/">Explore the map</a>{% endif %}
-  {% if cv_pdf %}<a class="cta" href="{{ cv_pdf }}">Download CV</a>{% else %}<a class="cta" href="/cv/">Read the CV</a>{% endif %}
+  {% if features.explore %}<a class="cta" href="{{ base }}/explore/">Explore the map</a>{% endif %}
+  {% if cv_pdf %}<a class="cta" href="{{ link(cv_pdf) }}">Download CV</a>{% else %}<a class="cta" href="{{ base }}/cv/">Read the CV</a>{% endif %}
 {% endblock %}
 
 {% block content %}
@@ -15,19 +15,19 @@
       {% if home.statement %}<p class="say">{{ home.statement }}</p>{% endif %}
       {% if home.lead %}<p class="leadp">{{ home.lead }}</p>{% endif %}
       {% if intro %}<div class="leadp">{{ intro }}</div>{% endif %}
-      <div class="btnrow">{% for href, label in kind_buttons %}<a class="btn{% if loop.first %} pri{% endif %}" href="{{ href }}">{{ label }}</a>{% endfor %}</div>
-      {% if links_list %}<div class="links">{% for l in links_list %}<a href="{{ l.url }}">{{ l.label }}</a>{% endfor %}</div>{% endif %}
+      <div class="btnrow">{% for href, label in kind_buttons %}<a class="btn{% if loop.first %} pri{% endif %}" href="{{ link(href) }}">{{ label }}</a>{% endfor %}</div>
+      {% if links_list %}<div class="links">{% for l in links_list %}<a href="{{ link(l.url) }}">{{ l.label }}</a>{% endfor %}</div>{% endif %}
     </div>
     {% if home.photo %}
     <div class="side">
-      <img src="{{ home.photo }}" width="230" height="230" alt="{{ site.name }}">
+      <img src="{{ link(home.photo) }}" width="230" height="230" alt="{{ site.name }}">
       <p class="where">{{ home.role }}{% if home.working_at %}<br>{{ home.working_at }}{% endif %}</p>
     </div>
     {% endif %}
   </div>
   {% if home.about or home.starters %}
   <div class="about">
-    {% for para in home.about or [] %}<p>{{ para|safe }}</p>{% endfor %}
+    {% for para in home.about or [] %}<p>{{ para|links|safe }}</p>{% endfor %}
     {% if home.starters %}
     <div class="starters" role="group" aria-label="{{ home.starters_label or 'Pick one' }}">
       {% for st in home.starters %}<button type="button" class="btn" data-say="{{ st.say }}">{{ st.mark }} {{ st.name }}</button>{% endfor %}
@@ -42,7 +42,7 @@
 <section class="sec" id="map">
   <h2 class="lab">Explore</h2>
   <p class="lead-s">{{ home.map_text or "Everything I have written or built is on one map, each item below what it builds on. Hover anything to see what is nearest and the reading order through it." }}</p>
-  <div class="btnrow"><a class="btn pri" href="/explore/">Open the map</a></div>
+  <div class="btnrow"><a class="btn pri" href="{{ base }}/explore/">Open the map</a></div>
 </section>
 {% endif %}
 
@@ -54,7 +54,7 @@
   <details class="role">
     <summary><span class="when">{{ job.period }}</span><span class="what"><b>{{ job.role }}</b>, {{ job.org }}{% if job.place %}<span class="dim"> · {{ job.place }}</span>{% endif %}</span></summary>
     <ul>{% for point in job.points or [] %}<li>{{ point }}</li>{% endfor %}</ul>
-    {% if job.page_nodes %}<p class="see">Pages from this role: {% for n in job.page_nodes %}<a data-x="{{ n.id }}" href="{{ n.url }}">{{ n.title }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+    {% if job.page_nodes %}<p class="see">Pages from this role: {% for n in job.page_nodes %}<a data-x="{{ n.id }}" href="{{ link(n.url) }}">{{ n.title }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</p>{% endif %}
   </details>
   {% endfor %}
   </div>
@@ -78,7 +78,7 @@
 {% set c = home.contact %}
 <section class="sec" id="contact">
   <h2 class="lab">Contact</h2>
-  {% if c.lead %}<p class="lead-s contact-lead">{{ c.lead|safe }}</p>{% endif %}
+  {% if c.lead %}<p class="lead-s contact-lead">{{ c.lead|links|safe }}</p>{% endif %}
   {% if c.areas %}
   <h3 class="help">What I work on</h3>
   <ul class="consult">
@@ -98,16 +98,16 @@
     <p class="send">{{ c.close }}</p>
     <div class="ways">
       {% if email %}<a class="btn pri" href="mailto:{{ email }}?subject=Project%20enquiry">{{ c.email_button or "Email me about a project" }}</a>{% endif %}
-      {% for l in links_list if l.label == "LinkedIn" %}<a class="btn" href="{{ l.url }}">Message on LinkedIn</a>{% endfor %}
+      {% for l in links_list if l.label == "LinkedIn" %}<a class="btn" href="{{ link(l.url) }}">Message on LinkedIn</a>{% endfor %}
       {% if email %}<p class="addr"><a href="mailto:{{ email }}">{{ email }}</a></p>{% endif %}
     </div>
   </div>
   {% endif %}
   <h3 class="else">Elsewhere</h3>
   <dl class="also">
-    {% if links_list %}<dt>{% for l in links_list %}<a href="{{ l.url }}">{{ l.label }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</dt>
+    {% if links_list %}<dt>{% for l in links_list %}<a href="{{ link(l.url) }}">{{ l.label }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</dt>
     <dd>{{ c.links_text or "Code, career record, and where the articles were first published." }}</dd>{% endif %}
-    {% for e in c.elsewhere or [] %}<dt><a href="{{ e.url }}">{{ e.label }}</a></dt>
+    {% for e in c.elsewhere or [] %}<dt><a href="{{ link(e.url) }}">{{ e.label }}</a></dt>
     <dd>{{ e.text }}</dd>
     {% endfor %}
   </dl>

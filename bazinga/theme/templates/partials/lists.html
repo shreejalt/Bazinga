@@ -4,7 +4,7 @@
 {% macro related(view) %}
 <ul class="rel">
   {% for r in view.related %}
-  <li><div><a data-x="{{ r.id }}" href="{{ r.url }}">{{ r.title }}</a></div><div class="why">{{ r.kl }} · {{ r.why }}</div></li>
+  <li><div><a data-x="{{ r.id }}" href="{{ link(r.url) }}">{{ r.title }}</a></div><div class="why">{{ r.kl }} · {{ r.why }}</div></li>
   {% else %}
   <li class="why">Nothing is connected to this yet.</li>
   {% endfor %}
@@ -18,7 +18,7 @@
   <li class="{{ p.role }}">
     {% if p.role != last.role %}<div class="role">{{ roles[p.role] }}</div>{% endif %}
     {% set last.role = p.role %}
-    <div>{% if p.role == "here" %}<b>{{ p.title }}</b>{% else %}<a data-x="{{ p.id }}" href="{{ p.url }}">{{ p.title }}</a>{% endif %}</div>
+    <div>{% if p.role == "here" %}<b>{{ p.title }}</b>{% else %}<a data-x="{{ p.id }}" href="{{ link(p.url) }}">{{ p.title }}</a>{% endif %}</div>
     <div class="why">{{ p.kl }}</div>
   </li>
   {% endfor %}
@@ -29,20 +29,20 @@
 {% macro broader(wider, title) %}
 <ul class="rel broad">
   {% if wider.trail %}
-  <li><div class="role">Sits under</div><div class="trail">{% for t in wider.trail %}{% if loop.first or loop.index > wider.trail|length - 2 %}<a data-x="{{ t.id }}" href="{{ t.url }}">{{ t.short }}</a><span class="dim"> › </span>{% elif loop.index == 2 %}<span class="dim" title="{{ wider.trail[1:-2]|map(attribute='short')|join(' › ') }}">… {{ wider.trail|length - 3 }} more › </span>{% endif %}{% endfor %}<b>{{ title }}</b></div></li>
+  <li><div class="role">Sits under</div><div class="trail">{% for t in wider.trail %}{% if loop.first or loop.index > wider.trail|length - 2 %}<a data-x="{{ t.id }}" href="{{ link(t.url) }}">{{ t.short }}</a><span class="dim"> › </span>{% elif loop.index == 2 %}<span class="dim" title="{{ wider.trail[1:-2]|map(attribute='short')|join(' › ') }}">… {{ wider.trail|length - 3 }} more › </span>{% endif %}{% endfor %}<b>{{ title }}</b></div></li>
   {% endif %}
   {% if wider.series %}
-  <li><div class="role">Series</div><div><a href="{{ wider.series.url }}">{{ wider.series.name }}</a><div class="why">part {{ wider.series.part }} of {{ wider.series.n }} · start from the first part</div></div></li>
+  <li><div class="role">Series</div><div><a href="{{ link(wider.series.url) }}">{{ wider.series.name }}</a><div class="why">part {{ wider.series.part }} of {{ wider.series.n }} · start from the first part</div></div></li>
   {% endif %}
-  <li><div class="role">Its tags on the map</div><div class="tags">{% for t in wider.tags %}<a class="tag" href="{{ t.url }}" data-tag="{{ t.slug }}">{{ t.label }} <span class="dim">{{ t.count }}</span></a>{% endfor %}</div></li>
+  <li><div class="role">Its tags on the map</div><div class="tags">{% for t in wider.tags %}<a class="tag" href="{{ link(t.url) }}" data-tag="{{ t.slug }}">{{ t.label }} <span class="dim">{{ t.count }}</span></a>{% endfor %}</div></li>
   {% if wider.under %}
   <li><div class="role">Also under these tags</div>
-    {% for u in wider.under %}<div><a data-x="{{ u.id }}" href="{{ u.url }}">{{ u.title }}</a><span class="why" style="display:inline;margin-left:8px">{{ u.shared|join(", ") }}</span></div>{% endfor %}</li>
+    {% for u in wider.under %}<div><a data-x="{{ u.id }}" href="{{ link(u.url) }}">{{ u.title }}</a><span class="why" style="display:inline;margin-left:8px">{{ u.shared|join(", ") }}</span></div>{% endfor %}</li>
   {% endif %}
-  <li><div class="role">Ask the map</div><div><a href="/ask/?q={{ wider.ask|urlencode }}">{{ wider.ask }}…</a><div class="why">type the other page's name; the map answers with the chain of links between them</div></div></li>
+  <li><div class="role">Ask the map</div><div><a href="{{ base }}/ask/?q={{ wider.ask|urlencode }}">{{ wider.ask }}…</a><div class="why">type the other page's name; the map answers with the chain of links between them</div></div></li>
 </ul>
 {% endmacro %}
 
 {% macro tags(slugs, topic) -%}
-{% for t in slugs %}<a class="tag" href="/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}
+{% for t in slugs %}<a class="tag" href="{{ base }}/topics/{{ t }}/" data-tag="{{ t }}">{{ topic(t).label }}</a>{% endfor %}
 {%- endmacro %}

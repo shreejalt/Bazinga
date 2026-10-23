@@ -4,8 +4,8 @@
     github (the repository), usage (shown as a code block), limitations (a list), credit. -#}
 {% block bodyclass %}kind-{{ page.kind }}{% endblock %}
 {% block cta %}
-  {% if meta.github %}<a class="cta" href="{{ meta.github }}">Source on GitHub</a>{% endif %}
-  <a class="cta" href="{{ kind_list_url }}">All {{ kind_list_label|lower }}</a>
+  {% if meta.github %}<a class="cta" href="{{ link(meta.github) }}">Source on GitHub</a>{% endif %}
+  <a class="cta" href="{{ link(kind_list_url) }}">All {{ kind_list_label|lower }}</a>
 {% endblock %}
 {% block tiny %}{% if meta.type %}{{ meta.type }} project{% else %}Project{% endif %}{% if meta.stack %}<br>{{ meta.stack }}{% endif %}{% endblock %}
 
@@ -28,11 +28,11 @@
     <div><div class="k">Type</div><div class="v">{{ meta.type or 'Open-source' }} project</div></div>
     <div><div class="k">From</div><div class="v">{{ meta.from }}</div></div>
     <div><div class="k">Headline result</div><div class="v">{{ page.summary }}</div></div>
-    <div><div class="k">Tags</div><div class="v tags">{% for t in page_topics %}<a class="tag" href="/topics/{{ t.slug }}/" data-tag="{{ t.slug }}">{{ t.label }}</a>{% endfor %}</div></div>
+    <div><div class="k">Tags</div><div class="v tags">{% for t in page_topics %}<a class="tag" href="{{ base }}/topics/{{ t.slug }}/" data-tag="{{ t.slug }}">{{ t.label }}</a>{% endfor %}</div></div>
   </div>
   {% endif %}
   {% if meta.github %}
-  <div class="btnrow"><a class="btn" href="{{ meta.github }}">Source on GitHub</a></div>
+  <div class="btnrow"><a class="btn" href="{{ link(meta.github) }}">Source on GitHub</a></div>
   {% endif %}
 </section>
 
