@@ -31,6 +31,9 @@ pull the new version in.
   example `javascript:`) is no longer turned into a link; the arXiv or DOI link is used instead, if there is one.
   Titles containing `</script>` or `<!--` can no longer break out of the page's structured data. The local server's
   Ask endpoint refuses a body length that is not a plain number.
+- **Scheduled posts on Vercel and Netlify:** the README now says how to give them a daily build (a build hook and a
+  small GitHub Actions cron), and the Editor's schedule note says a page appears on the first build on or after its
+  date. Before, the docs claimed the README explained it, and it did not.
 - **The Editor's name everywhere.** `serve --editor-port` (the old `--studio-port` still works), "The Editor
   stopped." when you press Ctrl+C, and citation lookups no longer send a made-up email address.
 - **`bazinga new` writes valid front matter** for any title (backslashes and quotes included), and refuses a `--slug`

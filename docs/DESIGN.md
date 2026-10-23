@@ -332,7 +332,7 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
    8. `git push` to the branch the current one tracks (`git push <remote> HEAD:<branch>`, so a local `work` tracking `origin/main` works; with no upstream, `git push -u origin HEAD`), then the optional `publish.command`.
    9. Show the live URL.
    - **Unpublish** sets status back to draft and runs steps 4–8.
-   - **Schedule** sets a future date: the page goes live on the first build after it. The README explains a daily cron build on Vercel or Netlify, and the GitHub Pages workflow has a daily schedule.
+   - **Schedule** sets a future date: the page goes live on the first build on or after it. The GitHub Pages workflow builds daily, so there it appears on its day. Vercel and Netlify build only on a push: without a daily build hook (README, "Scheduled posts need a build on their day": a build hook called by a small GitHub Actions cron) the page appears with the next push after its date. The Editor's publish summary says so.
 
 ## Theme and look
 

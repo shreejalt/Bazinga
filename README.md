@@ -248,6 +248,30 @@ the root of 127.0.0.1.
 | Custom domain | Set `site.origin` to it (on GitHub Pages the workflow picks the domain up by itself). |
 | Anywhere | `python -m bazinga build` (or `--origin https://…` for another address), then upload `_site/`. |
 
+**Scheduled posts need a build on their day.** A scheduled post goes live on the first build on or after its date.
+The GitHub Pages workflow builds every day by itself. Vercel and Netlify build only when you push, so give them a
+daily build:
+
+1. Make a build hook: on Vercel, Project → Settings → Git → Deploy Hooks (branch `main`); on Netlify, Site
+   configuration → Build & deploy → Build hooks. Copy the URL it gives you.
+2. In your GitHub repository, add it as a secret named `BUILD_HOOK_URL` (Settings → Secrets and variables → Actions).
+3. Add `.github/workflows/daily-build.yml`:
+
+```yaml
+name: Daily build
+on:
+  schedule: [{cron: "17 5 * * *"}]     # every day at 05:17 UTC
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsS -X POST "$HOOK"
+        env: {HOOK: "${{ secrets.BUILD_HOOK_URL }}"}
+```
+
+Without a daily build, a scheduled post appears with your next push after its date.
+
 ## Folders
 
 ```

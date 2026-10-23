@@ -202,6 +202,16 @@ class Builds(unittest.TestCase):
         finally:
             cleanup(root)
 
+    def test_scheduled_posts_are_documented_honestly(self):
+        """D8: DESIGN.md said the README explained a daily build on Vercel or Netlify; it did not."""
+        repo = Path(__file__).resolve().parent.parent
+        readme = (repo / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Scheduled posts need a build on their day", readme)
+        self.assertIn("BUILD_HOOK_URL", readme)
+        self.assertIn("schedule:", readme)
+        design = (repo / "docs/DESIGN.md").read_text(encoding="utf-8")
+        self.assertNotIn("The README explains a daily cron build", design)
+
     def test_feed_is_capped_at_thirty(self):
         cfg = config.load(make_site())
         try:

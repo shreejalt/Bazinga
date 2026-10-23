@@ -461,7 +461,8 @@ def _run(cfg, page_id: str, opts: Options, emit) -> dict:
             note = "The page is a draft again; it leaves the site on the next deploy"
         elif mode == "schedule":
             url = cfg.origin + page.url
-            note = f"Goes live on {fields['date']}, on the first build that day"
+            note = (f"Goes live on {fields['date']}, on the first build that day or later (GitHub Pages builds daily; "
+                    "on Vercel or Netlify add a daily build hook, see the README)")
         else:
             url = cfg.origin + page.url
             note = "Live after your host finishes deploying" if pub.get("push", True) or command else ""
