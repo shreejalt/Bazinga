@@ -381,6 +381,10 @@ def _run(cfg, page_id: str, opts: Options, emit) -> dict:
                         log(f"staged {line}")
                     args = []
                     author = (pub.get("author") or "").strip()
+                    if not (author and "<" in author) and not git(root, "config", "user.email", check=False).stdout.strip():
+                        raise StepFailed("Not committed: git does not know your name and email.",
+                                         "Set publish.author in site.yml (\"Your Name <you@example.com>\") or run "
+                                         "`git config user.name \"Your Name\"` and `git config user.email you@example.com`.")
                     if author and "<" in author:
                         name, email = author.split("<", 1)
                         args = ["-c", f"user.name={name.strip()}", "-c", f"user.email={email.strip(' >')}"]
@@ -409,8 +413,10 @@ def _run(cfg, page_id: str, opts: Options, emit) -> dict:
         else:
             step("push", "running")
             upstream = git(root, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}", check=False)
-            if upstream.returncode == 0:
-                cmd = ["git", "push"]
+            if upstream.returncode == 0 and "/" in upstream.stdout.strip():
+                # push to the branch this one tracks, even when the names differ (local "work" tracking origin/main)
+                remote, _, branch = upstream.stdout.strip().partition("/")
+                cmd = ["git", "push", remote, "HEAD:" + branch]
             elif "origin" in git(root, "remote", check=False).stdout.split():
                 cmd = ["git", "push", "-u", "origin", "HEAD"]
             else:
