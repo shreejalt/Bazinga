@@ -139,20 +139,10 @@ define `kinds:`, your list replaces the default kinds; it is not added to them.
 
 ## Turning parts on and off
 
-```yaml
-features: {ask: true, explore: true, series: true, feed: true, llms_txt: true, credit: true}
-```
-
-| Key | When off |
-|---|---|
-| `ask` | no `/ask/` page and no Ask button |
-| `explore` | no `/explore/` map and no Explore section on the home page |
-| `series` | no `/series/` pages |
-| `feed` | no `/feed.xml` |
-| `llms_txt` | no `/llms.txt` or `/llms-full.txt` |
-| `credit` | no small "Made with Bazinga" link at the foot of the side rail |
-
-Remember to take the matching item out of `nav:` too.
+`features:` in `site.yml` turns off Ask, the map, series, the feed, `llms.txt` and the "Made with Bazinga" link; what
+each switch removes is in [Configuration: features](reference/configuration.md#features). Take the matching item out
+of `nav:` too. A portfolio with no blog turns most of them off: see
+[A portfolio without the blog](home-and-cv.md#a-portfolio-without-the-blog).
 
 ## Your own copy of a theme file
 

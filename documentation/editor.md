@@ -44,6 +44,21 @@ There are two ways. Both open the same Editor.
 
 ![The Editor's list of pages](assets/images/editor-library.jpg){ .shot }
 
+## Only you see the Write button
+
+The **Write** button in the rail and the **Edit this page** button on a post appear only while you run
+`python -m bazinga serve` on your own computer. They are added to the page as it is served to you; they are never
+written into the built site.
+
+| Where | Write and Edit this page | The Editor |
+|---|---|---|
+| `python -m bazinga serve` on your computer | shown | runs on `127.0.0.1`, for you only |
+| `python -m bazinga build` (what your host publishes) | not there | not there: none of its files are in `_site/` |
+| Your live site | not there | cannot be reached |
+
+So visitors to your live site never see these buttons, and nobody can edit your site from the internet. A test in
+`tests/` builds the site and fails if any Editor file or button ends up in `_site/`.
+
 ## Your pages
 
 The list shows every page with a pill for its status (**Draft**, **Scheduled** or **Published**), its kind, its
@@ -214,6 +229,23 @@ read it and restore it. They are kept on this computer only, in `.studio/history
 
 ## Publish
 
+!!! note "What the Publish button does"
+    Publish takes the page you are writing and puts it on your live site. In order, it:
+
+    1. **Checks** the page. Errors stop it; warnings ask you first.
+    2. **Marks it published:** sets `status: published` and today's date (or your scheduled date).
+    3. **Tests the figures** the page uses.
+    4. **Builds** the whole site, so links, the map and Ask include the new page.
+    5. **Updates the wiki files:** `wiki/index.md` and a line in `wiki/log.md`.
+    6. **Commits** only this page and its own files (figures, drawings, uploads, new references), in your name.
+    7. **Pushes** the commit to your GitHub repository, to the branch yours tracks (normally `main`).
+    8. **Runs your deploy command**, if you set `publish.command` in `site.yml`.
+    9. **Shows the live address.** Your host (Vercel, Netlify or GitHub Pages) builds from the push and the page is
+       online a minute or two later.
+
+    If a step fails before the commit, your page is put back as it was. Use **Dry run** to see every step without
+    changing anything. To publish without pushing, set `publish: {push: false}` in `site.yml`.
+
 **Publish** opens a dialog with two tabs, **Publish now** and **Schedule**. On a page that is already published the
 first tab is **Publish changes**, and there is a third, **Unpublish**.
 
@@ -225,13 +257,9 @@ page would have.
 
 ::clip editor-publish | Publish with a dry run: every step runs on a copy, and nothing changes.
 
-Without **Dry run**, Publish does the same steps for real: it sets `status: published` and the date, builds,
-updates `wiki/index.md` and `wiki/log.md`, commits only this page and its files, pushes, and runs `publish.command`
-if you set one. The push goes to the branch yours tracks. Errors stop it; warnings need **Publish anyway**.
-The commit needs your name and email in git; if git has none, the Commit step stops and says how to set them (or set
-`publish.author`, see [Configuration](reference/configuration.md#publish)). **Schedule** sets a future date instead, and
-**Unpublish** turns the page back into a draft. [Writing, step 9](writing/publishing.md) walks through it, and
-[Deploying](deploying.md) covers what your host does after the push.
+Without **Dry run** the same steps run for real. Errors stop it; warnings need **Publish anyway**. **Schedule** sets a
+future date instead, and **Unpublish** turns the page back into a draft. Everything Publish does, its settings and
+what to do when a push fails are in [Writing, step 9: Publishing](writing/publishing.md).
 
 ## Why it is safe
 
@@ -241,9 +269,11 @@ The commit needs your name and email in git; if git has none, the Commit step st
 - It refuses requests from other sites and other host names.
 - It can only write inside `content/`, `figures/`, `drawings/`, `static/uploads/` and your references and topics
   files.
-- None of its files are copied to `_site/`, and a test checks that.
+- None of its files are copied to `_site/`, and a test checks that. The **Write** and **Edit this page** buttons are
+  added only while `serve` runs on your computer; see [Only you see the Write button](#only-you-see-the-write-button).
 
 ## What's next
 
+Next, make figures with the form or in code: [Interactive figures](figures.md).
+
 - Follow the writing path from the start: [Writing, step 1](writing/first-post.md).
-- Make figures with the form or in code: [Interactive figures](figures.md).

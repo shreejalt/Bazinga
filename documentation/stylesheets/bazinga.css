@@ -87,3 +87,19 @@
 .md-typeset .home-cards > ul > li > p.card-title { margin: 0 0 .2em; }
 .md-typeset .home-cards > ul > li figure.clip { width: 100%; }
 .md-typeset .home-start > ul > li { padding: .8rem 1rem; }
+
+/* Header: always show "Bazinga" in bold; never swap it for the page title while scrolling */
+.md-header__title { font-weight: 700; }
+.md-header__title .md-header__topic:first-child { font-weight: 700; }
+.md-header__title--active .md-header__topic:first-child {
+  opacity: 1; transform: none; z-index: 0; pointer-events: auto; transition: none;
+}
+.md-header__title .md-header__topic + .md-header__topic { display: none; }
+
+/* Home page headline */
+.home-hero { text-align: center; margin: 1.2rem auto 2.4rem; max-width: 46rem; }
+.home-hero h1 { font-size: 2.6rem; line-height: 1.15; font-weight: 700; margin: 0 0 .9rem; color: var(--md-default-fg-color); letter-spacing: -.01em; }
+.home-hero__sub { font-size: 1.15rem; line-height: 1.55; margin: 0 auto 1.4rem; color: var(--md-default-fg-color--light); }
+.home-hero__actions { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
+.home-hero__actions .md-button { margin: 0; }
+@media (max-width: 600px) { .home-hero h1 { font-size: 1.9rem; } .home-hero__sub { font-size: 1rem; } }

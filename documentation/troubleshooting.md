@@ -99,6 +99,32 @@ list for one page without building.
     The first move loads the code that redraws figures in the reader's browser; after that each change is quick.
     Without a network connection the figure keeps its first picture and does not redraw.
 
+## Your portfolio
+
+??? question "How do I change the photo?"
+    Put a square picture (about 600 × 600 pixels) in `static/images/` and point `home.photo` at it in `site.yml`:
+    `photo: /static/images/me.jpg`. The build does not check that the file exists, so a wrong name shows a broken
+    picture: check the spelling and the folder. `photo: ""` removes the photo, and the role lines under it go too.
+    The browser-tab icon is a separate setting, `site.avatar`. See [Your portfolio](home-and-cv.md#the-top).
+
+??? question "How do I hide the blog and keep only my portfolio?"
+    Delete the example posts, keep only `projects:` under `kinds:`, trim `nav:` to Home, Projects and CV, and turn
+    off `ask`, `explore`, `series` and `feed` under `features:`. The steps are in
+    [A portfolio without the blog](home-and-cv.md#a-portfolio-without-the-blog).
+
+??? question "How do I offer my CV as a PDF?"
+    Put the file under `static/`, for example `static/cv.pdf`, and set `cv: {pdf: /static/cv.pdf}` in `site.yml`.
+    The CV button in the home page's rail then says **Download CV** and opens the file. The `/cv/` page itself has no
+    download button; link the PDF from your About text if you want one there. See
+    [A PDF copy](home-and-cv.md#a-pdf-copy).
+
+??? question "How do I remove the \"Pick one\" buttons (Tea, Coffee, Water)?"
+    Delete `starters_label` and `starters` under `home:` in `site.yml`. Nothing else needs to change.
+
+??? question "How do I remove the \"Made with Bazinga\" link?"
+    Add `credit: false` to `features:` in `site.yml`, for example
+    `features: {ask: true, explore: true, series: true, feed: true, llms_txt: true, credit: false}`.
+
 ## The Editor and serve
 
 ??? question "`OSError: [Errno 48] Address already in use`"
@@ -175,6 +201,24 @@ list for one page without building.
     `.github/workflows/pages.yml` runs on every push to `main` and once a day. If your branch has another name,
     change `branches: [main]` in that file.
 
+??? question "The site has no styles, or its links lead to 404 pages"
+    The build wrote links for another address. Check `site.origin` in `site.yml`: it must be the address the site
+    really lives at. For a GitHub Pages project site that includes the folder, such as
+    `https://you.github.io/notes`; the Pages workflow fills this in by itself. If you upload `_site/` under a folder
+    by hand, build with `python -m bazinga build --origin https://your-host.example/folder`. See
+    [A site under a path](reference/configuration.md#a-site-under-a-path).
+
+??? question "Publish says `Committed, but there is no remote to push to.`"
+    Your site folder is not connected to a repository yet. Add yours, then publish again:
+
+    ```bash
+    git remote add origin https://github.com/<you>/<your-site>.git
+    ```
+
+    If the push itself fails, the message from git follows. The usual causes: you are not signed in to GitHub on
+    this computer, or the branch is protected and only accepts pull requests. Your commit is safe; push it with
+    `git push` once that is fixed.
+
 ??? question "A scheduled post did not go live"
     A scheduled post appears on the first build on or after its date. GitHub Pages rebuilds once a day by itself.
     On Vercel or Netlify, start a build on that day (a push, or a scheduled build hook).
@@ -189,6 +233,7 @@ Never paste a key.
 
 ## What's next
 
+Next, help improve Bazinga and these pages: [Contributing](contributing/index.md).
+
 - [Commands reference](reference/commands.md): every command and option.
 - [Configuration reference](reference/configuration.md): every setting in `site.yml`.
-- [Contributing](contributing/index.md): help improve Bazinga and these pages.

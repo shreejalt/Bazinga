@@ -62,6 +62,9 @@ Bazinga, add a row here and a section where it belongs.
 | Figure control kinds and their fields, in one table | [reference/configuration › figure-controls](../reference/configuration.md#figure-controls) | documented |
 | Host files (`vercel.json`, `netlify.toml`, `pages.yml`) | [reference/configuration › host-files](../reference/configuration.md#host-files) | documented |
 | A minimal `site.yml` | [reference/configuration › a-minimal-siteyml](../reference/configuration.md#a-minimal-siteyml) | documented |
+| A portfolio without the blog (kinds, nav, features, removing links) | [home-and-cv › a-portfolio-without-the-blog](../home-and-cv.md#a-portfolio-without-the-blog) | documented |
+| Project pages for a portfolio | [home-and-cv › your-projects](../home-and-cv.md#your-projects) | documented |
+| Portfolio questions (photo, hide the blog, CV PDF, starters, credit) | [troubleshooting › your-portfolio](../troubleshooting.md#your-portfolio) | documented |
 
 ## Content
 
@@ -170,8 +173,8 @@ Bazinga, add a row here and a section where it belongs.
 | Written answers (`api/ask.py`, the local `/api/ask/`) | [ask-and-wiki › written-answers-for-your-readers](../ask-and-wiki.md#written-answers-for-your-readers) | documented |
 | Limits per visitor and per day | [ask-and-wiki › limits](../ask-and-wiki.md#limits) | documented |
 | A laptop model cannot answer visitors of the deployed site | [ask-and-wiki › on-the-deployed-site](../ask-and-wiki.md#on-the-deployed-site) | documented |
-| `sources/` | [updating › working-with-ai-coding-agents](../updating.md#working-with-ai-coding-agents) | documented |
-| `AGENTS.md` | [updating › working-with-ai-coding-agents](../updating.md#working-with-ai-coding-agents) | documented |
+| `sources/` | [ask-and-wiki › working-with-ai-coding-agents](../ask-and-wiki.md#working-with-ai-coding-agents) | documented |
+| `AGENTS.md` | [ask-and-wiki › working-with-ai-coding-agents](../ask-and-wiki.md#working-with-ai-coding-agents) | documented |
 
 ## Map, topics and series
 
@@ -200,7 +203,7 @@ Bazinga, add a row here and a section where it belongs.
 |---|---|---|
 | Colours (tokens) and fonts | [theme › colours](../theme.md#colours) | documented |
 | The menu | [theme › the-menu](../theme.md#the-menu) | documented |
-| Turning parts on and off | [theme › turning-parts-on-and-off](../theme.md#turning-parts-on-and-off) | documented |
+| Turning parts on and off | [reference/configuration › features](../reference/configuration.md#features) | documented |
 | `theme/` overrides: templates, partials, CSS, scripts | [theme › your-own-copy-of-a-theme-file](../theme.md#your-own-copy-of-a-theme-file) | documented |
 
 ## Deploying and keeping up to date
@@ -213,8 +216,13 @@ Bazinga, add a row here and a section where it belongs.
 | GitHub Pages (`pages.yml`; skipped in the Bazinga repository itself) | [deploying › github-pages](../deploying.md#github-pages) | documented |
 | Any static host (`_site/`) | [deploying › anywhere-else](../deploying.md#anywhere-else) | documented |
 | Scheduled posts and the daily build | [deploying › scheduled-posts](../deploying.md#scheduled-posts) | documented |
-| `publish.command` | [deploying › publishing-from-the-editor](../deploying.md#publishing-from-the-editor) | documented |
-| Pulling a newer Bazinga into your site | [updating › step-2-bring-the-update-in](../updating.md#step-2-bring-the-update-in) | documented |
+| `publish.command` | [writing/publishing › choose-what-publish-does](../writing/publishing.md#choose-what-publish-does) | documented |
+| Pulling a newer Bazinga into your site | [updating › step-3-bring-the-update-in](../updating.md#step-3-bring-the-update-in) | documented |
+| A site under a path (`site.origin` with a folder, GitHub Pages project sites) | [reference/configuration › a-site-under-a-path](../reference/configuration.md#a-site-under-a-path) | documented |
+| `build --origin`, `BAZINGA_ORIGIN`, `SITE_URL` at build time | [reference/commands › build](../reference/commands.md#build) | documented |
+| Custom domains (Vercel, Netlify, GitHub Pages) | [deploying › your-own-domain](../deploying.md#your-own-domain) | documented |
+| Where Publish pushes, and push failures | [writing/publishing › when-the-push-fails](../writing/publishing.md#when-the-push-fails) | documented |
+| Reading the changelog before an update | [updating › step-1-read-what-changed](../updating.md#step-1-read-what-changed) | documented |
 
 ## The project
 
@@ -229,7 +237,7 @@ Bazinga, add a row here and a section where it belongs.
 | Contributing, the docs and their clips | [contributing/index › work-on-these-docs](../contributing/index.md#work-on-these-docs) | documented |
 | How the clips are recorded | [contributing/recording-clips](../contributing/recording-clips.md) | documented |
 
-**149 items: 149 documented, 0 gaps.**
+**157 items: 157 documented, 0 gaps.**
 
 ## What's next
 

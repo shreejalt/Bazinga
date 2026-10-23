@@ -2,7 +2,7 @@
   "kind": "browser",
   "bar": "127.0.0.1:8001 \u00b7 Editor",
   "caption": "The equation helper draws the formula as you type; Insert puts it where the cursor was.",
-  "seconds": 20.6,
+  "seconds": 23.6,
   "width": 1280,
   "height": 800
 }

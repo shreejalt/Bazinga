@@ -159,5 +159,6 @@ Styles are names, as in figures: `main`, `second`, `third`, `fourth`, `muted`, `
 
 ## What's next
 
+Next, the map that shows how all your pages connect: [The map and topics](map-and-topics.md).
+
 - Diagrams in a post, next to figures: [Writing, step 5](writing/figures-in-posts.md).
-- Pictures that move: [Interactive figures](figures.md).

@@ -19,6 +19,8 @@ When a value is wrong, every command stops before building and says what to writ
 site.yml: site.origin must start with http:// or https:// (got 'example.com')
 ```
 
+(`site.yml:` is in front of every such message, even when the address came from `--origin` or the environment.)
+
 ## site
 
 Who you are and where the site lives.
@@ -29,7 +31,7 @@ Who you are and where the site lives.
 | `site.author` | Your name on every page's header block, in the feed and for search engines. | `"Your Name"` | `"Your Name"` | text |
 | `site.tagline` | The feed's subtitle, and the home page's search description when `description` is empty. | `"Notes on things I am learning"` | `"Notes on the things I build and learn"` | text |
 | `site.description` | What search engines show for the home page. | `""` | a sentence | text, up to 155 characters |
-| `site.origin` | The address the site will have. Used for canonical links, the sitemap and the feed. | `"https://example.com"` | `"https://example.com"` | must start with `http://` or `https://`; a trailing `/` is removed |
+| `site.origin` | The address the site will have. Used for canonical links, the sitemap, the feed and share cards. If it has a path (`https://you.github.io/notes`), every link the build writes starts with that path. | `"https://example.com"` | `"https://example.com"` | must start with `http://` or `https://`; may have a path; no `?` or `#`; a trailing `/` is removed |
 | `site.language` | The language of the pages (`<html lang>`, share previews). | `"en"` | `en` | a language code |
 | `site.avatar` | A picture used as the browser-tab icon and the share image. Without it the tab shows the Bazinga mark. | `""` | `""` | a path such as `static/avatar.png` |
 | `site.links` | Buttons on the home page, in the order you write them. Empty ones are hidden. | `github`, `x`, `linkedin`, `email`, `scholar` (all empty) | `github`, `linkedin`, `medium`, `scholar`, `x`, `email` | a mapping of name → address |
@@ -42,6 +44,31 @@ site:
     github: "https://github.com/ada"
     email: "ada@example.com"
 ```
+
+### A site under a path {#a-site-under-a-path}
+
+Most sites live at the root of their address (`https://ada.example/`). A GitHub Pages project site lives under a
+folder instead: `https://ada.github.io/notes/`. Put that folder in `site.origin` and the build does the rest:
+
+```yaml
+site:
+  origin: "https://ada.github.io/notes"
+```
+
+**What you should see** after `python -m bazinga build`: links, styles, data files and figure code all start with
+`/notes/` (for example `href="/notes/assets/css/tokens.css?…"`), the canonical address is
+`https://ada.github.io/notes/reads/welcome/`, and each page carries `<meta name="bazinga-base" content="/notes">`.
+
+Three other ways set the address **for one build only**, without editing `site.yml`. The first one found wins:
+
+1. `python -m bazinga build --origin https://ada.github.io/notes`
+2. the environment variable `BAZINGA_ORIGIN`
+3. the environment variable `SITE_URL`
+
+The GitHub Pages workflow sets `BAZINGA_ORIGIN` for you (see [Deploying](../deploying.md#github-pages)).
+
+`python -m bazinga serve` and the Editor always serve the site at the root of `http://127.0.0.1:8000/`, whatever
+`site.origin` says, and they ignore `BAZINGA_ORIGIN` and `SITE_URL`.
 
 `site.links.email` is not shown as a link: it powers the Contact section's email button. These names get a proper
 label: `github`, `x`, `twitter`, `linkedin`, `email`, `scholar`, `medium`, `mastodon`, `bluesky`, `youtube`,
@@ -63,6 +90,9 @@ nav:
 ```
 
 `href` is a path on your site or a full address. More in [Theme and customising](../theme.md#the-menu).
+
+For a portfolio with no blog, keep only Home, Projects and CV in the menu; see
+[A portfolio without the blog](../home-and-cv.md#a-portfolio-without-the-blog).
 
 ## kinds
 
@@ -93,10 +123,18 @@ kinds:
 
 More in [Theme and customising](../theme.md#kinds-of-pages).
 
+A portfolio-only site keeps just `projects:` here (a site that defines its own kinds replaces the default ones):
+
+```yaml
+kinds:
+  projects: {label: Projects, singular: Project}
+```
+
 ## home
 
 The home page. Every field is optional, and a section without its fields is left out. Where each one shows, with
-examples, is in [Your home page and CV](../home-and-cv.md).
+examples, is in [Your portfolio](../home-and-cv.md). For a portfolio, `home:` is most of what you edit: your photo,
+role, About, Experience, Education and Contact.
 
 | Key | What it does | Default | Accepts |
 |---|---|---|---|
@@ -123,7 +161,7 @@ examples, is in [Your home page and CV](../home-and-cv.md).
 
 | Key | What it does | Default | Accepts |
 |---|---|---|---|
-| `cv.pdf` | A download button for your CV on the home page and the CV page. | `""` | a path such as `/static/cv.pdf`, or a full address |
+| `cv.pdf` | Makes the home page's CV button say **Download CV** and open this file (without it, **Read the CV** opens `/cv/`). | `""` | a path such as `/static/cv.pdf`, or a full address |
 
 ```yaml
 cv:
@@ -155,7 +193,8 @@ theme:
 
 ## features
 
-Turn parts of the site off. Every one is on by default.
+Turn parts of the site off. Every one is on by default. Remove the matching item from `nav:` as well. A portfolio
+with no blog usually turns off `ask`, `explore`, `series` and `feed`.
 
 | Key | When `false` |
 |---|---|
@@ -240,7 +279,8 @@ Settings read from the environment, not from `site.yml`. Where each one applies:
 | `ASK_WRITTEN` | `0`, `false` or `off` turns written answers off. | written answers only |
 | `ASK_PER_VISITOR` | Instead of `ask.per_visitor`. | written answers only |
 | `ASK_DAILY_CAP` | Instead of `ask.daily_cap`. | written answers only |
-| `SITE_URL` | Where `api/ask.py` fetches `/data/passages.json` when the deployment does not include `_site/data/`. Default: the request's own address. | Vercel (`api/ask.py`) only |
+| `BAZINGA_ORIGIN` | The site's address for this build, instead of `site.origin` (may have a path). `--origin` wins over it. | `python -m bazinga build` only |
+| `SITE_URL` | 1. For `build`: the same as `BAZINGA_ORIGIN`, when that is not set. 2. For `api/ask.py`: where it fetches `/data/passages.json` when the deployment does not include `_site/data/` (default: the request's own address). | `python -m bazinga build`, and Vercel (`api/ask.py`) |
 | `BAZINGA_STUDIO_DEV` | Any value makes the Editor rebuild its own app page on every load. Only for working on the Editor itself. | the Editor only |
 
 "Written answers" means `/api/ask/`: `api/ask.py` on Vercel, and the same endpoint under `python -m bazinga serve`.
@@ -331,7 +371,7 @@ optional. More in [Citations](../writing/citations.md).
 ## content/cv.yml
 
 The CV page: `contact`, `experience`, `education`, `patents`, `achievements` and the rest, each with its fields, in
-[Your home page and CV](../home-and-cv.md#the-cv-page).
+[Your portfolio](../home-and-cv.md#the-cv-page).
 
 ## content/series/&lt;slug&gt;.yml
 
@@ -368,7 +408,7 @@ The rest of a figure file (`TITLE`, `CAPTION`, `REQUIRES`, `PRESETS`, what `comp
 |---|---|---|
 | `vercel.json` | Vercel: install the requirements, run the tests, build into `_site`, and the `api/ask.py` function. | [Deploying](../deploying.md#vercel) |
 | `netlify.toml` | Netlify: the same build, Python 3.12, publish `_site`. | [Deploying](../deploying.md#netlify) |
-| `.github/workflows/pages.yml` | GitHub Pages: build on every push to `main` and once a day, then deploy `_site`. | [Deploying](../deploying.md#github-pages) |
+| `.github/workflows/pages.yml` | GitHub Pages: on every push to `main` and once a day, run the tests, build with the address GitHub gives the site (`BAZINGA_ORIGIN`, from `actions/configure-pages`), then deploy `_site`. | [Deploying](../deploying.md#github-pages) |
 
 ## A minimal site.yml
 
@@ -393,5 +433,6 @@ longer has.)
 
 ## What's next
 
+Next, answers to common problems and questions: [Troubleshooting and FAQ](../troubleshooting.md).
+
 - How each command uses these settings: [Commands](commands.md).
-- Put the site online: [Deploying](../deploying.md).

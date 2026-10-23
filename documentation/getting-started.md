@@ -3,6 +3,18 @@
 In ten minutes you will have Bazinga's example site running on your own computer. You will install it, build it
 once, serve it with live reload, and take a short tour of the folders. You need nothing but Python.
 
+## What you'll have
+
+Bazinga is a personal website in one folder:
+
+- **A portfolio:** a home page with your photo, who you are, your experience, education and a contact section; a CV
+  page; and a page for each project.
+- **A blog, if you want one:** posts with equations, diagrams, figures readers can move, series and a map of how
+  everything connects, plus Ask, which answers questions from your own pages.
+
+Use either part on its own, or both. The example site shows everything; you remove what you don't need later
+([a portfolio without the blog](home-and-cv.md#a-portfolio-without-the-blog)).
+
 ## What you need
 
 - **Python 3.11 or newer.** Check with `python3 --version`.
@@ -161,7 +173,7 @@ What lives where:
 | `.env.local` (you create it) | your model key; git-ignored, never committed | yes |
 | `.studio/` | the Editor's saved versions; git-ignored | no |
 | `vercel.json`, `netlify.toml`, `.github/workflows/pages.yml` | build settings for each host ([Deploying](deploying.md)) | rarely |
-| `AGENTS.md` | how the site works, for AI coding agents ([Updating](updating.md#working-with-ai-coding-agents)) | when you change the rules |
+| `AGENTS.md` | how the site works, for AI coding agents ([Ask and the wiki](ask-and-wiki.md#working-with-ai-coding-agents)) | when you change the rules |
 | `docs/` | notes for people working on Bazinga itself | no |
 | `LICENSE`, `THIRD_PARTY.md` | the code's licence and the parts it uses ([What's in Bazinga](whats-in-bazinga.md#licences)) | no |
 
@@ -181,6 +193,7 @@ python -m unittest discover tests
 
 ## What's next
 
-- Make the site yours: [your home page and CV](home-and-cv.md).
+Next, see every part of Bazinga in one place: [What's in Bazinga](whats-in-bazinga.md). Or jump in:
+
+- Make it your portfolio: [home page, CV and projects](home-and-cv.md).
 - Write your first post: [Writing, step 1](writing/first-post.md).
-- Prefer a writing window to a text editor? Read about [the Editor](editor.md).

@@ -99,12 +99,15 @@ content/reads/my-first-post.md already exists; pick another title or pass --slug
 ## build
 
 ```text
-usage: python -m bazinga build [-h] [--drafts] [--quiet]
+usage: python -m bazinga build [-h] [--drafts] [--quiet] [--origin URL]
 
 options:
-  -h, --help  show this help message and exit
-  --drafts    include drafts and scheduled pages (private previews only)
+  -h, --help    show this help message and exit
+  --drafts      include drafts and scheduled pages (private previews only)
   --quiet
+  --origin URL  the address the site is deployed at, instead of site.origin
+                (also BAZINGA_ORIGIN or SITE_URL in the environment); a path
+                such as https://you.github.io/repo puts every link under /repo
 ```
 
 ```console
@@ -114,6 +117,18 @@ Built 14 pages (36 HTML files) into _site/ in 0.83s
 $ python -m bazinga build --drafts
 Built 17 pages (39 HTML files) into _site/ in 0.77s — drafts included, do not deploy this build
 ```
+
+`--origin` builds for another address without editing `site.yml`. With a path, every link starts with it:
+
+```console
+$ python -m bazinga build --origin https://you.github.io/notes
+Built 14 pages (36 HTML files) into _site/ in 1.06s
+$ grep -o '<link rel="canonical"[^>]*>' _site/reads/welcome/index.html
+<link rel="canonical" href="https://you.github.io/notes/reads/welcome/">
+```
+
+Only `build` reads `--origin`, `BAZINGA_ORIGIN` and `SITE_URL`; `serve` and the Editor always serve at the root of
+`127.0.0.1`. See [A site under a path](configuration.md#a-site-under-a-path).
 
 `--quiet` prints only the last line. If anything is wrong, nothing is written: the build lists each problem with
 its file, line and a hint, and the exit code is 1.

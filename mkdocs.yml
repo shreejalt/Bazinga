@@ -15,6 +15,7 @@ exclude_docs: |
   recordings/
   hooks/
   overrides/
+  assets/brand/source/
   requirements.txt
 
 validation:
@@ -58,11 +59,13 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - navigation.top
     - navigation.footer
     - navigation.indexes
     - toc.follow
+    - toc.integrate
     - search.suggest
     - search.highlight
     - content.code.copy
@@ -103,15 +106,19 @@ markdown_extensions:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - pymdownx.keys
-  - pymdownx.snippets
+  - pymdownx.snippets:
+      check_paths: true
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
 
 nav:
   - Home: index.md
-  - Getting started: getting-started.md
-  - "What's in Bazinga": whats-in-bazinga.md
+  - Getting started:
+      - getting-started.md
+      - "What's in Bazinga": whats-in-bazinga.md
+      - Updating Bazinga: updating.md
+      - "What's new": whats-new.md
   - Writing:
       - writing/index.md
       - 1. Your first post: writing/first-post.md
@@ -124,17 +131,19 @@ nav:
       - 8. Checking: writing/checking.md
       - 9. Publishing: writing/publishing.md
   - Guides:
-      - The Editor: editor.md
-      - Interactive figures: figures.md
-      - Diagrams from code: diagrams.md
-      - 3-D figures: figures-3d.md
-      - The map and topics: map-and-topics.md
-      - Ask and the wiki: ask-and-wiki.md
-      - Your home page and CV: home-and-cv.md
-      - Theme and customising: theme.md
-      - Deploying: deploying.md
-      - SEO and feeds: seo-and-feeds.md
-      - Updating Bazinga: updating.md
+      - Figures and the Editor:
+          - The Editor: editor.md
+          - Interactive figures: figures.md
+          - 3-D figures: figures-3d.md
+          - Diagrams from code: diagrams.md
+      - Your site:
+          - The map and topics: map-and-topics.md
+          - Ask and the wiki: ask-and-wiki.md
+          - "Your portfolio: home page, CV and projects": home-and-cv.md
+          - Theme and customising: theme.md
+      - Going live:
+          - Deploying: deploying.md
+          - SEO and feeds: seo-and-feeds.md
   - Reference:
       - Commands: reference/commands.md
       - Configuration: reference/configuration.md

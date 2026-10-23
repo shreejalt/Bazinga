@@ -3,11 +3,28 @@
 This page lists every part of Bazinga in one place, with a link to the page that explains it. Read it once to see
 what you have, then come back when you wonder whether Bazinga can do something.
 
-Bazinga is a Python template for a personal site and technical blog. You write Markdown files; one command turns
-them into a plain static site that any host can serve. There is no Node and no bundler, and the built pages work
+Bazinga is a Python template for a personal website: a portfolio with your CV and projects, and a technical blog
+if you want one. You write YAML and Markdown files; one command turns them into a plain static site that any host
+can serve. There is no Node and no bundler, and the built pages work
 without JavaScript: scripts only add the moving parts.
 
 ::clip site-tour | The example site: the home page, a list of posts, and a post with its contents.
+
+## Your portfolio
+
+| Part | What it gives you | Where it is explained |
+|---|---|---|
+| Name, links and email | the name on every page, your profile links and the Contact buttons | [Your portfolio](home-and-cv.md#your-name-and-links) |
+| Photo and tab icon | a round photo on the home page; `avatar` for the browser tab and share picture | [Your portfolio](home-and-cv.md#the-top) |
+| Home page sections | headline, About, Experience (each role opens), Education, Contact | [Your portfolio](home-and-cv.md#the-home-page-section-by-section) |
+| Contact | what you work on, your tools, an email button and where else to find you | [Your portfolio](home-and-cv.md#contact) |
+| CV page | your full record at `/cv/`, from `content/cv.yml`, checked when the site is built | [Your portfolio](home-and-cv.md#the-cv-page) |
+| CV as a PDF | a **Download CV** button that opens your PDF | [Your portfolio](home-and-cv.md#a-pdf-copy) |
+| Projects | one page per project, with its stack, a GitHub link and usage | [Your portfolio](home-and-cv.md#your-projects) |
+| A portfolio without the blog | only Home, Projects and CV | [Your portfolio](home-and-cv.md#a-portfolio-without-the-blog) |
+| Your own address | a custom domain on Vercel, Netlify or GitHub Pages | [Deploying](deploying.md) |
+
+::clip portfolio-tour | A portfolio with no blog: the home page, a role in Experience, Contact, the CV and a project.
 
 ## Writing
 
@@ -52,7 +69,6 @@ without JavaScript: scripts only add the moving parts.
 
 | Part | What it gives you | Where it is explained |
 |---|---|---|
-| Home page and CV | about, experience, education, contact, and a full CV page | [Your home page and CV](home-and-cv.md) |
 | The map | every page on one map; a hover lights what is nearest and the reading order | [The map and topics](map-and-topics.md) |
 | Topic pages | one page per topic, with its pages and their live figures | [The map and topics](map-and-topics.md#topics) |
 | Ask | readers ask a question and get an answer from your own pages | [Ask and the wiki](ask-and-wiki.md#what-ask-does-with-no-setup) |
@@ -69,7 +85,7 @@ without JavaScript: scripts only add the moving parts.
 | Wiki commands | `index`, `query`, `lint` and `log` without a model; `ingest`, `highlights`, `describe`, `equation`, `figure` with one | [Ask and the wiki](ask-and-wiki.md#the-wiki-commands) |
 | Any model | OpenRouter, OpenAI, or a model on your own computer | [Ask and the wiki](ask-and-wiki.md#connect-a-model) |
 | Proposals | a model only suggests; you accept or reject in `proposals/` | [Ask and the wiki](ask-and-wiki.md#suggestions-the-model-proposes-you-decide) |
-| AI coding agents | `AGENTS.md` tells an agent how the site works | [Updating Bazinga](updating.md#working-with-ai-coding-agents) |
+| AI coding agents | `AGENTS.md` tells an agent how the site works | [Ask and the wiki](ask-and-wiki.md#working-with-ai-coding-agents) |
 
 ## Running it
 
@@ -84,16 +100,7 @@ without JavaScript: scripts only add the moving parts.
 
 ## The folders
 
-```text
-site.yml      settings and home page        content/   your posts, cv.yml, topics.yml, references.yml
-figures/      interactive figures           drawings/  diagrams made with code (optional)
-static/       images and files              wiki/      generated wiki files
-bazinga/      the engine, theme and Editor  tests/     run before every deploy
-api/          written answers on Vercel     docs/      notes on Bazinga's design
-```
-
-Every folder and file, and whether you edit it, is in the table in
-[Getting started](getting-started.md#5-a-tour-of-the-folders).
+Every folder and file, and whether you edit it, is in [Getting started: a tour of the folders](getting-started.md#5-a-tour-of-the-folders).
 
 ## Licences {#licences}
 
@@ -107,5 +114,5 @@ Every folder and file, and whether you edit it, is in the table in
 
 ## What's next
 
-Start at [Getting started](getting-started.md) if you have not installed it yet, or go straight to
-[Writing](writing/index.md).
+Next: how to bring a newer Bazinga into your site later, in [Updating Bazinga](updating.md). Ready to write
+instead? Go to [Writing](writing/index.md).

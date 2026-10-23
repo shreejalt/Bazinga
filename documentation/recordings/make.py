@@ -64,11 +64,13 @@ def tool(name: str, required: bool = True) -> str | None:
 
 
 # ------------------------------------------------------------------------------------------------- the work copy
-def prepare_site() -> None:
-    """A fresh copy of the template as a new user has it, as its own git repository."""
-    if WORK.exists():
-        shutil.rmtree(SITE, ignore_errors=True)
-    SITE.mkdir(parents=True)
+def prepare_site(site: Path = SITE, overlay: str = "") -> None:
+    """A fresh copy of the template as a new user has it, as its own git repository.
+
+    With `overlay` (a folder name under recordings/sites/), the paths listed in its REMOVE file are deleted first and
+    its files are then copied over the example site: that is how the portfolio clip gets a portfolio-only site."""
+    shutil.rmtree(site, ignore_errors=True)
+    site.mkdir(parents=True)
     RAW.mkdir(parents=True, exist_ok=True)
     files = subprocess.run(["git", "ls-files", "-z"], cwd=REPO, check=True, capture_output=True).stdout
     for rel in files.decode().split("\0"):
@@ -76,15 +78,28 @@ def prepare_site() -> None:
             continue
         src = REPO / rel
         if src.is_file():
-            dst = SITE / rel
+            dst = site / rel
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dst)
+    if overlay:
+        extra = HERE / "sites" / overlay
+        remove = extra / "REMOVE"
+        for line in (remove.read_text(encoding="utf-8").splitlines() if remove.exists() else []):
+            line = line.strip()
+            if line and not line.startswith("#"):
+                target = site / line
+                shutil.rmtree(target) if target.is_dir() else target.unlink(missing_ok=True)
+        for src in extra.rglob("*"):
+            if src.is_file() and src.name != "REMOVE":
+                dst = site / src.relative_to(extra)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
     env = dict(os.environ, GIT_AUTHOR_NAME="Your Name", GIT_AUTHOR_EMAIL="you@example.com",
                GIT_COMMITTER_NAME="Your Name", GIT_COMMITTER_EMAIL="you@example.com")
-    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=SITE, check=True)
-    subprocess.run(["git", "add", "-A"], cwd=SITE, check=True)
-    subprocess.run(["git", "commit", "-qm", "The example site"], cwd=SITE, check=True, env=env)
-    print(f"Work copy ready: {SITE.relative_to(REPO)}")
+    subprocess.run(["git", "init", "-q", "-b", "main"], cwd=site, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=site, check=True)
+    subprocess.run(["git", "commit", "-qm", "The example site"], cwd=site, check=True, env=env)
+    print(f"Work copy ready: {site.relative_to(REPO) if site.is_relative_to(REPO) else site}")
 
 
 def tool_env() -> dict:
@@ -121,38 +136,58 @@ def tape_meta(path: Path) -> dict:
     return meta
 
 
+# Some commands print the path of the Python running them (Publish shows "$ <python> -m bazinga build"). So that a
+# terminal clip never shows a folder of this computer, tapes use a Python environment at a neutral path.
+TAPE_DIR = Path("/tmp/bazinga-clips")            # tapes run in TAPE_DIR/site; some commands print full paths
+TAPE_VENV = TAPE_DIR / ".venv"
+
+
+def tape_python() -> Path:
+    """A virtual environment at /tmp/bazinga-clips/.venv with requirements.txt installed (made once)."""
+    if not (TAPE_VENV / "bin" / "python").exists():
+        print(f"Making {TAPE_VENV} for the terminal clips (once)")
+        run([sys.executable, "-m", "venv", TAPE_VENV])
+        run([TAPE_VENV / "bin" / "python", "-m", "pip", "install", "-q", "--disable-pip-version-check",
+             "-r", REPO / "requirements.txt"])
+    return TAPE_VENV / "bin"
+
+
 def record_tape(path: Path) -> None:
     vhs = tool("vhs")
     tool("ttyd")
-    out = RAW / f"{path.stem}.mp4"
-    out.unlink(missing_ok=True)
-    # VHS writes the file named by the tape's Output line, relative to the folder it runs in (.cache/recordings/).
-    run([vhs, path], cwd=WORK, env=tool_env())
-    if not out.exists():
+    env = tool_env()
+    env["BAZINGA_BIN"] = str(tape_python())
+    prepare_site(TAPE_DIR / "site")
+    made = TAPE_DIR / "raw" / f"{path.stem}.mp4"
+    made.unlink(missing_ok=True)
+    # VHS writes the file named by the tape's Output line (raw/<name>.mp4), relative to the folder it runs in.
+    run([vhs, path], cwd=TAPE_DIR, env=env)
+    if not made.exists():
         sys.exit(f"{path.name} did not write raw/{path.stem}.mp4 (check its Output line)")
+    shutil.move(made, RAW / f"{path.stem}.mp4")
     (RAW / f"{path.stem}.json").write_text(json.dumps(tape_meta(path), indent=2), encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------------------------------- browser
 class Server:
-    """`python -m bazinga serve` on the work copy, with the Editor, for as long as the browser clips run."""
+    """`python -m bazinga serve` on a work copy, with the Editor, for as long as its browser clips run."""
 
-    def __init__(self):
-        self.proc = None
+    def __init__(self, site: Path = SITE, port: int = PORT):
+        self.proc, self.site, self.port = None, site, port
 
     def __enter__(self):
-        log = open(WORK / "serve.log", "w")
+        log = open(WORK / f"serve-{self.port}.log", "w")
         self.proc = subprocess.Popen(
-            [sys.executable, "-m", "bazinga", "serve", "--port", str(PORT), "--studio-port", str(EDITOR_PORT)],
-            cwd=SITE, env=tool_env(), stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+            [sys.executable, "-m", "bazinga", "serve", "--port", str(self.port), "--studio-port", str(self.port + 1)],
+            cwd=self.site, env=tool_env(), stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         for _ in range(120):
             try:
-                urllib.request.urlopen(f"http://127.0.0.1:{PORT}/", timeout=1).read()
-                print(f"Example site at http://127.0.0.1:{PORT}/ (Editor on {EDITOR_PORT})")
+                urllib.request.urlopen(f"http://127.0.0.1:{self.port}/", timeout=1).read()
+                print(f"{self.site.name} at http://127.0.0.1:{self.port}/ (Editor on {self.port + 1})")
                 return self
             except OSError:
                 if self.proc.poll() is not None:
-                    sys.exit(f"the server stopped; see {WORK / 'serve.log'}")
+                    sys.exit(f"the server stopped; see {WORK / f'serve-{self.port}.log'}")
                 time.sleep(0.5)
         sys.exit("the server did not start within 60 s")
 
@@ -165,12 +200,18 @@ class Server:
                 os.killpg(self.proc.pid, signal.SIGKILL)
 
 
-def record_clip(path: Path) -> bool:
+def clip_site(path: Path) -> str:
+    """The `site: "<name>"` a clip asks for in its meta (a folder under recordings/sites/), or "" for the example."""
+    m = re.search(r'\bsite:\s*"([a-z0-9-]+)"', path.read_text(encoding="utf-8"))
+    return m.group(1) if m else ""
+
+
+def record_clip(path: Path, port: int = PORT) -> bool:
     node = tool("node")
     if not (HERE / "node_modules" / "playwright").exists():
         sys.exit("Playwright is missing: run `npm install` in documentation/recordings first.")
     env = tool_env()
-    env["BASE_URL"] = f"http://127.0.0.1:{PORT}"
+    env["BASE_URL"] = f"http://127.0.0.1:{port}"
     try:
         run([node, HERE / "lib" / "run.mjs", path, RAW], cwd=HERE, env=env)
         return True
@@ -241,7 +282,7 @@ def convert(name: str) -> dict:
     crf = str(meta.get("crf") or 23)        # lower is sharper and bigger; a clip that scrolls a lot may want 27
     run([ffmpeg, "-y", "-loglevel", "error", *inputs, "-vf", vf, "-an", "-c:v", "libx264", "-preset", "slow",
          "-crf", crf, "-pix_fmt", "yuv420p", *COLOUR, "-movflags", "+faststart", f"{base}.mp4"])
-    run([ffmpeg, "-y", "-loglevel", "error", *inputs, "-vf", vf, "-an", "-c:v", "libvpx-vp9", "-crf", "36",
+    run([ffmpeg, "-y", "-loglevel", "error", *inputs, "-vf", vf, "-an", "-c:v", "libvpx-vp9", "-crf", "38",
          "-b:v", "0", "-row-mt", "1", "-deadline", "good", "-cpu-used", "2", *COLOUR, f"{base}.webm"])
     length = duration(Path(f"{base}.mp4"))
     at = meta.get("poster")
@@ -288,11 +329,33 @@ def make_gif(src: Path, out: Path, width: int, fps: int = 10, start: float = 0, 
 
 # ----------------------------------------------------------------------------------------------------- banner
 def make_banner() -> None:
-    """The banner GIFs at the top of the README and the docs home (see recordings/banner/)."""
-    script = HERE / "banner" / "frames.mjs"
-    if not script.exists():
-        sys.exit("recordings/banner/frames.mjs is missing")
-    run([tool("node"), script], cwd=HERE / "banner", env=tool_env())
+    """The banner GIFs at the top of the README and the docs home, from documentation/assets/brand/source/
+    (banner.html draws a frame for any time t; frames.mjs saves every frame; see that folder's README.md)."""
+    source = DOCS / "assets" / "brand" / "source"
+    if not (source / "frames.mjs").exists():
+        sys.exit("documentation/assets/brand/source/frames.mjs is missing")
+    ffmpeg, node = tool("ffmpeg"), tool("node")
+    gifsicle = tool("gifsicle", required=False)
+    for theme in ("light", "dark"):
+        frames = WORK / f"banner-frames-{theme}"
+        shutil.rmtree(frames, ignore_errors=True)
+        frames.mkdir(parents=True)
+        # frames.mjs imports playwright: run it from this folder so it finds node_modules here
+        shutil.copy(source / "frames.mjs", HERE / "_banner_frames.mjs")
+        try:
+            run([node, HERE / "_banner_frames.mjs", source / "banner.html", frames, theme, "20"], cwd=HERE)
+        finally:
+            (HERE / "_banner_frames.mjs").unlink(missing_ok=True)
+        gif = WORK / f"banner-{theme}.gif"
+        run([ffmpeg, "-y", "-loglevel", "error", "-framerate", "20", "-i", frames / "f%04d.png", "-vf",
+             "fps=15,split[a][b];[a]palettegen=max_colors=40:stats_mode=diff[p];"
+             "[b][p]paletteuse=dither=none:diff_mode=rectangle", "-loop", "0", gif])
+        out = BRAND_OUT / f"banner-{theme}.gif"
+        if gifsicle:
+            run([gifsicle, "-O3", "--lossy=45", gif, "-o", out])
+        else:
+            shutil.copy(gif, out)
+        print(f"{out.relative_to(REPO)}: {out.stat().st_size / 1024:.0f} KB")
 
 
 # ------------------------------------------------------------------------------------------------------- main
@@ -327,14 +390,18 @@ def main() -> int:
         prepare_site()
         for n in [n for n in wanted if n in tapes]:
             print(f"\n== tape {n}")
-            record_tape(tapes[n])
-            prepare_site()          # a tape may have changed the work copy; the next clip starts clean
+            record_tape(tapes[n])   # each tape starts from its own fresh copy
         browser = sorted((n for n in wanted if n in clips), key=lambda n: (n.startswith("editor"), n))  # Editor clips write files: last
-        if browser:
-            with Server():
-                for n in browser:
+        by_site: dict[str, list] = {}
+        for n in browser:
+            by_site.setdefault(clip_site(clips[n]), []).append(n)
+        for k, (overlay, names) in enumerate(sorted(by_site.items())):
+            site, port = (SITE, PORT) if not overlay else (WORK / f"site-{overlay}", PORT + 2 * k + 2)
+            prepare_site(site, overlay)
+            with Server(site, port):
+                for n in names:
                     print(f"\n== clip {n}")
-                    if not record_clip(clips[n]):
+                    if not record_clip(clips[n], port):
                         failed.append(n)
     print()
     total = 0

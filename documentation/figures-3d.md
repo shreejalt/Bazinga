@@ -170,5 +170,7 @@ The example site's `camera_rig` starter uses the camera helpers together; copy i
 
 ## What's next
 
-- Place it in a post: [Writing, step 5](writing/figures-in-posts.md).
+Next, diagrams that are drawn once and do not move: [Diagrams from code](diagrams.md).
+
+- Place a 3-D figure in a post: [Writing, step 5](writing/figures-in-posts.md).
 - Everything else about figures: [Interactive figures](figures.md).

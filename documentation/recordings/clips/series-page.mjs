@@ -1,6 +1,6 @@
 // Series: the list of series, one series with its parts in order, and a part showing where it sits.
 export const meta = {
-  path: "/series/getting-started/", crf: 27,
+  path: "/series/getting-started/", crf: 29,
   caption: "A series page lists its parts in order with highlights; every part shows where it sits.",
 };
 

@@ -110,6 +110,7 @@ A topic that no public page uses has no page yet.
 
 ## What's next
 
+Next, let readers ask questions of your pages: [Ask and the wiki](ask-and-wiki.md).
+
 - Write the links that build the map: [Writing, step 6](writing/links-and-topics.md).
 - Turn a chain of pages into a series: [Writing, step 7](writing/series.md).
-- Let readers ask questions of your pages: [Ask and the wiki](ask-and-wiki.md).

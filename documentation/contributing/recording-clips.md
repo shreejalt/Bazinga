@@ -223,9 +223,24 @@ The comment lines at the top are read by `make.py`: `caption`, `speed`, `trim` (
 
 ## The banner
 
-The animated banner at the top of the README and of the docs home lives in `documentation/assets/brand/`
-(`banner-light.gif`, `banner-dark.gif`). It is designed by hand and is not made by these scripts. If its source is
-added as `documentation/recordings/banner/frames.mjs`, `make.py banner` runs it.
+The animated banner at the top of the README and of this site's home page is `banner-light.gif` and
+`banner-dark.gif` in `documentation/assets/brand/`. It is made the same way as the clips, but it is drawn rather than
+filmed, so every frame is exact and the loop joins up seamlessly:
+
+1. `documentation/assets/brand/source/banner.html` draws one frame of the banner for any time `t` (a 7-second loop).
+2. `frames.mjs` (next to it) opens that page in headless Chrome, sets the time frame by frame (20 a second), and saves
+   each frame as a PNG.
+3. ffmpeg's `palettegen`/`paletteuse` turns the frames into a GIF with a small palette, and
+   [gifsicle](https://www.lcdf.org/gifsicle/), when it is installed, makes it smaller.
+
+To make both banners again:
+
+```bash
+.venv/bin/python documentation/recordings/make.py banner
+```
+
+It overwrites the two GIFs in `documentation/assets/brand/`. The folder's own `README.md` shows the same steps
+by hand.
 
 ## What's next
 

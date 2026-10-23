@@ -63,4 +63,5 @@ For this repository, VHS 0.12.1 from Homebrew worked as it is.
 
 ## What's next
 
-[Recording the clips](recording-clips.md) covers every other clip in these pages, browser and terminal.
+[Coverage](coverage.md) lists every part of Bazinga and the page that documents it. Every other clip is covered
+in [Recording the clips](recording-clips.md).

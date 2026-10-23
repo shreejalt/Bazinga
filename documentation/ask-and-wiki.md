@@ -9,7 +9,8 @@ On this page you will:
 - run the wiki commands that need no model, and read their real output;
 - connect a language model (OpenRouter, OpenAI, or one on your own computer);
 - turn on written answers, and learn their limits;
-- use the model's suggestions safely: it proposes, you decide.
+- use the model's suggestions safely: it proposes, you decide;
+- point an AI coding agent at your site's rules (`AGENTS.md`).
 
 A model is optional. Everything on this page up to [Connect a model](#connect-a-model) works without one.
 
@@ -464,6 +465,24 @@ We tried the free OpenRouter models on the example site. What we found:
   with it. If you see this, put a model that answers directly first, for example `google/gemma-4-26b-a4b-it:free`.
 - Expect 5 to 30 seconds per suggestion on free models, and minutes for `lint --model`.
 
+## Working with AI coding agents {#working-with-ai-coding-agents}
+
+`AGENTS.md`, at the root of the site, is written for coding agents such as Claude Code, Codex or Cursor, and for
+you. It explains how the site works as a wiki, in the sense of Karpathy's "LLM Wiki" idea:
+
+- **Three layers.** `sources/` (optional, git-ignored: the papers and notes you collect), the wiki itself
+  (`content/`), and the rules (`AGENTS.md` and `docs/DESIGN.md`).
+- **What is generated.** `wiki/index.md`, the catalog an agent reads first, and `wiki/log.md`, the log of what
+  happened. Neither is edited by hand.
+- **The exact commands** for asking (`wiki query`), connecting a new page (`check`, then `wiki ingest`), keeping the
+  wiki healthy (`wiki lint`) and the other proposals, as described [above](#the-wiki-commands).
+- **The rules.** Cite everything; a model only writes proposals to `proposals/`, and nothing reaches `content/`
+  unless you accept it.
+
+When you ask an agent to work on your site, point it at `AGENTS.md` first. `CLAUDE.md` does that for Claude Code: it
+only says to read `AGENTS.md`, so the same rules apply. Edit the file when your own rules
+change, for example the topics you allow or how you like pages written.
+
 ## When something goes wrong
 
 | What you see | Why | What to do |
@@ -485,6 +504,7 @@ More problems and fixes are in [Troubleshooting](troubleshooting.md).
 
 ## What's next
 
-- [The map and topics](map-and-topics.md): the other half of the wiki, the map readers explore.
+Next, the personal side of your site: [Your portfolio: home page, CV and projects](home-and-cv.md).
+
 - [Deploying](deploying.md): put the site online, with written answers on Vercel.
 - [Configuration reference](reference/configuration.md): every `llm:` and `ask:` setting in one table.

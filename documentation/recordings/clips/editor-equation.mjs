@@ -22,6 +22,10 @@ export default async function (page, h) {
   await h.pause(1500);
   await h.step("Number it");
   await h.click('.eq-modal :text("Number this equation")');
+  await h.pause(500);
+  await h.step("Give it a short name");
+  await h.click('.eq-modal input[placeholder^="eq:"], .eq-modal input[placeholder*="softmax"]');
+  await h.type("softmax", 70);
   await h.pause(900);
   await h.step("Insert it into the page");
   await h.click('.eq-modal .modal-foot button.btn.primary, .eq-modal button.btn.primary >> nth=-1');

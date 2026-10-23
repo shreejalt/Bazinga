@@ -1,9 +1,21 @@
-# Your home page and CV
+# Your portfolio: home page, CV and projects
 
-In this guide you will put your own name, words and record on the site. Two files hold everything personal:
+Bazinga is not only for blogging. It is a complete personal website: a home page with your photo, who you are, your
+experience, education and a contact section, a CV page, and a page for each of your projects. Use it as a portfolio
+with no blog at all, as a blog, or as both. In this guide you will put your own name, photo, words, record and
+projects on the site.
 
-- `site.yml`, the `site:` and `home:` sections, for the home page;
-- `content/cv.yml`, for the CV page at `/cv/`.
+Three places hold everything personal:
+
+| What visitors see | Where you change it |
+|---|---|
+| Your name, links, email, tab icon and share picture | `site.yml` → `site:` |
+| Photo, role, headline, About, Experience, Education, Contact | `site.yml` → `home:` |
+| The CV page at `/cv/` (and an optional PDF) | `content/cv.yml`, and `site.yml` → `cv:` |
+| Your projects | one file each in `content/projects/` |
+| The menu on the left | `site.yml` → `nav:` |
+
+![A portfolio made with Bazinga: photo, role, a short introduction and the sections.](assets/portfolio-home.jpg)
 
 Keep `python -m bazinga serve` running while you edit. The page reloads every time you save.
 
@@ -82,8 +94,9 @@ home:
 
 Under the lead you always get one button per kind of page (Reads, Papers, Projects, ...), then your links.
 
-To use your own photo, put it in `static/images/` and point `photo:` at it, for example
-`/static/images/me.jpg`. Note the leading `/`.
+**Your photo:** put a square picture (about 600 × 600 pixels) in `static/images/` and point `photo:` at it, for
+example `/static/images/me.jpg`. Note the leading `/`. To use the same picture as the browser-tab icon and the
+picture in link previews, also set `site: avatar: static/images/me.jpg`.
 
 ### About, and the "pick one" buttons
 
@@ -100,7 +113,8 @@ To use your own photo, put it in `static/images/` and point `photo:` at it, for 
 ```
 
 `about` is a list of paragraphs. They are printed as written, so they may carry `<b>`, `<i>` and `<a>`.
-`starters` are small buttons under About; clicking one shows its `say` line. Delete the list to hide them.
+`starters` are small buttons under About; clicking one shows its `say` line. Delete `starters_label` and `starters`
+to hide them.
 
 ### Explore
 
@@ -240,14 +254,90 @@ cv:
   pdf: /static/cv.pdf
 ```
 
-A full address works too. With a PDF set, the home page's button says **Download CV** and the CV page gets a
-**Download the PDF** button. Without it, the home page's button says **Read the CV**.
+A full address works too. With a PDF set, the button in the home page's rail says **Download CV** and opens the
+file. Without it, that button says **Read the CV** and opens `/cv/`. The CV page itself shows no download button, so
+link the PDF from your About text as well if you want it there.
 
 **What you should see:** open `http://127.0.0.1:8000/cv/`. Your roles, education and skills are laid out in the
 same order as the file.
 
+![The CV page.](assets/portfolio-cv.jpg)
+
+## Your projects
+
+Each project is one Markdown file in `content/projects/`. Delete the example and add your own:
+
+```markdown
+---
+title: "Weather App"
+date: 2026-05-01
+summary: "A small app that shows tomorrow's weather for any city."
+topics: [tools]
+type: Personal              # the page says "Personal project"; e.g. Open-source, Client, Research
+stack: "Python · Flask"
+github: "https://github.com/your-handle/weather-app"
+---
+
+What it does, why you built it and what you learned. Add screenshots with ![alt](/static/uploads/shot.png), or a
+figure readers can move with ::figure name.
+```
+
+Other optional header fields: `tagline`, `lead`, `from` (where it was done), `usage` (shown as a code block),
+`limitations` (a list), `credit`, `order` (the position in the list). A project with `github:` also appears in the
+CV's open-source section by itself.
+
+![A project page.](assets/portfolio-project.jpg)
+
+## A portfolio without the blog
+
+If you only want a portfolio, turn the blog parts off. Nothing breaks: their pages and buttons simply go away.
+
+1. **Delete the example posts:** the folders `content/reads/`, `content/papers/` and `content/elsewhere/`, and the
+   example project.
+2. **Keep only the kinds you use** in `site.yml`:
+
+    ```yaml
+    kinds:
+      projects:
+        label: Projects
+        singular: Project
+        blurb: "Things I have built."
+    ```
+
+3. **Trim the menu:**
+
+    ```yaml
+    nav:
+      - {label: Home, href: /}
+      - {label: Projects, href: /projects/}
+      - {label: CV, href: /cv/}
+    ```
+
+4. **Turn off what you don't need:**
+
+    ```yaml
+    features: {ask: false, explore: false, series: false, feed: false, llms_txt: true, credit: true}
+    ```
+
+5. **Remove the links to the blog:**
+    - rewrite `home: about:` so it no longer points to Reads or Papers;
+    - delete the "Elsewhere on this site" line under `home: contact: elsewhere:`;
+    - delete `pages:` entries in `site.yml` and `pages:` / `page:` entries in `content/cv.yml` (including
+      `open_source`) that name pages you deleted.
+6. Run `python -m bazinga build`. If a page id still names a deleted page, the build stops and says where, for
+   example `content/cv.yml: error: cv.yml: unknown page 'project:bazinga' in open_source`. Plain `<a href>` links
+   in your text are not checked, so look for `/reads/` and `/papers/` yourself.
+
+**What you should see:** with one project, `Built 1 pages (7 HTML files) into _site/`, and a site with Home,
+Projects and CV only. The pictures on this page come from exactly such a
+site, built from a fresh copy of the template.
+
+::clip portfolio-tour | A portfolio with no blog: the home page, a role in Experience, Contact, the CV and a project.
+
+Want a blog later? Add the `reads` kind back and write your first post: see [Writing](writing/index.md).
+
 ## What's next
 
 - Change the colours and fonts: [Theme and customising](theme.md).
-- Put the site online: [Deploying](deploying.md).
+- Put it online at your own address: set `site.origin`, then follow [Deploying](deploying.md).
 - Every key in one table: [Configuration reference](reference/configuration.md).

@@ -89,10 +89,7 @@ const OVERLAY = `
     if (!text) { t.classList.remove("on"); return; }
     t.textContent = text; t.classList.add("on");
   };
-  window.__clip_restore = () => {
-    if (window.__clip_text) window.__clip_step(window.__clip_text);
-  };
-  document.addEventListener("DOMContentLoaded", () => { make(); window.__clip_restore(); });
+  document.addEventListener("DOMContentLoaded", make);
 })();`;
 
 // Filming: Chrome's own screencast (through Playwright's CDP session) sends a sharp JPEG of the page each time it
@@ -112,6 +109,7 @@ const now = () => (Date.now() - t0) / 1000;
 let startAt = null;
 const skips = [];               // [from, to] seconds cut from the clip (page loads, waiting)
 let stepNo = 0;
+let stepText = null;            // the caption on screen, put back after every page load
 const page = await context.newPage();
 const cdp = await context.newCDPSession(page);
 cdp.on("Page.screencastFrame", ({ data, metadata, sessionId }) => {
@@ -153,7 +151,7 @@ async function settle(extra = 300) {
   }
   await sleep(extra);
   await setCursor();
-  await call("__clip_restore");
+  if (stepText) await call("__clip_step", stepText);
 }
 
 const h = {
@@ -193,11 +191,10 @@ const h = {
   },
   /** Show a step caption at the bottom ("2 · Pick a preset"); null hides it. */
   async step(text) {
-    if (!text) { await page.evaluate(() => { window.__clip_text = null; }).catch(() => {}); await call("__clip_step", null); return; }
+    if (!text) { stepText = null; await call("__clip_step", null); return; }
     stepNo += 1;
-    const label = `${stepNo} · ${text}`;
-    await page.evaluate((t) => { window.__clip_text = t; }, label).catch(() => {});
-    await call("__clip_step", label);
+    stepText = `${stepNo} · ${text}`;
+    await call("__clip_step", stepText);
     await sleep(350);
   },
   /** Draw a highlight box around a control for a moment, before it is used. */
@@ -286,6 +283,12 @@ const h = {
     await h.move(xAt(val), y);
     await sleep(350);
     await h.dragFrom(xAt(val), y, xAt(to) - xAt(val), 0, ms);
+  },
+  /** Scroll an element to a third of the way down the screen, smoothly. */
+  async scrollTo(target, ms = 900) {
+    const loc = locate(target);
+    const y = await loc.evaluate((el) => el.getBoundingClientRect().top);
+    await h.scroll(y - viewport.height / 3, ms);
   },
   /** Scroll the page smoothly by dy pixels (with the mouse wheel, where the arrow is). */
   async scroll(dy, ms = 900) {

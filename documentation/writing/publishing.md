@@ -132,6 +132,9 @@ Do what it says, then publish again. The commits are always yours: Bazinga never
 In the Editor, **Publish** opens a dialog that runs the same steps with a live list and log. It has a dry run, shows
 warnings with a **Publish anyway** button, and offers **Schedule** and **Unpublish**. See [The Editor](../editor.md).
 
+The **Write** button that opens the Editor is never part of the published site: readers of the live site do not see
+it. [Only you see the Write button](../editor.md#only-you-see-the-write-button) explains why.
+
 ::clip editor-publish | Publishing from the Editor: a dry run with the steps ticking off one by one.
 
 ## Schedule a post for later
@@ -166,6 +169,16 @@ python -m bazinga publish content/reads/my-first-post.md --unpublish
 If other published pages link to the page or build on it, the build fails and nothing is committed, because those
 pages would then point at a draft. Remove those links first.
 
+## When the push fails
+
+Your commit stays on your computer, so nothing is lost. Private repositories work like public ones: the push uses the
+git sign-in you already have. The usual causes of a failed push:
+
+- **No remote:** Publish says `Committed, but there is no remote to push to.` Add one with
+  `git remote add origin <url>`, then run `git push -u origin main`.
+- **Not signed in:** sign in to GitHub on this computer (for example with `gh auth login`), then run `git push`.
+- **A protected branch** that only accepts pull requests: push to another branch and open a pull request.
+
 ## Choose what publish does
 
 The `publish:` section of `site.yml` controls the last steps:
@@ -188,9 +201,9 @@ builds `_site/` and updates the wiki files. Upload `_site/` to your host yoursel
 
 ## What's next
 
-That is the whole path, from a new file to a live page. From here:
+That is the whole path, from a new file to a live page. Next, write in a window with a live preview:
+[The Editor](../editor.md). From there:
 
 - Make your own figures: [Interactive figures](../figures.md).
-- Write in the Editor instead of a text editor: [The Editor](../editor.md).
-- Make your home page and CV yours: [Your home page and CV](../home-and-cv.md).
+- Make it your portfolio: [home page, CV and projects](../home-and-cv.md).
 - Put the site online, if you have not yet: [Deploying](../deploying.md).

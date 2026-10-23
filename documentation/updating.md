@@ -1,25 +1,38 @@
 # Updating Bazinga
 
 Bazinga keeps improving after you make your site from it. This page shows how to bring a newer version into your
-site without losing your own pages and settings, and how to let an AI coding agent help you with the site.
+site without losing your own pages and settings.
 
 Your writing lives in files Bazinga never changes: `site.yml`, `content/`, `figures/`, `drawings/`, `static/` and
 your own `theme/` folder. The engine lives in `bazinga/`, with its tests in `tests/` and the written-answer function
 in `api/`. An update is about those engine folders.
 
-## Step 1: add Bazinga as a second remote
+## Updating your site to a newer Bazinga
+
+### Step 1: read what changed
+
+Open `CHANGELOG.md` in Bazinga's repository, or [What's new](whats-new.md) in these docs. It lists the changes
+newest first. Read every entry newer than your copy, and look for the words "you" and "your": those entries say what
+you may need to do, such as a new setting in `site.yml` or a change for theme files you copied.
+
+### Step 2: add Bazinga as a second remote
 
 Do this once, from your site's folder:
 
 ```bash
 git remote add upstream https://github.com/shreejalt/Bazinga.git
+```
+
+Then, each time you update:
+
+```bash
 git fetch upstream
 ```
 
-What you should see: `git fetch` lists the branches of `upstream`, and `git remote -v` now shows both `origin`
-(your site) and `upstream` (Bazinga).
+**What you should see:** `git fetch` lists Bazinga's branches, and `git remote -v` shows both `origin` (your site)
+and `upstream` (Bazinga).
 
-## Step 2: bring the update in
+### Step 3: bring the update in
 
 How you made your site decides which way works.
 
@@ -28,14 +41,19 @@ How you made your site decides which way works.
     Your history starts from Bazinga's, so git can merge the two:
 
     ```bash
-    git fetch upstream
     git merge upstream/main
     ```
 
-    What you should see: `Merge made by the 'ort' strategy.` and a merge commit on top of your own. If you and
-    Bazinga changed the same lines (often in `site.yml` or an example page), git stops and marks the conflict in
-    those files. Keep your version of your settings and pages, keep Bazinga's version of everything under
-    `bazinga/`, then `git add` the files and `git commit`.
+    **What you should see:** `Merge made by the 'ort' strategy.` and a merge commit on top of your own.
+
+    If you and Bazinga changed the same lines (often in `site.yml` or an example page), git stops and lists the
+    files with conflicts. In each one:
+
+    1. Keep your version of your settings and your pages (`site.yml`, `content/`, `figures/`, `static/`).
+    2. Keep Bazinga's version of everything under `bazinga/`, `tests/` and `api/`.
+    3. Run `git add <file>`.
+
+    Then finish with `git commit`.
 
 === "You used \"Use this template\""
 
@@ -45,22 +63,31 @@ How you made your site decides which way works.
     fatal: refusing to merge unrelated histories
     ```
 
-    Take only the engine folders from Bazinga instead. Your settings and pages are not touched:
+    (`git merge --allow-unrelated-histories upstream/main` gets past that message, but then nearly every file
+    conflicts: 44 of them in our test. It is not worth it.)
+
+    Take the engine folders from Bazinga instead. Your settings and pages are not touched:
 
     ```bash
-    git fetch upstream
     git checkout upstream/main -- bazinga tests api requirements.txt
-    git commit -m "Update Bazinga's engine"
     ```
 
-    What you should see: `git status` before the commit lists only files under `bazinga/`, `tests/`, `api/` and
-    `requirements.txt`. A file Bazinga deleted stays in your copy; `git diff --stat HEAD upstream/main -- bazinga`
-    shows what still differs.
+    If you never changed them, take the host files and the notes too, so new deploy settings reach you:
 
-These commands were tried on two test copies of a site, one cloned and one made as a fresh history, each with its own
-changes to `site.yml` and a page of its own.
+    ```bash
+    git checkout upstream/main -- .github/workflows/pages.yml vercel.json netlify.toml AGENTS.md CLAUDE.md CHANGELOG.md
+    ```
 
-## Step 3: check that everything still works
+    **What you should see:** `git status` lists only the files you named. Then commit:
+
+    ```bash
+    git commit -m "Update Bazinga"
+    ```
+
+    A file Bazinga deleted stays in your copy; `git diff --stat HEAD upstream/main -- bazinga` shows what still
+    differs.
+
+### Step 4: check that everything still works
 
 ```bash
 python -m pip install -r requirements.txt
@@ -68,32 +95,26 @@ python -m unittest discover tests
 python -m bazinga build
 ```
 
-What you should see: the tests end with `OK`, and the build prints `Built … pages`. If the build stops, its message
-names the file and line and says what to write instead; see [Troubleshooting](troubleshooting.md).
+**What you should see:** the tests end with `OK`, and the build prints `Built … pages`.
+
+- If the build stops, its message names the file and line and says what to write instead; see
+  [Troubleshooting](troubleshooting.md).
+- A few tests check the example site. If one fails and names an example file Bazinga added (after the 3-D update it
+  was `figures/tangent_plane.py`), take that file too, for example
+  `git checkout upstream/main -- figures/tangent_plane.py`, or delete the matching example page yourself.
+
+Then push. Your host deploys the updated site as usual.
+
+These steps were tried on two test copies of a site, one cloned and one made as a fresh history, each with its own
+changes to `site.yml`, updating from an older copy (before 3-D figures) to the 2026-10-23 version.
 
 !!! tip "Copied theme files do not update"
     A file you copied into `theme/` keeps your version. If an update changes the same file in `bazinga/theme/`,
     compare the two (`git diff --no-index theme/templates/base.html bazinga/theme/templates/base.html`) and carry
     over what you want. See [Theme and customising](theme.md#your-own-copy-of-a-theme-file).
 
-## Working with AI coding agents {#working-with-ai-coding-agents}
-
-`AGENTS.md`, at the root of the site, is written for coding agents such as Claude Code, Codex or Cursor, and for
-you. It explains how the site works as a wiki, in the sense of Karpathy's "LLM Wiki" idea:
-
-- **Three layers.** `sources/` (optional, git-ignored: the papers and notes you collect), the wiki itself
-  (`content/`), and the rules (`AGENTS.md` and `docs/DESIGN.md`).
-- **What is generated.** `wiki/index.md`, the catalog an agent reads first, and `wiki/log.md`, the log of what
-  happened. Neither is edited by hand.
-- **The exact commands** for asking (`wiki query`), connecting a new page (`check`, then `wiki ingest`), keeping the
-  wiki healthy (`wiki lint`) and the other proposals. They are described in [Ask and the wiki](ask-and-wiki.md).
-- **The rules.** Cite everything; a model only writes proposals to `proposals/`, and nothing reaches `content/`
-  unless you accept it.
-
-When you ask an agent to work on your site, point it at `AGENTS.md` first. Edit the file when your own rules
-change, for example the topics you allow or how you like pages written.
-
 ## What's next
 
-- See every part of Bazinga in one place: [What's in Bazinga](whats-in-bazinga.md).
+Next: what changed in each version, in [What's new](whats-new.md). Read it before you update.
+
 - Something broke after an update: [Troubleshooting and FAQ](troubleshooting.md).

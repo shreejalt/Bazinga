@@ -147,5 +147,6 @@ written.
 
 ## What's next
 
-- Put the site online: [Deploying](deploying.md).
+Next, every command and option in one place: [Commands](reference/commands.md).
+
 - Every key in one table: [Configuration reference](reference/configuration.md).

@@ -5,14 +5,21 @@ hide:
   - toc
 ---
 
-![Bazinga: write posts with live figures, a map and Ask.](assets/brand/banner-light.gif#only-light)
-![Bazinga: write posts with live figures, a map and Ask.](assets/brand/banner-dark.gif#only-dark)
+![Bazinga: numbered dots joined by a pencil become the Vulcan-salute hand and the Bazinga logo.](assets/brand/banner-light.gif#only-light)
+![Bazinga: numbered dots joined by a pencil become the Vulcan-salute hand and the Bazinga logo.](assets/brand/banner-dark.gif#only-dark)
 
-# Bazinga
+<div class="home-hero" markdown>
 
-**A template for a personal site and technical blog.** You write posts in Markdown. Equations render properly,
-diagrams come from a few lines of text, figures have sliders your readers can move, and the whole site works as a
-wiki that readers can ask questions.
+# Your work, your writing, your website.
+
+<p class="home-hero__sub">A portfolio, a CV and a blog in one site you own: your photo and story, every project, a
+proper CV, and posts with real equations and figures your readers can move.</p>
+
+<p class="home-hero__actions"><a class="md-button md-button--primary" href="getting-started/">Get started</a>
+<a class="md-button" href="home-and-cv/">Make it your portfolio</a>
+<a class="md-button" href="writing/">Start writing</a></p>
+
+</div>
 
 You need Python 3.11 or newer. There is no Node and no bundler.
 
@@ -33,6 +40,11 @@ Open <http://127.0.0.1:8000>. You see the example site, and it rebuilds every ti
 
 <div class="grid cards home-cards">
 <ul>
+<li>
+<p class="card-title"><strong>Your portfolio and CV</strong></p>
+::clip portfolio-tour
+<p>Your photo, who you are, experience, education, projects, a CV page and a contact section, all from one settings file. <a href="home-and-cv/">Your portfolio →</a></p>
+</li>
 <li>
 <p class="card-title"><strong>Figures your readers can move</strong></p>
 ::clip figure-slider

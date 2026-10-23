@@ -2,7 +2,7 @@
 
 A figure is a picture with controls under it. The reader moves a slider and the picture follows. On this page you
 will make one three ways: with a form (no code), from a ready-made example, and by hand. Then you will test it and
-place it in a post.
+keep it fast. Placing it in a post is [Writing, step 5](writing/figures-in-posts.md).
 
 ::clip figure-slider | A reader drags a slider and presses a preset; the plot redraws each time.
 
@@ -241,9 +241,7 @@ The kind `scene3d` is the 3-D panel; it is made with the 3-D kit, see [3-D figur
 
 ## Place it in a post, and open it at a preset
 
-Put `::figure my_plot` on a line of its own in a post. To open it at one of its presets, write
-`::figure my_plot | start: <preset label>`. [Writing, step 5](writing/figures-in-posts.md) shows both, with what
-you should see.
+Placing a figure (`::figure my_plot`) and opening it at a preset are in [Writing, step 5](writing/figures-in-posts.md).
 
 ## Test it
 

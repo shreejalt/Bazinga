@@ -1,6 +1,6 @@
 // A first look at the example site: the home page, the list of reads, and one read with its contents.
 export const meta = {
-  path: "/", bar: "127.0.0.1:8000", crf: 28,
+  path: "/", bar: "127.0.0.1:8000", crf: 30,
   caption: "The example site: the home page, a list of posts, and a post with its contents.",
 };
 
