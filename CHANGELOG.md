@@ -8,6 +8,9 @@ pull the new version in.
 - **Editor: previews can no longer write.** A script in a page (or a figure's code) used to run in the preview with
   the Editor's rights, so a page could save files through it. Previews now open from a second local port, and every
   write needs a key that only the Editor's own page has. Nothing changes in how you use it.
+- **Editor: a figure drafted from a description is not run until you say so.** It opens as code with a note; press
+  "I have read it: run it" (or save it) to test it. The note also lists anything in it a figure does not need, such
+  as imports other than `math`, `random`, `statistics`, the figure kits and (when declared) `numpy`.
 - **Sites under a sub-path work.** If `site.origin` has a path (for example `https://you.github.io/notes`), every
   link, asset, data file and figure module is placed under `/notes`. The GitHub Pages workflow fills in the address
   by itself, so a project site works with no edits. `python -m bazinga build --origin …`, `BAZINGA_ORIGIN` or

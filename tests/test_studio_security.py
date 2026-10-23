@@ -306,21 +306,72 @@ class Paths(unittest.TestCase):
 
 
 class DraftGate(unittest.TestCase):
-    """Model-written figure code runs automatically only when it is plain computation."""
+    """Model-written figure code: an allowlist, and it is never run before the author has read it (A4)."""
 
     def test_plain_figure_passes(self):
         from bazinga.studio.api import draft_gate
-        src = "import math\nfrom numpy import linspace\nTITLE='x'\nCAPTION=''\nCONTROLS=[]\n" \
+        src = "import math\nimport random\nfrom bazinga.scene3d import Scene\nTITLE='x'\nCAPTION=''\nCONTROLS=[]\n" \
               "def compute(_narrow=0):\n    return {'panels': [{'kind': 'xy', 'series': [{'y': [math.sin(1)]}]}]}\n"
         self.assertEqual(draft_gate(src), [])
+        np_src = "import numpy as np\nREQUIRES = ['numpy']\nx = np.linspace(0, 1, 5).tolist()\n"
+        self.assertEqual(draft_gate(np_src), [])
+
+    def test_every_shipped_figure_and_starter_passes(self):
+        from bazinga.studio.api import draft_gate
+        root = Path(__file__).resolve().parent.parent
+        for f in sorted(list((root / "bazinga/starters/figures").glob("*.py")) + list((root / "figures").glob("*.py"))):
+            with self.subTest(f=f.name):
+                self.assertEqual(draft_gate(f.read_text(encoding="utf-8")), [])
 
     def test_escapes_are_caught(self):
         from bazinga.studio.api import draft_gate
         for src in ("import os", "import subprocess as s", "from pathlib import Path", "open('x')",
                     "__import__('os')", "eval('1')", "().__class__.__bases__", "import socket",
-                    "from . import x", "exec('x')", "import urllib.request"):
+                    "from . import x", "exec('x')", "import urllib.request",
+                    # the audit's bypasses: engine modules that re-export os/subprocess, numpy file output,
+                    # getattr chains
+                    "from bazinga import build\nbuild.os.system('x')", "import bazinga.cli", "import bazinga",
+                    "from bazinga.studio import publish", "from bazinga.build import os",
+                    "import numpy as np\nREQUIRES=['numpy']\nnp.save('x', [1])",
+                    "import numpy as np\nREQUIRES=['numpy']\nnp.savetxt('x', [1])",
+                    "import numpy as np\nREQUIRES=['numpy']\nnp.zeros(2).tofile('x')",
+                    "import numpy as np\nREQUIRES=['numpy']\nnp.lib.npyio",
+                    "from numpy import savez\nREQUIRES=['numpy']",
+                    "import numpy as np\nnp.zeros(2)",                     # numpy without REQUIRES
+                    "import math\ngetattr(math, 'x')", "import math\nf = getattr\nf(math, 'x')",
+                    "from math import *", "import random\nrandom._os", "x = vars()", "type('x', (), {})",
+                    "import itertools", "import functools", "import collections"):
             with self.subTest(src=src):
                 self.assertTrue(draft_gate(src))
+
+    def test_a_draft_is_shown_not_run(self):
+        from bazinga.studio import api as studio_api
+        tmp = Path(tempfile.mkdtemp(prefix="studio-draft-"))
+        self.addCleanup(shutil.rmtree, tmp, True)
+        make_site(tmp)
+        ed = studio_api.Editor(tmp)
+        src = "import math\nTITLE='x'\nCONTROLS=[]\ndef compute(_narrow=0):\n    return {}\n"
+
+        class FakeLLM:
+            @staticmethod
+            def configured(cfg):
+                return True
+
+            @staticmethod
+            def figure_draft(cfg, desc):
+                return src
+        ran = []
+        with mock.patch.object(studio_api.engine, "module", return_value=FakeLLM), \
+                mock.patch.object(studio_api.engine, "worker", side_effect=lambda *a, **k: ran.append(a) or {}):
+            res = ed.figure_draft({"name": "wave", "description": "a wave"})
+            self.assertEqual((res["ran"], res["ok"], res["source"], res["unsafe"]), (False, False, src, []))
+            self.assertIn("not run yet", res["problems"][0])
+            FakeLLM.figure_draft = staticmethod(lambda cfg, d: "import os\nos.system('touch PWNED')\n")
+            res = ed.figure_draft({"name": "wave", "description": "a wave"})
+            self.assertFalse(res["ran"])
+            self.assertIn("imports os", res["unsafe"])
+        self.assertEqual(ran, [])
+        self.assertFalse((tmp / "figures" / "wave.py").exists())
 
 
 class AtomicWrite(unittest.TestCase):

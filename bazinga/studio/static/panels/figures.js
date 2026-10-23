@@ -213,8 +213,7 @@ export function open(ed, { kind = "figure" } = {}) {
           draftBtn.disabled = true; draftBtn.textContent = "Drafting…";
           try {
             const res = await api("/api/figures/draft", { name: nm, description: desc.value });
-            editCode(nm, { source: res.source, unsaved: true, result: res.ok ? null : res });
-            if (res.ok) toast("The draft passes its test. Read it, then save it.", "ok", 4000);
+            editCode(nm, { source: res.source, unsaved: true, result: res });   // shown as text; it runs when saved
           } catch (e) { err.textContent = e.message; }
           finally { draftBtn.disabled = false; draftBtn.textContent = "Draft it"; }
         } }, "Draft it");

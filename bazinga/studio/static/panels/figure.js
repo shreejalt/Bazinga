@@ -390,11 +390,11 @@ export async function open(ed) {
     const checks = h("div.fg-checks-box");
     const note = h("div.fg-note");
     let dirty = unsaved;
-    let autoRun = !(draft && draft.ran === false);   // a model's draft that is not plain computation runs only on request
+    let autoRun = !draft;   // a model's draft is never run before the author has read it and pressed Run
     let created = !unsaved;
     const saveBtn = h("button.btn", { type: "button", onclick: () => save(false) }, h("span", "Save"), h("kbd", `${modKey()} S`));
     const insertBtn = h("button.btn.primary", { type: "button", onclick: () => save(true) }, icon("plus", 16), h("span.long", "Save and place in the text"), h("span.short", "Save, place"));
-    const runBtn = h("button.btn", { type: "button", hidden: autoRun, onclick: () => { autoRun = true; runBtn.hidden = true; check.flush(); } }, icon("play", 16), h("span", "Run it to check"));
+    const runBtn = h("button.btn", { type: "button", hidden: autoRun, onclick: () => { autoRun = true; runBtn.hidden = true; check.flush(); } }, icon("play", 16), h("span", draft ? "I have read it: run it" : "Run it to check"));
 
     // the failing line, marked in the editor
     const setBad = StateEffect.define();
@@ -413,7 +413,7 @@ export async function open(ed) {
 
     if (made === "edited") note.append(h("p", icon("info", 15), " This figure was made with the form and then changed by hand, so it opens as code. Your changes are kept."));
     if (fromBuilder) note.append(h("p", icon("info", 15), " This is the code the form wrote. Once you change it here, the form will not open this figure again."));
-    if (draft && draft.ran === false) note.append(h("p.warn", icon("alert", 15), " ", (draft.problems || [])[0] || "Read this draft before running it."));
+    if (draft) for (const p of (draft.problems && draft.problems.length ? draft.problems : ["Read this draft before running it."])) note.append(h("p.warn", icon("alert", 15), " ", p));
     if (fresh) note.append(h("p", icon("info", 15), " The comments explain each part. Change something and the preview follows."));
 
     fill(main, crumbs(created ? h("button.fg-crumb", { type: "button", onclick: () => go(detail, name) }, name) : name, "Code"),
