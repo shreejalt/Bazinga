@@ -71,6 +71,9 @@ class ExampleTheme(unittest.TestCase):
         page = self.html("papers/attention-is-all-you-need/index.html")
         self.assertIn("Explains: <a href=\"https://arxiv.org/abs/1706.03762\">Attention Is All You Need</a>", page)
         self.assertIn("[Page 3]", page)                                          # one ::pagebreak: three pages
+        import re
+        footers = re.findall(r'<div class="pagebreak">.*?\[Page (\d+)\]', page)
+        self.assertEqual(footers, ["1", "2"])        # page 1 (contents) and the ::pagebreak (page 2); the end says 3
         self.assertNotIn("pagebreak-slot", page)
         lst = self.html("papers/index.html")
         self.assertIn("<b>Attention Is All You Need</b>", lst)

@@ -591,7 +591,7 @@ class Builder:
 
         def pagebreak(n):
             return (f'<div class="pagebreak"><span>{html_lib.escape(surname)}</span><span>Informational</span>'
-                    f'<span>[Page {n - 1}]</span></div><div class="pagetop"><span>{html_lib.escape(initial)}. '
+                    f'<span>[Page {n}]</span></div><div class="pagetop"><span>{html_lib.escape(initial)}. '
                     f'{html_lib.escape(surname)}</span><span>{month_year(page.date)}</span></div>')
         if role == "project":
             body, headings, last = r.html, [{"id": t["id"], "text": t["text"], "page": 1} for t in r.toc

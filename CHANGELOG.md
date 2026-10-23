@@ -5,6 +5,7 @@ pull the new version in.
 
 ## 2026-10-23
 
+- **Page numbers after a `::pagebreak`** are right: the footer of the second page said "[Page 1]".
 - **Removing the example pages no longer stops your deploys.** Sixteen tests built the template's own example pages,
   so on a portfolio-only site (or any site that deleted the examples) they failed, and every host runs the tests
   before deploying. They now build their own copy of the example site in `tests/fixtures/example-site/`. There is no
