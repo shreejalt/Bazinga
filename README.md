@@ -7,9 +7,11 @@
 
 # Bazinga
 
-A template for a personal site and technical blog. You write posts in Markdown. Equations render properly,
-diagrams are drawn from a few lines of text, and figures have sliders readers can move. The whole site also works as
-a wiki that readers can ask questions.
+Your personal website in one template: a **portfolio**, a **CV** and, if you want one, a **technical blog**. The home
+page has your photo, who you are, your experience, education and a contact section; the CV page and a page per
+project come from simple files. Posts are Markdown: equations render properly, diagrams are drawn from a few lines of
+text, figures have sliders readers can move, and the whole site works as a wiki that readers can ask questions. Use
+all of it, or only the portfolio.
 
 You need Python 3.11 or newer. There is no Node and no bundler.
 
@@ -23,7 +25,7 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 Open http://127.0.0.1:8000. You see the example site, and it rebuilds whenever you save a file.
 
-## 2. Make it yours
+## 2. Make it yours (your portfolio)
 
 1. **`site.yml`:** your name, address, links, and the home page (about, experience, education, contact). Every field
    has a comment.
@@ -31,6 +33,12 @@ Open http://127.0.0.1:8000. You see the example site, and it rebuilds whenever y
 3. **`content/`:** delete the example posts and write your own. Keep the four guides in `content/reads/` until you
    no longer need them.
 4. **`content/LICENSE.md`:** the licence for your writing.
+5. **`content/projects/`:** one file per project (title, summary, `type`, `stack`, `github`, then a few paragraphs).
+
+Only want a portfolio? Delete the example posts in `content/reads/`, `content/papers/` and `content/elsewhere/`, keep
+the `projects` kind in `site.yml`, trim `nav:` to Home, Projects and CV, and set
+`features: {ask: false, explore: false, series: false, feed: false, llms_txt: true, credit: true}`. The build tells you if anything still points at
+a page you removed.
 
 ## 3. Write a post
 
