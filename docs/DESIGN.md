@@ -90,7 +90,7 @@ site:
   author: "Your Name"
   tagline: "Notes on things I am learning"
   description: "≤155 characters for search engines"
-  origin: "https://example.com"        # canonical origin, no trailing slash
+  origin: "https://example.com"        # where the site lives, no trailing slash; a path (https://you.github.io/repo) puts every URL under /repo
   language: en
   avatar: static/avatar.png             # optional
   links: {github: "", x: "", linkedin: "", email: "", scholar: ""}
@@ -107,7 +107,7 @@ theme:
   font_math: "STIX Two Math"
   width: 720                            # reading column in px
   mode: auto                            # auto | light | dark
-features: {ask: true, explore: true, series: true, feed: true, llms_txt: true}
+features: {ask: true, explore: true, series: true, feed: true, llms_txt: true, credit: true}   # credit: "Made with Bazinga" in the rail
 llm:                                    # optional; everything works without it except proposals + written answers
   base_url: "https://openrouter.ai/api/v1"   # any OpenAI-compatible /chat/completions (OpenAI, OpenRouter, Ollama http://localhost:11434/v1 …)
   model: ""                             # e.g. "openai/gpt-4o-mini" or "llama3.1"; comma-separated = fallbacks
@@ -120,7 +120,7 @@ publish:                                # what Publish runs after building, on t
   commit: true                          # git add the post (+ its figures/drawings/uploads/references) and commit
   push: true                            # git push (Vercel/Netlify/GitHub Pages then deploy from the repo)
   command: ""                           # optional extra command, e.g. "vercel deploy --prod --yes"
-  author: ""                            # optional "Name <email>" for commits; default is git's own config
+  author: ""                            # optional "Name <email>" for commits; default is git's own config (Publish refuses to commit when neither is set)
 ```
 
 ## Content model
@@ -236,6 +236,15 @@ def compute(t=1.0, k=0, log=0, _narrow=0):    # pure: same inputs → same spec;
   - Reset and presets set values and recompute.
 - **Performance budget:** `compute()` plus render under 30 ms (a test runs every figure at defaults, presets and 20 random control states; it fails on an exception, NaN or a slow state).
 
+### 3-D figures (bazinga/scene3d.py)
+
+`bazinga/scene3d.py` (standard library only) builds 3-D scenes: points, lines, boxes, planes, curves, surfaces
+`z = f(x, y)`, vectors, axes with ticks, labels, measurements and cameras with the picture they take. `Scene.render()`
+returns a `scene3d` panel that `plot.py` draws; the kit ships as `/figures/_scene3d.py` and is imported as
+`bazinga.scene3d` both at build time and in the browser. Controls `orbit` (turn by dragging the picture), `pad` and
+`hidden` (points moved by their handles), `_drag` and `state` in `compute()`. Starters: `scene_basic`, `surface_plot`,
+`vectors_planes`, `camera_rig`; the form has a "3-D scene" type. `figure test` also drags every handle.
+
 ## Drawings (drawings/<module>.py)
 
 Each function returns an SVG string built with `bazinga.draw`. The kit has:
@@ -314,7 +323,7 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
    5. Update the wiki files (index, log entry `publish | Title`, passages).
    6. Optional: "Ask the model for links and topics" shows the ingest proposals as accept/reject cards before committing.
    7. `git add` the page, its figures/drawings/uploads and references, wiki/index.md and wiki/log.md, then `git commit -m "Publish: <title>"`.
-   8. `git push`, then the optional `publish.command`.
+   8. `git push` to the branch the current one tracks (`git push <remote> HEAD:<branch>`, so a local `work` tracking `origin/main` works; with no upstream, `git push -u origin HEAD`), then the optional `publish.command`.
    9. Show the live URL.
    - **Unpublish** sets status back to draft and runs steps 4–8.
    - **Schedule** sets a future date: the page goes live on the first build after it. The README explains a daily cron build on Vercel or Netlify, and the GitHub Pages workflow has a daily schedule.
@@ -373,7 +382,8 @@ The tests cover:
 
 - **Vercel:** `vercel.json` runs `pip install -r requirements.txt && python -m unittest discover tests && python -m bazinga build`. `api/ask.py` is the function.
 - **Netlify:** `netlify.toml` gives the same build; Ask's written answers are off (static only), unless the author adds a Netlify function.
-- **GitHub Pages:** `.github/workflows/pages.yml` builds on push and daily (for scheduled posts) and deploys `_site`. Written answers are off.
+- **GitHub Pages:** `.github/workflows/pages.yml` builds on push and daily (for scheduled posts) and deploys `_site`. It runs `actions/configure-pages` and passes the Pages address as `BAZINGA_ORIGIN`, so a project site under `https://<user>.github.io/<repo>/` works with no edits. Written answers are off.
+- **Sub-paths:** `config.load()` takes the path of `site.origin` as `cfg.base` (`""` at a host's root); `cfg.url()` / the templates' `link()` and `{{ base }}` add it to every site path, the `bazinga-base` meta tag gives it to the scripts, and data files carry prefixed URLs. `python -m bazinga build --origin …`, `BAZINGA_ORIGIN` or `SITE_URL` override the origin for the build only; `serve` and the Editor always serve at the root. Template overrides under `theme/` must use `link()` or `{{ base }}` for their own links.
 - **Any static host:** upload `_site/`.
 
 ## The default theme (rail and paper sheet)
