@@ -13,6 +13,11 @@ from bazinga import figbuilder
 from bazinga.studio.api import Editor
 from bazinga.studio.security import Refused
 from bazinga.studio.server import ROUTES_GET, ROUTES_POST, StudioServer
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parent.parent
 

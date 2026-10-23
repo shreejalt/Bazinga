@@ -24,6 +24,8 @@ pull the new version in.
   `status: publshed` or `date: 2026/01/05` used to be left out of the site without a word; the build now stops and
   names the file and line. Impossible dates such as `2026-02-30` (in a page, `site.yml`, `references.yml` or
   `cv.yml`) are reported as `<file>:<line>: … not a real date` instead of a Python traceback.
+- **Deploys no longer fail on a slow build machine.** The tests that time things (figures under 30 ms and the like)
+  now run only with `BAZINGA_PERF_TESTS=1`; the deploy runs every correctness check as before.
 - **`check` counts pages it cannot read.** Broken front matter is now an error (exit code 1), and
   `check <file>` reports only the files you name.
 - **Sites under a sub-path work.** If `site.origin` has a path (for example `https://you.github.io/notes`), every

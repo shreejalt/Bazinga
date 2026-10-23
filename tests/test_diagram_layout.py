@@ -14,6 +14,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bazinga import diagram_text as dt  # noqa: E402
 
 from diagram_checks import problems  # noqa: E402
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parent.parent
 SVG = "{http://www.w3.org/2000/svg}"
@@ -219,6 +224,7 @@ class Accessible(unittest.TestCase):
         self.assertEqual(root.get("width"), root.get("viewBox").split()[2])
 
 
+@perf_only
 class Speed(unittest.TestCase):
     def test_examples_draw_quickly(self):
         for ex in dt.EXAMPLES:

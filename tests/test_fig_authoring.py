@@ -12,6 +12,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from bazinga import cli, figbuilder, figures, plot
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -133,7 +138,8 @@ class Report(unittest.TestCase):
         self.assertEqual(labels[0], "It draws at its starting values, wide and on a phone")
         self.assertIn("Every preset draws (2)", labels)
         self.assertTrue(any(l.startswith("Fast enough") for l in labels))
-        self.assertLess(r["slowest_ms"], figures.BUDGET_MS)
+        if PERF:
+            self.assertLess(r["slowest_ms"], figures.BUDGET_MS)
 
     def test_failure_points_at_the_line(self):
         src = (self.tmp / "figures").joinpath("bad.py")

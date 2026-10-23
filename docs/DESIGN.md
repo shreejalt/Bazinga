@@ -377,12 +377,18 @@ The tests cover:
 - graph edges and backlinks;
 - the wiki files (index, llms.txt layout, passages);
 - `retrieve` ranking on a fixture;
-- the figure contract plus every figure in `figures/` at defaults, presets and random states (< 30 ms, no NaN, valid SVG);
+- the figure contract plus every figure in `figures/` at defaults, presets and random states (no NaN, valid SVG; the < 30 ms budget with `BAZINGA_PERF_TESTS=1`);
 - drawings;
 - the Editor security (Host, Origin, token, path traversal, no Editor files in `_site`);
 - the publish pipeline in a temporary git repo (a dry run with no push);
 - the example site building end to end;
 - `node --check` on every JS file when node is available.
+
+**Speed checks are not part of the deploy gate.** The deploy configurations run the suite before building, and a slow or
+busy build machine must not fail a deploy, so every wall-clock assertion runs only with `BAZINGA_PERF_TESTS=1`
+(`BAZINGA_PERF_TESTS=1 python -m unittest discover tests`); without it the figure test's 30 ms budget is switched off
+(`BAZINGA_FIGURE_BUDGET_MS=inf`) and the correctness checks still run. `figure test` on the command line and in the
+Editor keeps the budget.
 
 ## Deploy
 

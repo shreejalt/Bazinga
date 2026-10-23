@@ -12,6 +12,11 @@ from pathlib import Path
 
 from bazinga import figbuilder as fb
 from bazinga import figures
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 
 class Site:
@@ -338,6 +343,7 @@ class Generated(unittest.TestCase):
         for kind in fb.TYPES:
             self.assertEqual(fb.validate(d["examples"][kind]), [])
 
+    @perf_only
     def test_fast(self):
         import time
         for kind in fb.TYPES:

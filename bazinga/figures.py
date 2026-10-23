@@ -17,6 +17,7 @@ import importlib.util
 import inspect
 import json
 import math
+import os
 import random
 import re
 import shutil
@@ -41,6 +42,16 @@ _KIT_RE = {k: re.compile(r"^\s*(from\s+bazinga\s+import\s+[^\n]*\b%s\b|from\s+ba
            for k in KITS}
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 BUDGET_MS = 30.0
+
+
+def default_budget_ms() -> float:
+    """The time a figure may take per state: BUDGET_MS, or BAZINGA_FIGURE_BUDGET_MS when set ("inf" turns the timing
+    check off; the test suite does that unless BAZINGA_PERF_TESTS=1, so a busy build machine cannot fail a deploy)."""
+    raw = os.environ.get("BAZINGA_FIGURE_BUDGET_MS", "").strip()
+    try:
+        return float(raw) if raw else BUDGET_MS
+    except ValueError:
+        return BUDGET_MS
 STARTER_DIR = Path(__file__).parent / "starters"
 STARTERS = ("slider_plot", "compare_bars", "heatmap", "geometry2d", "animation", "scatter_fit", "distribution",
             "matrix_transform", "step_through", "data_lines", "linked_panels", "sampling", "vector_field",
@@ -577,8 +588,9 @@ def _random_states(mod, n, seed):
     return states
 
 
-def check_state(name, values, narrow=0, cfg=None, budget_ms=BUDGET_MS, timing=None, drag=None):
+def check_state(name, values, narrow=0, cfg=None, budget_ms=None, timing=None, drag=None):
     """Problems for one state (empty list = fine). The best time in ms is appended to ``timing`` when given."""
+    budget_ms = default_budget_ms() if budget_ms is None else budget_ms
     label = "%s %s%s%s" % (name, json.dumps(values, sort_keys=True), " (narrow)" if narrow else "",
                            (" dragging %s" % drag.get("handle")) if drag else "")
     try:
@@ -681,8 +693,9 @@ def _handle_problems(name, mod, values, narrow, cfg):
     return probs
 
 
-def test_figure(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
+def test_figure(name, cfg=None, n_random=20, budget_ms=None):
     """All problems found for a figure: defaults (wide + narrow), every preset, 20 seeded random states."""
+    budget_ms = default_budget_ms() if budget_ms is None else budget_ms
     try:
         mod = load(name, cfg)
     except FigureError as e:
@@ -820,9 +833,10 @@ def line_of(text):
     return int(m.group(1)) if m else None
 
 
-def test_report(name, cfg=None, n_random=20, budget_ms=BUDGET_MS):
+def test_report(name, cfg=None, n_random=20, budget_ms=None):
     """The figure test as a list of plain checks: {"ok", "checks": [{"label", "ok", "detail"}], "problems",
     "slowest_ms", "line"}. The same states as test_figure()."""
+    budget_ms = default_budget_ms() if budget_ms is None else budget_ms
     try:
         mod = load(name, cfg)
     except FigureError as e:

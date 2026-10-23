@@ -5,6 +5,11 @@ from bazinga.graph import build_graph, series_slug
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from test_wiki_fixtures import make_site  # noqa: E402
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 
 class GraphTest(unittest.TestCase):
@@ -87,7 +92,8 @@ class GraphTest(unittest.TestCase):
         t = time.perf_counter()
         g = build_graph(pages, rendered, SimpleNamespace(topics={}))
         pos = g.layout()
-        self.assertLess(time.perf_counter() - t, 20)
+        if PERF:
+            self.assertLess(time.perf_counter() - t, 20)
         self.assertEqual(len(pos), 400)
 
     def test_to_json(self):

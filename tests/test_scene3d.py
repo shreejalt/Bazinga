@@ -17,6 +17,11 @@ from types import SimpleNamespace
 
 from bazinga import figbuilder, figures, plot
 from bazinga import scene3d as k
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 ROOT = Path(__file__).resolve().parent.parent
 BUDGET_MS = 15 * (3 if os.environ.get("CI") or os.environ.get("VERCEL") else 1)   # per compute, in this interpreter
@@ -303,7 +308,8 @@ class SceneFigures(unittest.TestCase):
                                 for h in p["handles"]:
                                     self.assertIn(h["control"], names)
                 per = (time.perf_counter() - t) / n * 1000
-                self.assertLess(per, BUDGET_MS, "%s: %.1f ms per compute" % (name, per))
+                if PERF:
+                    self.assertLess(per, BUDGET_MS, "%s: %.1f ms per compute" % (name, per))
                 self.assertEqual(figures.test_figure(name, CFG), [])
 
     def test_no_overlapping_labels(self):

@@ -16,6 +16,11 @@ from pathlib import Path
 
 from bazinga.studio import publish
 from bazinga.studio.server import StudioServer
+import os as _os
+import sys as _sys
+
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))
+from perf_support import PERF, perf_only  # noqa: E402,F401
 
 HAS_GIT = shutil.which("git") is not None
 FAKE_BUILD = [sys.executable, "-c", "import pathlib; pathlib.Path('_site').mkdir(exist_ok=True); "
