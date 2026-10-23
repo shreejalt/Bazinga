@@ -144,7 +144,7 @@ cover: static/uploads/x.png             # optional share image
 ```
 
 Rules:
-- **What is public:** a page is public when `status: published` and `date <= today`. A future date means scheduled: it appears on the first build after that date. Drafts and scheduled pages are never written to `_site`, the sitemap, the feed, the wiki files or the passages. The Editor previews them.
+- **What is public:** a page is public when `status: published` and `date <= today`. A future date means scheduled: it appears on the first build after that date. Drafts and scheduled pages are never written to `_site`, the sitemap, the feed, the wiki files or the passages. The Editor previews them. A page that does not say `status: draft` but has a status or a date the build cannot read (`publshed`, `2026/01/05`) stops a production build with its file and line, instead of quietly staying out; an impossible date (`2026-02-30`) in any YAML file is reported as `<file>:<line>: … not a real date`.
 - **Topics:** `topics.yml` looks like `{groups: [{name: "Methods", topics: [{slug: attention, label: "Attention", blurb: "…"}]}]}`. An unknown topic is an error with a "did you mean".
 - **References:** `references.yml` maps `KEY: {title, authors: [..], year, venue, arxiv?, doi?, url?}`.
 

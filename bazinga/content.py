@@ -32,6 +32,36 @@ class ContentError(Exception):
         return f"{where}{self.message}" + (f" ({self.hint})" if self.hint else "")
 
 
+_DATE_LIKE = re.compile(r"(?<![\w.-])(\d{4})-(\d{1,2})-(\d{1,2})(?![\w.-])")
+
+
+def impossible_date(text: str, first_line: int = 1) -> tuple[int, str] | None:
+    """(line, text) of the first date-shaped value that is not a real day (2026-02-30), or None."""
+    for i, line in enumerate(text.split("\n")):
+        for m in _DATE_LIKE.finditer(line):
+            try:
+                date(int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            except ValueError:
+                return first_line + i, m.group(0)
+    return None
+
+
+def load_yaml(text: str, path, first_line: int = 1, what: str = "not valid YAML"):
+    """``yaml.safe_load`` that reports a broken file or an impossible date (2026-02-30) as file:line, never as a
+    traceback. ``first_line`` is the file line of the text's first line (2 for front matter)."""
+    try:
+        return yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        mark = getattr(exc, "problem_mark", None)
+        raise ContentError(f"{what}: {getattr(exc, 'problem', exc)}", path,
+                           mark.line + first_line if mark else None) from None
+    except ValueError as exc:             # YAML reads 2026-02-30 as a date and Python refuses it
+        bad = impossible_date(text, first_line)
+        line, value = bad if bad else (None, "")
+        raise ContentError(f"{value + ' is ' if value else ''}not a real date", path, line,
+                           f"{exc}; write dates as YYYY-MM-DD") from None
+
+
 def today() -> date:
     """Today's date. Tests patch this to check scheduled pages."""
     return date.today()
@@ -62,6 +92,8 @@ class Page:
     explains: list = field(default_factory=list)    # a paper write-up: the reference keys it explains
     problems: list = field(default_factory=list)   # [(line, message, hint)] found while parsing the front matter
     meta_lines: dict = field(default_factory=dict)  # front-matter key -> line number in the file
+    meant_draft: bool = False                       # the file says status: draft
+    hidden_by: list = field(default_factory=list)   # [(line, message, hint)]: why a page meant to go out cannot
 
     @property
     def public(self) -> bool:
@@ -163,12 +195,13 @@ def parse(text: str, path: Path, cfg) -> Page:
         exc.path = path
         raise
     try:
-        meta = yaml.safe_load(fm) if fm.strip() else {}
-    except yaml.YAMLError as exc:
-        mark = getattr(exc, "problem_mark", None)
-        line = mark.line + 2 if mark else 1
-        raise ContentError(f"the front matter is not valid YAML: {getattr(exc, 'problem', exc)}", path, line,
-                           "check quotes and colons; text containing ': ' needs quotes") from None
+        meta = load_yaml(fm, path, 2, "the front matter is not valid YAML") if fm.strip() else {}
+    except ContentError as exc:
+        if exc.line is None:
+            exc.line = 1
+        if not exc.hint:
+            exc.hint = "check quotes and colons; text containing ': ' needs quotes"
+        raise
     if not isinstance(meta, dict):
         raise ContentError("the front matter must be key: value lines", path, 2)
 
@@ -180,12 +213,16 @@ def parse(text: str, path: Path, cfg) -> Page:
     )
     page.title = str(meta.get("title") or "").strip()
     page.status = str(meta.get("status") or "published").strip().lower()
+    page.meant_draft = page.status == "draft"
     if page.status not in ("draft", "published"):
         problems.append((lines.get("status"), f"status {page.status!r} is not draft or published",
                          "write status: draft while writing, and status: published (or leave it out) to publish"))
         page.status = "draft"
+        page.hidden_by.append(problems[-1])
+    n = len(problems)
     page.date = _as_date(meta.get("date"), "date", lines.get("date"), problems)
     page.updated = _as_date(meta.get("updated"), "updated", lines.get("updated"), problems)
+    page.hidden_by += problems[n:]
     page.summary = " ".join(str(meta.get("summary") or "").split())
     page.description = " ".join(str(meta.get("description") or "").split())
     page.topics = _as_list(meta.get("topics"), "topics", lines.get("topics"), problems)
@@ -275,12 +312,7 @@ def load_references(cfg) -> dict[str, dict]:
 
 
 def _yaml_file(path: Path):
-    try:
-        return yaml.safe_load(path.read_text(encoding="utf-8"))
-    except yaml.YAMLError as exc:
-        mark = getattr(exc, "problem_mark", None)
-        raise ContentError(f"not valid YAML: {getattr(exc, 'problem', exc)}", path,
-                           mark.line + 1 if mark else None) from None
+    return load_yaml(path.read_text(encoding="utf-8"), path)
 
 
 def slugify(text: str) -> str:

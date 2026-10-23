@@ -296,6 +296,15 @@ class Builder:
     def load(self) -> None:
         cfg = self.cfg
         everything = content.load_pages(cfg, drafts=True)
+        # A page that does not say status: draft but has a status or a date the build cannot read would quietly
+        # never go out (a typo such as "publshed" or 2026/01/05): that stops a production build, with file:line.
+        unreadable = [(self._rel(p.path), checks.Issue("error", line, msg + " (so this page would not be published)",
+                                                       hint, "front-matter"))
+                      for p in everything if not p.meant_draft for line, msg, hint in p.hidden_by]
+        if unreadable and self.strict:
+            raise BuildError(unreadable)
+        for path, issue in unreadable:
+            note(issue.format(path), self.notes, self.quiet)
         self.pages = everything if self.drafts else [p for p in everything if p.public]
         hidden = [] if self.drafts else [p for p in everything if not p.public]
         self.topics = content.load_topics(cfg)
@@ -687,7 +696,10 @@ class Builder:
             return
         try:
             import yaml
-            cv = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            cv = content.load_yaml(path.read_text(encoding="utf-8"), "content/cv.yml") or {}
+        except content.ContentError as exc:
+            self.problem("content/cv.yml" + (f":{exc.line}" if exc.line else ""), exc.message, exc.hint)
+            return
         except Exception as exc:                                       # noqa: BLE001
             self.problem("content/cv.yml", f"cv.yml is not valid YAML: {exc}")
             return
@@ -760,7 +772,7 @@ class Builder:
             return {}
         try:
             import yaml
-            data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            data = content.load_yaml(path.read_text(encoding="utf-8"), path.name) or {}
         except Exception as exc:                                       # noqa: BLE001 - optional file
             note(f"{path.name} could not be read ({exc}); its highlights are skipped", self.notes, self.quiet)
             return {}

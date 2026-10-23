@@ -144,6 +144,73 @@ class CommandLine(unittest.TestCase):
         finally:
             cleanup(root)
 
+    def test_unreadable_status_or_date_stops_the_build(self):
+        """C-1: a page that is not status: draft but has a status or date the build cannot read used to vanish."""
+        for field, line_text in (("status", "status: publshed"), ("date", "date: 2026/01/05")):
+            with self.subTest(field=field):
+                text = post(title="Lonely") if field == "status" else post(title="Lonely", date="2026/01/05")
+                if field == "status":
+                    text = text.replace("date:", line_text + "\ndate:", 1)
+                root = make_site({"posts/lonely": text, "posts/other": post(title="Other")})
+                try:
+                    code, out = self.run_cli("--root", str(root), "build")
+                    self.assertEqual(code, 1, out)
+                    line = 1 + text.split("\n").index(line_text)
+                    self.assertIn(f"content/posts/lonely.md:{line}: error:", out)
+                    self.assertIn("would not be published", out)
+                finally:
+                    cleanup(root)
+        # a page that says status: draft may keep an unfinished date
+        root = make_site({"posts/lonely": post(title="Lonely", date="2026/01/05", status="draft"),
+                          "posts/other": post(title="Other")})
+        try:
+            code, out = self.run_cli("--root", str(root), "build")
+            self.assertEqual(code, 0, out)
+        finally:
+            cleanup(root)
+
+    def test_impossible_dates_are_reported_with_file_and_line(self):
+        """C-3: 2026-02-30 used to end in a ValueError traceback, in pages and in every YAML file."""
+        cases = {
+            "page": ("content/posts/bad.md:3", lambda r: (r / "content/posts/bad.md").write_text(post(date="2026-02-30"))),
+            "references": ("content/references.yml:4", lambda r: (r / "content/references.yml").write_text(
+                (r / "content/references.yml").read_text() + "X1: {title: x, year: 2020, seen: 2026-02-30}\n")),
+            "site.yml": ("site.yml:6", lambda r: (r / "site.yml").write_text((r / "site.yml").read_text()
+                                                                             + "extra: {launched: 2026-13-01}\n")),
+            "cv": ("content/cv.yml:2", lambda r: (r / "content/cv.yml").write_text("name: A\nupdated: 2025-02-29\n")),
+        }
+        for name, (where, setup) in cases.items():
+            with self.subTest(name=name):
+                root = make_site({"posts/ok": post()})
+                try:
+                    setup(root)
+                    code, out = self.run_cli("--root", str(root), "build")
+                    self.assertNotEqual(code, 0, out)
+                    self.assertNotIn("Traceback", out)
+                    self.assertIn(where, out)
+                    self.assertIn("not a real date", out)
+                finally:
+                    cleanup(root)
+
+    def test_check_counts_unreadable_files_and_reports_only_named_ones(self):
+        """C-2: front matter that cannot be read was printed but not counted (exit 0), and named files got
+        everyone's parse errors."""
+        root = make_site({"posts/ok": post(), "posts/broken": '---\ntitle: "x\n---\nbody\n'})
+        try:
+            code, out = self.run_cli("--root", str(root), "check")
+            self.assertEqual(code, 1, out)
+            self.assertIn("content/posts/broken.md:2: error: the front matter is not valid YAML", out)
+            self.assertIn("1 error(s)", out)
+            code, out = self.run_cli("--root", str(root), "check", str(root / "content/posts/ok.md"))
+            self.assertEqual(code, 0, out)
+            self.assertNotIn("broken", out)
+            self.assertIn("Checked 1 page(s): 0 error(s)", out)
+            code, out = self.run_cli("--root", str(root), "check", str(root / "content/posts/broken.md"))
+            self.assertEqual(code, 1, out)
+            self.assertIn("Checked 1 page(s): 1 error(s)", out)
+        finally:
+            cleanup(root)
+
     def test_passthrough_keeps_options(self):
         with mock.patch("bazinga.cli._module") as module:
             module.return_value.main = mock.Mock(return_value=0)

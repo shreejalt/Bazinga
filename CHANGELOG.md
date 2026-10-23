@@ -20,6 +20,12 @@ pull the new version in.
   would have published it. Publish now checks who commits before it stages anything, and on any failure unstages its
   files and puts the page and the wiki files back.
 - **Renaming a page that was never committed** no longer stops its first publish.
+- **Typos in `status` or `date` no longer hide a page.** A page that is not `status: draft` but says
+  `status: publshed` or `date: 2026/01/05` used to be left out of the site without a word; the build now stops and
+  names the file and line. Impossible dates such as `2026-02-30` (in a page, `site.yml`, `references.yml` or
+  `cv.yml`) are reported as `<file>:<line>: … not a real date` instead of a Python traceback.
+- **`check` counts pages it cannot read.** Broken front matter is now an error (exit code 1), and
+  `check <file>` reports only the files you name.
 - **Sites under a sub-path work.** If `site.origin` has a path (for example `https://you.github.io/notes`), every
   link, asset, data file and figure module is placed under `/notes`. The GitHub Pages workflow fills in the address
   by itself, so a project site works with no edits. `python -m bazinga build --origin …`, `BAZINGA_ORIGIN` or

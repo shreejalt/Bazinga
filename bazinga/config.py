@@ -215,6 +215,11 @@ def load(root=None, local: bool = False, origin: str | None = None) -> Config:
             mark = getattr(exc, "problem_mark", None)
             where = f" (line {mark.line + 1})" if mark else ""
             raise ConfigError(f"site.yml is not valid YAML{where}: {getattr(exc, 'problem', exc)}") from None
+        except ValueError as exc:         # YAML reads 2026-02-30 as a date and Python refuses it
+            from .content import impossible_date
+            bad = impossible_date(path.read_text(encoding="utf-8"))
+            where = f"site.yml:{bad[0]}: {bad[1]} is" if bad else "site.yml:"
+            raise ConfigError(f"{where} not a real date ({exc}); write dates as YYYY-MM-DD") from None
         if not isinstance(data, dict):
             raise ConfigError("site.yml must be a mapping of sections (site:, nav:, theme: ...)")
     merged = deep_merge(DEFAULTS, data)
