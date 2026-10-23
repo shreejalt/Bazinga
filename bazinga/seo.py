@@ -108,8 +108,8 @@ def jsonld(cfg, page: Page | None = None, url: str = "/", kind: str = "website")
     else:
         data = {"@context": "https://schema.org", "@type": "WebPage", "url": absolute(cfg, url),
                 "isPartOf": {"@type": "WebSite", "name": cfg["site"]["name"], "url": cfg["site"]["origin"] + "/"}}
-    # "</" inside a script block would end it early.
-    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+    # "</script" would end the block early and "<!--" would change how it is parsed: no "<" goes in as itself
+    return json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("<", "\\u003c")
 
 
 # ---------------------------------------------------------------------------------------------- files at the root

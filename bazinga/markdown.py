@@ -708,9 +708,17 @@ def references(rendered: Rendered, site: SiteIndex) -> list[dict]:
     return out
 
 
+def safe_url(url) -> str:
+    """``url`` when it is an http(s) address or a path on this site, else "" (never javascript:, data: and the like)."""
+    url = str(url or "").strip()
+    if re.match(r"(?i)^https?://[^\s]+$", url) or (url.startswith("/") and not url.startswith("//")):
+        return url
+    return ""
+
+
 def reference_url(ref: dict) -> str:
-    if ref.get("url"):
-        return str(ref["url"])
+    if safe_url(ref.get("url")):
+        return safe_url(ref["url"])
     if ref.get("arxiv"):
         return f"https://arxiv.org/abs/{ref['arxiv']}"
     if ref.get("doi"):

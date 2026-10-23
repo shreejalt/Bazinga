@@ -237,7 +237,10 @@ def make_handler(state: State):
                 from . import ask_server
             except ImportError:
                 return self.json(HTTPStatus.NOT_FOUND, {"enabled": False, "error": "Written answers are not set up."})
-            length = int(self.headers.get("Content-Length") or 0)
+            raw = (self.headers.get("Content-Length") or "0").strip()
+            if not (raw.isascii() and raw.isdigit()):
+                return self.json(HTTPStatus.LENGTH_REQUIRED, {"error": "A body with a length is required."})
+            length = int(raw)
             body = self.rfile.read(min(length, 64 * 1024)) if length else b""
             env = dict(os.environ)
             env.update(_dotenv(state.cfg.root / ".env.local"))

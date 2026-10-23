@@ -27,6 +27,10 @@ pull the new version in.
 - **Python 3.11 works again.** `requirements.txt` pinned numpy 2.5.4, which needs Python 3.12, so the whole install
   failed on 3.11. It now picks numpy 2.4.6 on 3.11. A build without numpy no longer stops: a figure that needs it
   is replaced by a short note and a warning.
+- **Safer links and data blocks.** A reference whose `url` is not an `http(s)` address or a path on your site (for
+  example `javascript:`) is no longer turned into a link; the arXiv or DOI link is used instead, if there is one.
+  Titles containing `</script>` or `<!--` can no longer break out of the page's structured data. The local server's
+  Ask endpoint refuses a body length that is not a plain number.
 - **3-D figures work from the keyboard.** Tab to the picture, then the left and right arrow keys turn it and up and
   down tilt it (Shift for small steps); the new angle is read out to screen readers. The hint under the figure says so.
 - **Keyboard focus shows on the rail.** The rail kept a pale focus ring from when it was dark; it now uses the same

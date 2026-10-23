@@ -167,6 +167,41 @@ class Builds(unittest.TestCase):
         finally:
             cleanup(root)
 
+    def test_json_ld_cannot_end_its_script_block(self):
+        """B6: a title with </script> or <!-- must stay inside the JSON-LD block."""
+        root = make_site({"posts/a": post('x </script><script>alert(1)</script> <!-- y', date="2020-01-02")})
+        try:
+            cfg = config.load(root)
+            build.build(cfg, quiet=True)
+            html = (cfg.out_dir / "posts" / "a" / "index.html").read_text()
+            block = html.split('<script type="application/ld+json">')[1].split("</script>")[0]
+            self.assertNotIn("<", block)
+            self.assertEqual(json.loads(block)["headline"], "x </script><script>alert(1)</script> <!-- y")
+        finally:
+            cleanup(root)
+
+    def test_reference_links_are_http_or_site_paths(self):
+        """B7/A11: a reference url: javascript:... must never become a link."""
+        from bazinga import markdown as md
+        for url, want in (("javascript:alert(1)", "https://arxiv.org/abs/1"), (" JavaScript:x", "https://arxiv.org/abs/1"),
+                          ("data:text/html,x", "https://arxiv.org/abs/1"), ("//evil.example/x", "https://arxiv.org/abs/1"),
+                          ("https://ok.example/p", "https://ok.example/p"), ("/static/paper.pdf", "/static/paper.pdf")):
+            with self.subTest(url=url):
+                self.assertEqual(md.reference_url({"url": url, "arxiv": "1"}), want)
+        self.assertEqual(md.reference_url({"url": "javascript:alert(1)"}), "")
+        root = make_site({"posts/a": post(body="See [@Evil1].")})
+        try:
+            (root / "content/references.yml").write_text(
+                (root / "content/references.yml").read_text()
+                + 'Evil1: {title: "Evil", authors: [A B], year: 2020, url: "javascript:alert(document.domain)"}\n')
+            cfg = config.load(root)
+            build.build(cfg, quiet=True)
+            for f in cfg.out_dir.rglob("*"):
+                if f.is_file() and f.suffix in (".html", ".json", ".js", ".xml"):
+                    self.assertNotIn("javascript:alert", f.read_text(encoding="utf-8"), f)
+        finally:
+            cleanup(root)
+
     def test_feed_is_capped_at_thirty(self):
         cfg = config.load(make_site())
         try:

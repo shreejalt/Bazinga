@@ -191,5 +191,30 @@ class LocalWriteButton(unittest.TestCase):
             cleanup(root)
 
 
+    def test_local_ask_needs_a_plain_body_length(self):
+        """B4/A8: Content-Length -1 made the dev server read until the client hung up; "abc" crashed the handler."""
+        import http.client
+        root = make_site({"posts/a": post("A")})
+        httpd = None
+        try:
+            state = serve.State(config.load(root))
+            httpd = ThreadingHTTPServer(("127.0.0.1", 0), serve.make_handler(state))
+            threading.Thread(target=httpd.serve_forever, daemon=True).start()
+            for length in ("-1", "abc", "1e3"):
+                with self.subTest(length=length):
+                    c = http.client.HTTPConnection("127.0.0.1", httpd.server_address[1], timeout=5)
+                    c.putrequest("POST", "/api/ask/")
+                    c.putheader("Content-Type", "application/json")
+                    c.putheader("Content-Length", length)
+                    c.endheaders(b"{}")
+                    self.assertEqual(c.getresponse().status, 411)
+                    c.close()
+        finally:
+            if httpd:
+                httpd.shutdown()
+                httpd.server_close()
+            cleanup(root)
+
+
 if __name__ == "__main__":
     unittest.main()
