@@ -252,6 +252,16 @@ class CommandLine(unittest.TestCase):
         src = (REPO / "bazinga/studio/server.py").read_text(encoding="utf-8")
         self.assertNotIn("Studio stopped", src)
 
+    def test_tests_never_build_the_sites_own_pages(self):
+        """Docs audit: a portfolio-only site failed 16 tests that built the example pages from the site itself."""
+        import re
+        bad = re.compile(r'(?:ROOT|REPO) / "(?:content|drawings|static)"|config\.load\((?:ROOT|REPO)\)'
+                         r'|(?:ROOT|REPO) / "site\.yml"|sys\.path\.insert\(0, str\((?:ROOT|REPO)\)\)')
+        for f in sorted((REPO / "tests").glob("test_*.py")):
+            for n, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
+                if bad.search(line) and "noqa: site" not in line:
+                    self.fail(f"{f.name}:{n} reads the site's own files; use tests/fixtures/example-site: {line.strip()}")
+
     def test_passthrough_keeps_options(self):
         with mock.patch("bazinga.cli._module") as module:
             module.return_value.main = mock.Mock(return_value=0)

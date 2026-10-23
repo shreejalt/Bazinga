@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 class SiteFigures(unittest.TestCase):
     def test_every_figure(self):
-        cfg = types.SimpleNamespace(root=ROOT, figures_dir=ROOT / "figures", drawings_dir=ROOT / "drawings")
+        cfg = types.SimpleNamespace(root=ROOT, figures_dir=ROOT / "figures", drawings_dir=ROOT / "drawings")  # noqa: site (this site's own figures, skipped when it has none)
         found = figures.discover(cfg)
         if not found:
             self.skipTest("this site has no figures of its own")
