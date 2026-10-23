@@ -263,6 +263,11 @@ class Builds(unittest.TestCase):
             self.assertNotIn("--width:", (cfg.out_dir / "posts" / "a" / "index.html").read_text())
         finally:
             cleanup(root)
+        root = make_site(site_yml=SITE_YML + 'theme: {font_code: "Fira Code"}\n')
+        try:
+            self.assertEqual(config.load(root)["theme"]["font_ui"], "Fira Code")   # older site.yml files keep their look
+        finally:
+            cleanup(root)
         for bad in ("width: 100", "width: wide"):
             with self.subTest(bad=bad):
                 root = make_site(site_yml=SITE_YML + f"theme: {{{bad}}}\n")

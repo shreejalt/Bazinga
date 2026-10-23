@@ -222,6 +222,9 @@ def load(root=None, local: bool = False, origin: str | None = None) -> Config:
         if not isinstance(data, dict):
             raise ConfigError("site.yml must be a mapping of sections (site:, nav:, theme: ...)")
     merged = deep_merge(DEFAULTS, data)
+    user_theme = data.get("theme") if isinstance(data.get("theme"), dict) else {}
+    if user_theme.get("font_code") and not user_theme.get("font_ui"):
+        merged["theme"]["font_ui"] = user_theme["font_code"]     # before font_ui existed, font_code set both
     if origin:
         merged["site"]["origin"] = origin
     # A site that defines its own kinds replaces the default kinds instead of adding to them.

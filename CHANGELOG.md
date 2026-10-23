@@ -8,8 +8,8 @@ pull the new version in.
 - **Theme settings that did nothing now work or are gone.** `theme.width` sets the reading column (480-1200 px;
   leave it out for the theme's own, about 780) and `theme.font_ui` sets the typewriter face of the rail, labels and
   reads, while `theme.font_code` now sets only code. `theme.mode` (the theme is light only) and `home.show` were never
-  used and are removed; a `mode:` line left in your `site.yml` is ignored. If your `site.yml` had `font_code` but no
-  `font_ui`, set `font_ui` to the same font to keep the look.
+  used and are removed; a `mode:` line left in your `site.yml` is ignored. A `site.yml` with `font_code` and no `font_ui` keeps its look
+  (`font_ui` follows `font_code`).
 - **Fewer crashes:** `build --drafts` with a draft that names a figure that does not exist reports it on that page
   instead of stopping with a traceback; `serve` and the Editor on a port that is in use say so and suggest another.
   The Editor's figure previews no longer show a tan bar between readout tiles (their stylesheets load in the site's
