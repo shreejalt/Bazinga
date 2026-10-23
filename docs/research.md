@@ -299,5 +299,5 @@ new EditorView({doc: "# Hi", extensions: [basicSetup, markdown({base: markdownLa
     Pyodide MPL-2.0) in `THIRD_PARTY.md`.
 23. Pin every CDN dependency to an exact version at least two weeks old, kept in one `vendor.yml`. Add a test that
     fails on unpinned URLs.
-24. Floor is Python ≥3.11: Markdown 3.11.2 requires it, and latex2mathml requires ≥3.10. Dependencies are Markdown,
+24. Floor is Python ≥3.11 (Markdown 3.10 needs ≥3.10, latex2mathml ≥3.10; numpy is pinned per Python version). Dependencies are Markdown,
     PyYAML 6.0.3, Jinja2 3.1.6 and latex2mathml 3.81.1, with nothing else required.

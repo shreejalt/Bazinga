@@ -24,6 +24,9 @@ pull the new version in.
   `status: publshed` or `date: 2026/01/05` used to be left out of the site without a word; the build now stops and
   names the file and line. Impossible dates such as `2026-02-30` (in a page, `site.yml`, `references.yml` or
   `cv.yml`) are reported as `<file>:<line>: … not a real date` instead of a Python traceback.
+- **Python 3.11 works again.** `requirements.txt` pinned numpy 2.5.4, which needs Python 3.12, so the whole install
+  failed on 3.11. It now picks numpy 2.4.6 on 3.11. A build without numpy no longer stops: a figure that needs it
+  is replaced by a short note and a warning.
 - **Deploys no longer fail on a slow build machine.** The tests that time things (figures under 30 ms and the like)
   now run only with `BAZINGA_PERF_TESTS=1`; the deploy runs every correctness check as before.
 - **`check` counts pages it cannot read.** Broken front matter is now an error (exit code 1), and

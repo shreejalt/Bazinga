@@ -317,6 +317,11 @@ class _Renderer:
             return _embed_error("Figure", name, "The figure engine is not available in this build.")
         try:
             return figmod.figure_html(name, start=start, cfg=self.site.cfg)
+        except getattr(figmod, "FigureNeedsPackage", ()) as exc:
+            self.issue("warning", i, f"figure {name!r}: {exc}", f"python -m pip install {exc.package}", "figure-package")
+            return (f'<div class="embed-error" role="note"><strong>The figure “{htmllib.escape(name)}” is not shown '
+                    f"in this build.</strong> It needs {htmllib.escape(exc.package)}, which is not installed where the "
+                    "site was built (python -m pip install -r requirements.txt).</div>")
         except figmod.FigureError as exc:
             self.issue("error", i, f"figure {name!r}: {exc}", "fix the figure file, or run: python -m bazinga "
                        f"figure test {name}", "figure")

@@ -13,7 +13,8 @@ project come from simple files. Posts are Markdown: equations render properly, d
 text, figures have sliders readers can move, and the whole site works as a wiki that readers can ask questions. Use
 all of it, or only the portfolio.
 
-You need Python 3.11 or newer. There is no Node and no bundler.
+You need Python 3.11 or newer. There is no Node and no bundler. (numpy is installed too, for the one example figure
+that uses it: version 2.5 on Python 3.12 and newer, 2.4 on 3.11.)
 
 ## 1. Start
 

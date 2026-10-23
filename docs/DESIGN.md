@@ -21,7 +21,7 @@ This file is the contract between the parts. Every builder reads it first. `docs
    - requires a per-launch token.
 
    The deployed site can only *answer* (Ask). It cannot write.
-6. **Standard library first.** The runtime dependencies are Markdown, PyYAML, Jinja2, latex2mathml and Pygments. Python ≥ 3.11. No Node needed. CDN assets are pinned to exact versions in one place (`bazinga/vendor.py`).
+6. **Standard library first.** The runtime dependencies are Markdown, PyYAML, Jinja2, latex2mathml and Pygments, plus numpy for figures that declare `REQUIRES = ["numpy"]` (pinned per Python version in `requirements.txt`: 2.5.4 on 3.12+, 2.4.6 on 3.11). Without numpy the site still builds: such a figure becomes a note in the built page and a warning. Python ≥ 3.11. No Node needed. CDN assets are pinned to exact versions in one place (`bazinga/vendor.py`).
 7. **Customisable without forking the engine.**
    - `site.yml` covers names, nav, colours, fonts, kinds, LLM provider and deploy command.
    - A `theme/` folder in the site root overrides any template or asset of `bazinga/theme/` by the same path.
@@ -189,7 +189,7 @@ The contract. `figures.py` validates it; the Editor's starters follow it.
 ```python
 TITLE = "Softmax temperature"                 # shown above the figure
 CAPTION = "What the slider does, in one or two sentences."
-REQUIRES = []                                 # optional Pyodide packages, e.g. ["numpy"] (build env must have them too)
+REQUIRES = []                                 # optional Pyodide packages, e.g. ["numpy"] (without it in the build env: a note + warning)
 CONTROLS = [                                  # rendered as HTML controls in this order
   {"name": "t", "kind": "slider", "label": "temperature", "min": 0.1, "max": 5, "step": 0.1, "value": 1, "play": False},
   {"name": "k", "kind": "steps",  "label": "classes", "options": ["3", "5", "10"], "value": 0},
