@@ -223,6 +223,64 @@ class Pipeline(unittest.TestCase):
         self.assertIn("content/posts/hello.md", changed)    # deleted in the same commit
         self.assertFalse((self.root / "content/posts/hello.md").exists())
 
+    def test_rename_of_an_untracked_page_publishes(self):
+        """A3: a page made and renamed before its first commit has no old file for git to remove."""
+        from bazinga.studio.api import Editor
+        studio = Editor(self.root)
+        pid = studio.new_page({"title": "Fresh page", "kind": "posts"})["id"]
+        path = self.root / "content/posts" / (pid.split(":", 1)[1] + ".md")
+        path.write_text('---\ntitle: "Fresh page"\nstatus: draft\nsummary: "A fresh page."\ntopics: [writing]\n---\n\n'
+                        "Fresh.\n", encoding="utf-8")
+        res = studio.rename_page({"id": pid, "slug": "fresh-renamed"})
+        renames = json.loads((self.root / ".studio/renames.json").read_text(encoding="utf-8"))
+        self.assertEqual(renames.get(res["id"]), [])
+        out = publish.run(self.cfg(), res["id"], publish.Options(build_cmd=FAKE_BUILD), self.emit)
+        self.assertTrue(out["ok"], out)
+        self.assertIn("content/posts/fresh-renamed.md", git(self.root, "show", "--name-only", "--format=", "HEAD"))
+
+    def assert_untouched_after_failure(self, res, step):
+        self.assertFalse(res["ok"])
+        self.assertEqual(res["step"], step)
+        self.assertIn("status: draft", (self.root / "content/posts/hello.md").read_text(encoding="utf-8"))
+        self.assertEqual(git(self.root, "diff", "--cached", "--name-only"), "")      # nothing left staged
+        self.assertEqual(git(self.root, "status", "--porcelain", "--untracked-files=all"), "")
+        self.assertFalse((self.root / "wiki/log.md").exists())                      # no false log entry
+        self.assertEqual(git(self.root, "log", "--oneline").count("\n"), 0)        # still only "init"
+
+    def test_commit_rejected_by_a_hook_leaves_nothing_staged(self):
+        """A2/D1: a failing pre-commit hook used to leave the published page and the log entry staged."""
+        hook = self.root / ".git/hooks/pre-commit"
+        hook.write_text("#!/bin/sh\necho 'hook says no'; exit 1\n", encoding="utf-8")
+        hook.chmod(0o755)
+        (self.root / "wiki").mkdir(exist_ok=True)
+        res = self.run_pipeline()
+        self.assertIn("git commit failed", res["error"])
+        self.assert_untouched_after_failure(res, "commit")
+
+    def test_no_identity_stops_before_staging(self):
+        import os
+        from unittest import mock
+        git(self.root, "config", "--unset", "user.email")
+        git(self.root, "config", "--unset", "user.name")
+        home = self.tmp / "home"
+        home.mkdir()
+        with mock.patch.dict(os.environ, {"HOME": str(home), "XDG_CONFIG_HOME": str(home), "GIT_CONFIG_NOSYSTEM": "1",
+                                          "GIT_CONFIG_GLOBAL": str(home / "none")}):
+            for k in ("GIT_AUTHOR_NAME", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_NAME", "GIT_COMMITTER_EMAIL", "EMAIL"):
+                os.environ.pop(k, None)
+            res = self.run_pipeline()
+        self.assertIn("does not know your name and email", res["error"])
+        self.assertNotIn(("log", {"text": "staged content/posts/hello.md"}), self.events)
+        self.assert_untouched_after_failure(res, "commit")
+
+    def test_a_malformed_publish_author_stops_before_staging(self):
+        shutil.rmtree(self.tmp)
+        self.tmp.mkdir()
+        self.root, self.remote = make_repo(self.tmp, 'publish:\n  author: "Ada Writer"\n')
+        res = self.run_pipeline()
+        self.assertIn("publish.author", res["error"])
+        self.assert_untouched_after_failure(res, "commit")
+
     @unittest.skipUnless(shutil.which("git"), "git")
     def test_real_build(self):
         """The real `python -m bazinga build` in the temporary site (when the core build is present)."""

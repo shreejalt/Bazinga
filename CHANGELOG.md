@@ -15,6 +15,11 @@ pull the new version in.
   request, so a crafted request could feed it someone else's passages and links. It now uses `SITE_URL` or
   `site.origin` (and says so plainly when neither is set), and links that do not point into your site are dropped,
   on the server and in the page.
+- **A failed publish leaves nothing behind.** When the commit failed (a git hook said no, or git did not know your
+  name), the published version of the page and a "publish" line in `wiki/log.md` stayed staged, so your next commit
+  would have published it. Publish now checks who commits before it stages anything, and on any failure unstages its
+  files and puts the page and the wiki files back.
+- **Renaming a page that was never committed** no longer stops its first publish.
 - **Sites under a sub-path work.** If `site.origin` has a path (for example `https://you.github.io/notes`), every
   link, asset, data file and figure module is placed under `/notes`. The GitHub Pages workflow fills in the address
   by itself, so a project site works with no edits. `python -m bazinga build --origin …`, `BAZINGA_ORIGIN` or

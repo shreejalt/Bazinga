@@ -328,7 +328,7 @@ Styles are named and themed by CSS, as in figures. Diagrams are drawn at build t
    4. Build the site.
    5. Update the wiki files (index, log entry `publish | Title`, passages).
    6. Optional: "Ask the model for links and topics" shows the ingest proposals as accept/reject cards before committing.
-   7. `git add` the page, its figures/drawings/uploads and references, wiki/index.md and wiki/log.md, then `git commit -m "Publish: <title>"`.
+   7. Check who commits (`publish.author`, or git's name and email) before staging anything; then `git add` the page, its figures/drawings/uploads and references, wiki/index.md and wiki/log.md, and `git commit -m "Publish: <title>"`. If any step fails before the commit, the page and the wiki files are put back as they were and nothing stays staged. A renamed page stages the removal of its old file only when git tracked that file.
    8. `git push` to the branch the current one tracks (`git push <remote> HEAD:<branch>`, so a local `work` tracking `origin/main` works; with no upstream, `git push -u origin HEAD`), then the optional `publish.command`.
    9. Show the live URL.
    - **Unpublish** sets status back to draft and runs steps 4–8.

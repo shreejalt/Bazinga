@@ -279,7 +279,14 @@ class Editor:
             if n:
                 atomic_write(other, new_text)
                 changed.append(str(other.relative_to(self.root)))
-        # remember the old file so the next publish stages its removal
+        # remember the old file so the next publish stages its removal -- only when git knows it (an untracked
+        # page has nothing to remove, and naming it to `git add` would stop the publish)
+        old_rel = str(path.relative_to(self.root))
+        try:
+            tracked = publish.git(self.root, "ls-files", "--error-unmatch", "--", old_rel,
+                                  check=False).returncode == 0
+        except (OSError, Exception):  # noqa: BLE001 - no git, or not a repository
+            tracked = False
         renames = self.root / ".studio" / "renames.json"
         renames.parent.mkdir(exist_ok=True)
         try:
@@ -287,8 +294,7 @@ class Editor:
         except (OSError, ValueError):
             data_r = {}
         olds = data_r.pop(pid, [])
-        old_rel = str(path.relative_to(self.root))
-        data_r[new_id] = [o for o in olds + [old_rel] if o != str(new_path.relative_to(self.root))]
+        data_r[new_id] = [o for o in olds + ([old_rel] if tracked else []) if o != str(new_path.relative_to(self.root))]
         atomic_write(renames, json.dumps(data_r, indent=1))
         self.buffers.pop(pid, None)
         note = (f"The live address changes from {cfg.origin}/{kind}/{pid.split(':', 1)[1]}/ to "

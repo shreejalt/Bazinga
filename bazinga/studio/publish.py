@@ -25,6 +25,7 @@ from __future__ import annotations
 import datetime as _dt
 import difflib
 import json
+import re
 import shlex
 import shutil
 import subprocess
@@ -259,6 +260,10 @@ def _run(cfg, page_id: str, opts: Options, emit) -> dict:
     work = root
     tmp_root = None
     wrote = False
+    staged = []            # paths this run staged (unstaged again if it fails before the commit)
+    # the wiki files as they were, so a failed publish leaves no log entry for something that never went out
+    wiki_before = {rel: ((root / rel).read_bytes() if (root / rel).is_file() else None)
+                   for rel in ("wiki/index.md", "wiki/log.md")}
     summary = {"ok": False, "dry_run": opts.dry_run, "mode": mode, "title": title, "url": None, "commit": None}
     keys = [k for k, _ in STEPS if not (mode == "unpublish" and k in UNPUBLISH_SKIP)]
     current = {"key": None}
@@ -372,28 +377,36 @@ def _run(cfg, page_id: str, opts: Options, emit) -> dict:
                 log("Would run: git commit -m " + shlex.quote(message) + " -- " + " ".join(paths))
                 step("commit", "done", "Dry run: not committed")
             else:
+                # who commits is settled before anything is staged, so a missing name leaves the index alone
+                author = (pub.get("author") or "").strip()
+                if author and not re.fullmatch(r"[^<>]+<[^<>@\s]+@[^<>\s]+>", author):
+                    raise StepFailed("Not committed: publish.author in site.yml is not \"Your Name <you@example.com>\".",
+                                     f"It is {author!r}. Fix it, or remove it to commit under your git name and email.")
+                if not author and not (git(root, "config", "user.name", check=False).stdout.strip()
+                                       and git(root, "config", "user.email", check=False).stdout.strip()):
+                    raise StepFailed("Not committed: git does not know your name and email.",
+                                     "Set publish.author in site.yml (\"Your Name <you@example.com>\") or run "
+                                     "`git config user.name \"Your Name\"` and `git config user.email you@example.com`.")
+                args = []
+                if author:
+                    name, email = author.split("<", 1)
+                    args = ["-c", f"user.name={name.strip()}", "-c", f"user.email={email.strip(' >')}"]
+                staged = list(paths)
                 git(root, "add", "-A", "--", *paths)
-                staged = git(root, "diff", "--cached", "--name-only", "--", *paths)
-                if not staged.stdout.strip():
+                staged_names = git(root, "diff", "--cached", "--name-only", "--", *paths)
+                if not staged_names.stdout.strip():
+                    staged = []
                     step("commit", "skipped", "Nothing changed since the last commit")
                 else:
-                    for line in staged.stdout.split():
+                    for line in staged_names.stdout.split():
                         log(f"staged {line}")
-                    args = []
-                    author = (pub.get("author") or "").strip()
-                    if not (author and "<" in author) and not git(root, "config", "user.email", check=False).stdout.strip():
-                        raise StepFailed("Not committed: git does not know your name and email.",
-                                         "Set publish.author in site.yml (\"Your Name <you@example.com>\") or run "
-                                         "`git config user.name \"Your Name\"` and `git config user.email you@example.com`.")
-                    if author and "<" in author:
-                        name, email = author.split("<", 1)
-                        args = ["-c", f"user.name={name.strip()}", "-c", f"user.email={email.strip(' >')}"]
                     commit_args = [*args, "commit", "-m", message]
                     if author:
                         commit_args += ["--author", author]
                     code, out = run_stream(["git", *commit_args, "--", *paths], root, emit, opts.timeout_git)
                     if code != 0:
                         raise StepFailed("git commit failed.", out)
+                    staged = []
                     sha = git(root, "rev-parse", "--short", "HEAD").stdout.strip()
                     summary["commit"] = sha
                     committed = True
@@ -473,10 +486,18 @@ def _run(cfg, page_id: str, opts: Options, emit) -> dict:
         emit("done", summary)
         return summary
     finally:
-        if wrote and not opts.dry_run:   # failed before committing: put the page back as it was
+        if wrote and not opts.dry_run:   # failed before committing: put the page and the wiki back as they were
+            if staged:
+                git(root, "reset", "-q", "--", *staged, check=False)
+                emit("log", {"text": "Unstaged: " + ", ".join(staged) + "."})
             try:
                 atomic_write(real_path, original)
-                emit("log", {"text": f"Restored {page_rel} to how it was before publishing."})
+                for rel, data in wiki_before.items():
+                    if data is None:
+                        (root / rel).unlink(missing_ok=True)
+                    elif not (root / rel).is_file() or (root / rel).read_bytes() != data:
+                        atomic_write(root / rel, data)
+                emit("log", {"text": f"Restored {page_rel} and the wiki files to how they were before publishing."})
             except OSError:
                 pass
         if tmp_root is not None:
