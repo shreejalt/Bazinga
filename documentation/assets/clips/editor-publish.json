@@ -1,0 +1,8 @@
+{
+  "kind": "browser",
+  "bar": "127.0.0.1:8001 \u00b7 Editor",
+  "caption": "Publish, as a dry run: every step runs on a copy of the site, and nothing changes.",
+  "seconds": 14.6,
+  "width": 1280,
+  "height": 800
+}

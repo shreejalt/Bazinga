@@ -1,0 +1,8 @@
+{
+  "kind": "browser",
+  "bar": "127.0.0.1:8001 \u00b7 Editor",
+  "caption": "Each ## heading becomes a numbered entry in the contents, in the preview as you type.",
+  "seconds": 16.4,
+  "width": 1280,
+  "height": 800
+}

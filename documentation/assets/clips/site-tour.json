@@ -1,0 +1,8 @@
+{
+  "kind": "browser",
+  "bar": "127.0.0.1:8000",
+  "caption": "The example site: the home page, a list of posts, and a post with its contents.",
+  "seconds": 16.0,
+  "width": 1280,
+  "height": 800
+}

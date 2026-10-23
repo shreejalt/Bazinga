@@ -1,0 +1,8 @@
+{
+  "kind": "terminal",
+  "bar": "Terminal",
+  "caption": "Start a new post: the file is a draft until you publish it.",
+  "seconds": 9.8,
+  "width": 1280,
+  "height": 520
+}

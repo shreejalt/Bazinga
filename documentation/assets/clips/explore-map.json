@@ -1,0 +1,8 @@
+{
+  "kind": "browser",
+  "bar": "127.0.0.1:8000/explore/",
+  "caption": "Hover a page on the map: its nearest pages light up ring by ring, then the reading order walks through it.",
+  "seconds": 13.5,
+  "width": 1280,
+  "height": 800
+}

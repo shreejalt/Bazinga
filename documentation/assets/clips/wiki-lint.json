@@ -1,0 +1,8 @@
+{
+  "kind": "terminal",
+  "bar": "Terminal",
+  "caption": "The wiki's fixed checks: findings go to proposals/ for you to review.",
+  "seconds": 11.4,
+  "width": 1280,
+  "height": 640
+}

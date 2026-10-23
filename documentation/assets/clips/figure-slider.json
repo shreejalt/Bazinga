@@ -1,0 +1,8 @@
+{
+  "kind": "browser",
+  "bar": "127.0.0.1:8000/reads/softmax-and-temperature/",
+  "caption": "Drag the slider and the figure redraws as you move it. Presets set several controls at once.",
+  "seconds": 18.5,
+  "width": 1280,
+  "height": 800
+}

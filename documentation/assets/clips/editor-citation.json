@@ -1,0 +1,8 @@
+{
+  "kind": "browser",
+  "bar": "127.0.0.1:8001 \u00b7 Editor",
+  "caption": "Citation\u2026: look a paper up by its arXiv id or DOI; it is added to references.yml and cited where the cursor is.",
+  "seconds": 19.7,
+  "width": 1280,
+  "height": 800
+}

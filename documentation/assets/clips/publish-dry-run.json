@@ -1,0 +1,8 @@
+{
+  "kind": "terminal",
+  "bar": "Terminal",
+  "caption": "A publish dry run: every step runs on a copy of the site, and nothing changes.",
+  "seconds": 15.6,
+  "width": 1280,
+  "height": 640
+}

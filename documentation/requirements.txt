@@ -1,0 +1,2 @@
+# The documentation site (MkDocs Material). Install with: pip install -r documentation/requirements.txt
+mkdocs-material==9.7.7

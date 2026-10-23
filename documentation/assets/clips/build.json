@@ -1,0 +1,8 @@
+{
+  "kind": "terminal",
+  "bar": "Terminal",
+  "caption": "Build the site, then check every page.",
+  "seconds": 8.8,
+  "width": 1280,
+  "height": 300
+}

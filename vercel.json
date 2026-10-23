@@ -7,7 +7,7 @@
   "trailingSlash": true,
   "functions": {
     "api/ask.py": {
-      "excludeFiles": "{tests/**,content/**,figures/**,drawings/**,static/**,_site/static/**,docs/**,proposals/**,sources/**}"
+      "excludeFiles": "{tests/**,content/**,figures/**,drawings/**,static/**,_site/static/**,docs/**,documentation/**,proposals/**,sources/**}"
     }
   }
 }

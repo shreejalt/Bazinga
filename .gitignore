@@ -22,3 +22,9 @@ sources/
 # build staging folders (normally removed by the build)
 _site.partial/
 _site.old/
+
+# the documentation site (mkdocs build) and its tools
+_docs_site/
+.venv-docs/
+.cache/
+documentation/recordings/node_modules/

@@ -1,0 +1,89 @@
+/* Bazinga's colours on top of Material: sapphire, paper, ink and a pencil-yellow accent. */
+:root {
+  --bz-sapphire: #0F52BA;
+  --bz-paper: #FBF7EC;
+  --bz-ink: #1D1A15;
+  --bz-pencil: #F2B632;
+}
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--bz-sapphire);
+  --md-primary-fg-color--light: #3B74CC;
+  --md-primary-fg-color--dark: #0B3F91;
+  --md-accent-fg-color: #B27C00;
+  --md-default-bg-color: var(--bz-paper);
+  --md-default-fg-color: var(--bz-ink);
+  --md-typeset-color: var(--bz-ink);
+  --md-typeset-a-color: var(--bz-sapphire);
+  --md-code-bg-color: #F2EBDB;
+}
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #0B3F91;
+  --md-primary-fg-color--light: #3B74CC;
+  --md-primary-fg-color--dark: #082F6D;
+  --md-accent-fg-color: var(--bz-pencil);
+  --md-typeset-a-color: #8AB4F8;
+  --md-hue: 220;
+}
+.md-typeset { font-size: .86rem; line-height: 1.65; }
+.md-typeset h1, .md-typeset h2, .md-typeset h3 { font-weight: 700; letter-spacing: 0; }
+.md-typeset code { font-size: .82em; }
+
+/* Clips: a looping video framed as a small window (a bar with three dots and the page address). */
+.md-typeset figure.clip { margin: 1.4em 0 1.8em; max-width: 100%; }
+.md-typeset figure.clip .clip-bar,
+.md-typeset figure.clip video { width: 100%; max-width: 100%; box-sizing: border-box; }
+.md-typeset figure.clip .clip-bar {
+  display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
+  background: #ECE5D5; border: 1px solid rgba(29,26,21,.14); border-bottom: 0;
+  border-radius: 10px 10px 0 0; box-shadow: 0 10px 28px rgba(29,26,21,.10);
+}
+.md-typeset figure.clip .clip-bar i { width: 10px; height: 10px; border-radius: 50%; background: #CBC1AD; flex: none; }
+.md-typeset figure.clip .clip-bar i:nth-child(1) { background: #E0675A; }
+.md-typeset figure.clip .clip-bar i:nth-child(2) { background: #E8B53F; }
+.md-typeset figure.clip .clip-bar i:nth-child(3) { background: #62B65B; }
+.md-typeset figure.clip .clip-bar span {
+  flex: 1; min-width: 0; margin-left: 10px; padding: 2px 10px; border-radius: 6px; background: rgba(255,255,255,.65);
+  font: 12px/1.5 "Courier Prime", "Courier New", monospace; color: #4A443A;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.md-typeset figure.clip-terminal .clip-bar { background: #2A2723; border-color: #2A2723; }
+.md-typeset figure.clip-terminal .clip-bar span { background: transparent; color: #CBC1AD; text-align: center; margin-right: 46px; }
+.md-typeset figure.clip video {
+  display: block; height: auto; aspect-ratio: auto; border: 1px solid rgba(29,26,21,.14); border-top: 0;
+  border-radius: 0 0 10px 10px; background: var(--md-code-bg-color);
+  box-shadow: 0 14px 32px rgba(29,26,21,.14);
+}
+[data-md-color-scheme="slate"] .md-typeset figure.clip .clip-bar { background: #2E3138; border-color: rgba(255,255,255,.10); }
+[data-md-color-scheme="slate"] .md-typeset figure.clip .clip-bar span { background: rgba(255,255,255,.08); color: #C9CDD4; }
+[data-md-color-scheme="slate"] .md-typeset figure.clip video { border-color: rgba(255,255,255,.10); box-shadow: 0 14px 32px rgba(0,0,0,.45); }
+.md-typeset figure.clip figcaption { font-size: .78rem; color: var(--md-default-fg-color--light); margin-top: .7em; max-width: none; }
+.md-typeset .clip-missing {
+  padding: 2.5em 1em; text-align: center; border: 1px dashed var(--md-default-fg-color--lighter);
+  color: var(--md-default-fg-color--light); border-radius: 6px;
+}
+/* Screenshots: same frame as the clips. */
+.md-typeset img.shot { border: 1px solid var(--md-default-fg-color--lightest); border-radius: 6px; max-width: 100%; height: auto; }
+/* Wide tables scroll inside themselves on phones instead of widening the page. */
+.md-typeset__table { max-width: 100%; }
+
+/* The header: Bazinga's mark at a readable size, with rounded corners. */
+.md-header__button.md-logo { padding: .2rem .4rem; }
+.md-header__button.md-logo img, .md-header__button.md-logo svg { height: 1.8rem; width: auto; border-radius: 7px; }
+.md-nav__title .md-nav__button.md-logo img { height: 2.4rem; border-radius: 8px; }
+
+/* Headings in ink (Material greys the h1 by default), paper-coloured on dark. */
+[data-md-color-scheme="default"] .md-typeset h1 { color: var(--bz-ink); }
+[data-md-color-scheme="slate"] .md-typeset h1 { color: var(--bz-paper); }
+
+/* Home page: the banner and the feature cards. */
+/* (the banner pair uses #only-light / #only-dark, which Material shows or hides by palette; do not set display here) */
+.md-typeset img[src*="assets/brand/banner-"] { width: 100%; height: auto; border-radius: 12px; }
+.md-typeset .home-cards figure.clip { margin: .4em 0 .8em; }
+.md-typeset .home-cards figure.clip .clip-bar { height: 22px; padding: 0 8px; }
+.md-typeset .home-cards figure.clip .clip-bar i { width: 7px; height: 7px; }
+.md-typeset .home-cards figure.clip .clip-bar span { font-size: 10px; padding: 0 6px; margin-left: 6px; }
+.md-typeset .grid.cards > ul > li { border-radius: 10px; }
+
+.md-typeset .home-cards > ul > li > p.card-title { margin: 0 0 .2em; }
+.md-typeset .home-cards > ul > li figure.clip { width: 100%; }
+.md-typeset .home-start > ul > li { padding: .8rem 1rem; }

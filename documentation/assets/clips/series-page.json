@@ -1,0 +1,8 @@
+{
+  "kind": "browser",
+  "bar": "127.0.0.1:8000/series/getting-started/",
+  "caption": "A series page lists its parts in order with highlights; every part shows where it sits.",
+  "seconds": 13.5,
+  "width": 1280,
+  "height": 800
+}

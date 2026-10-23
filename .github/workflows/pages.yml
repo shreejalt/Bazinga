@@ -1,5 +1,7 @@
 # GitHub Pages: build and deploy on every push to main, and once a day so scheduled posts go live on their date.
 # Turn it on in the repository: Settings -> Pages -> Source: "GitHub Actions".
+# In the Bazinga repository itself these jobs are skipped: its Pages site is the documentation (docs.yml).
+# In your own copy (a fork or "Use this template") they run and publish your site.
 name: Deploy to GitHub Pages
 on:
   push:
@@ -16,6 +18,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
+    if: github.repository != 'shreejalt/Bazinga'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +33,7 @@ jobs:
         with:
           path: _site
   deploy:
+    if: github.repository != 'shreejalt/Bazinga'
     needs: build
     runs-on: ubuntu-latest
     environment:

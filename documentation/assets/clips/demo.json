@@ -1,0 +1,8 @@
+{
+  "kind": "terminal",
+  "bar": "Terminal",
+  "caption": "Bazinga in twenty seconds: build the example site, add a figure, test it, and serve it.",
+  "seconds": 15.9,
+  "width": 1200,
+  "height": 760
+}

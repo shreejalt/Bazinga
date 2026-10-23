@@ -1,0 +1,8 @@
+{
+  "kind": "browser",
+  "bar": "127.0.0.1:8000/ask/",
+  "caption": "Ask a question: the answer is put together from the site's own pages, with links to the sections it used.",
+  "seconds": 15.0,
+  "width": 1280,
+  "height": 800
+}

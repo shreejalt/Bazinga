@@ -1,0 +1,146 @@
+# The documentation site for Bazinga (MkDocs Material). It is separate from the Bazinga site itself.
+# Build it:   pip install -r documentation/requirements.txt && mkdocs build --strict
+# Preview it: mkdocs serve -a 127.0.0.1:8030
+site_name: Bazinga
+site_description: User guide for Bazinga, a Python template for a personal site and technical blog with live figures, a map and Ask.
+site_url: https://bazinga.shreejal.ai/
+repo_url: https://github.com/shreejalt/Bazinga
+repo_name: shreejalt/Bazinga
+edit_uri: edit/main/documentation/
+docs_dir: documentation
+site_dir: _docs_site
+copyright: Code under the MIT licence. Example content under CC BY 4.0.
+
+exclude_docs: |
+  recordings/
+  hooks/
+  overrides/
+  requirements.txt
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
+
+hooks:
+  - documentation/hooks/clips.py
+
+theme:
+  name: material
+  custom_dir: documentation/overrides
+  language: en
+  logo: assets/brand/mark.svg
+  favicon: assets/brand/favicon.png
+  font:
+    text: STIX Two Text
+    code: Courier Prime
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  features:
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - content.action.edit
+
+extra_css:
+  - stylesheets/bazinga.css
+
+extra_javascript:
+  - javascripts/clips.js
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/shreejalt/Bazinga
+      name: Bazinga on GitHub
+
+plugins:
+  - search
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - "What's in Bazinga": whats-in-bazinga.md
+  - Writing:
+      - writing/index.md
+      - 1. Your first post: writing/first-post.md
+      - 2. Sections and contents: writing/sections.md
+      - 3. Equations: writing/equations.md
+      - 4. Citations: writing/citations.md
+      - 5. Figures and diagrams in a post: writing/figures-in-posts.md
+      - 6. Links and topics: writing/links-and-topics.md
+      - 7. Series: writing/series.md
+      - 8. Checking: writing/checking.md
+      - 9. Publishing: writing/publishing.md
+  - Guides:
+      - The Editor: editor.md
+      - Interactive figures: figures.md
+      - Diagrams from code: diagrams.md
+      - 3-D figures: figures-3d.md
+      - The map and topics: map-and-topics.md
+      - Ask and the wiki: ask-and-wiki.md
+      - Your home page and CV: home-and-cv.md
+      - Theme and customising: theme.md
+      - Deploying: deploying.md
+      - SEO and feeds: seo-and-feeds.md
+      - Updating Bazinga: updating.md
+  - Reference:
+      - Commands: reference/commands.md
+      - Configuration: reference/configuration.md
+      - Troubleshooting and FAQ: troubleshooting.md
+  - Contributing:
+      - contributing/index.md
+      - Recording clips: contributing/recording-clips.md
+      - The demo GIF: contributing/demo-gif.md
+      - Coverage: contributing/coverage.md

@@ -1,0 +1,8 @@
+{
+  "kind": "terminal",
+  "bar": "Terminal",
+  "caption": "Check one formula: a mistake is pointed out with a caret and a fix.",
+  "seconds": 14.6,
+  "width": 1280,
+  "height": 560
+}

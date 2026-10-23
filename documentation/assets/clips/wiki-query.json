@@ -1,0 +1,8 @@
+{
+  "kind": "terminal",
+  "bar": "Terminal",
+  "caption": "Ask the site a question from the terminal: no model needed.",
+  "seconds": 9.7,
+  "width": 1280,
+  "height": 520
+}
