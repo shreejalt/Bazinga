@@ -144,6 +144,26 @@ class CommandLine(unittest.TestCase):
         finally:
             cleanup(root)
 
+    def test_new_writes_valid_yaml_and_refuses_odd_slugs(self):
+        """C-9: a title with a backslash or quotes broke the front matter; --slug ../x wrote outside content/."""
+        root = make_site()
+        try:
+            title = 'Paths like C:\\new and "quotes" \\q: here'
+            code, text = self.run_cli("--root", str(root), "new", title)
+            self.assertEqual(code, 0, text)
+            made = sorted((root / "content/posts").glob("*.md"))
+            self.assertEqual(len(made), 1)
+            page = content.load_file(made[0], config.load(root))
+            self.assertEqual(page.title, title)
+            for slug in ("../evil", "a/b", "..", "/abs", "Caps", "a\\b", ".hidden"):
+                with self.subTest(slug=slug):
+                    code, text = self.run_cli("--root", str(root), "new", "X", "--slug", slug)
+                    self.assertEqual(code, 2, text)
+            self.assertFalse((root / "content/evil.md").exists())
+            self.assertEqual(len(list(root.rglob("*.md"))), 1)
+        finally:
+            cleanup(root)
+
     def test_unreadable_status_or_date_stops_the_build(self):
         """C-1: a page that is not status: draft but has a status or date the build cannot read used to vanish."""
         for field, line_text in (("status", "status: publshed"), ("date", "date: 2026/01/05")):

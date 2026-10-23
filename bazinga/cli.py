@@ -19,6 +19,8 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import json
+import re
 import sys
 from datetime import date
 from pathlib import Path
@@ -48,6 +50,10 @@ def cmd_new(args, cfg) -> int:
         print(f"unknown kind {kind!r}; site.yml defines: {', '.join(cfg['kinds'])}", file=sys.stderr)
         return 2
     slug = args.slug or content.slugify(args.title)
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", slug or ""):
+        print(f"{slug!r} is not a page name: use lowercase letters, digits and dashes (no / or ..), "
+              "for example --slug my-first-post", file=sys.stderr)
+        return 2
     folder = cfg.content_dir / kind
     path = folder / f"{slug}.md"
     if path.exists():
@@ -57,8 +63,10 @@ def cmd_new(args, cfg) -> int:
     if not starter.exists():
         starter = Path(__file__).parent / "starters" / "post.md"
     text = starter.read_text(encoding="utf-8")
-    title = args.title.replace('"', '\\"')
-    text = text.replace("{{title}}", title).replace("{{date}}", date.today().isoformat())
+    title = " ".join(args.title.split())                 # one line
+    # a JSON string is a valid YAML double-quoted string: quotes, backslashes and the rest are escaped properly
+    text = text.replace('"{{title}}"', json.dumps(title, ensure_ascii=False)).replace("{{title}}", title)
+    text = text.replace("{{date}}", date.today().isoformat())
     folder.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
     print(f"Created {path.relative_to(cfg.root)} (a draft). Preview it with: python -m bazinga serve --drafts")
