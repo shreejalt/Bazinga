@@ -5,8 +5,8 @@ and, when settings are not enough, the theme's own files. You never edit the eng
 
 There are two levels:
 
-1. **`site.yml`**: colours, fonts, the menu (`nav:`), the kinds of pages (`kinds:`) and which parts are on
-   (`features:`).
+1. **`site.yml`**: colours, fonts, the width of the text, the menu (`nav:`), the kinds of pages (`kinds:`) and which
+   parts are on (`features:`).
 2. **A `theme/` folder** in your site: your own copy of any template or stylesheet, which wins over the built-in one.
 
 ## Colours
@@ -57,22 +57,39 @@ theme:
 | Key | Used for |
 |---|---|
 | `font_text` | the body text |
-| `font_code` | code, and also the default theme's labels, menu and buttons |
+| `font_ui` | the typewriter face: the menu, labels, buttons, and the text of reads and papers |
+| `font_code` | code blocks and code in the text |
 | `font_math` | equations; it needs a font with a maths table, such as STIX Two Math |
-| `font_ui` | the font is downloaded, but the default theme does not use it (see below) |
 
 Each family named here is loaded from Google Fonts with the weights the theme needs.
 
-If you delete a key, Bazinga uses its own default: Source Serif 4 for text, JetBrains Mono for code, STIX Two Math
-for equations, and `#3b5bdb` for the accent. Keep the keys to keep the look of the example site.
+If you set `font_code` and leave out `font_ui`, the menu and labels use your code font too. If you delete a key,
+Bazinga uses its own default: Source Serif 4 for text, JetBrains Mono for the interface and code, STIX Two Math for
+equations, and `#3b5bdb` for the accent. Keep the keys to keep the look of the example site.
 
-!!! note "Honest notes on three theme keys"
-    - **`font_ui`**: the default theme draws its interface in the code font. Setting `font_ui` loads the font
-      but changes nothing you can see. To change the interface font, change `font_code` (code changes with it),
-      or override the stylesheet as shown below.
-    - **`mode`**: accepted (`auto`, `light` or `dark`) but not used. The default theme is light only.
-    - **`width`**: checked (480 to 1200) but not used by the default theme, whose column width is set in its
-      stylesheet.
+**What you should see:** with `font_ui: "IBM Plex Mono"`, the menu and labels change after the page reloads, and code
+keeps its own font.
+
+## The width of the text
+
+The reading column is about 780 pixels wide. Set `width` to make it narrower or wider:
+
+```yaml
+theme:
+  width: 860
+```
+
+It takes a number from 480 to 1200. Any other number stops the build with
+`theme.width should be between 480 and 1200 pixels`. Leave it out to keep the theme's own width.
+
+**What you should see:** after the page reloads, the text of every page runs wider (or narrower). On a phone the
+column still fits the screen.
+
+## Light only
+
+The site has one look: the paper sheet, in light colours. It has no dark mode, and no setting turns one on. (These
+docs have a light and a dark look; your site does not.) To change the colours, use the keys under
+[Colours](#colours).
 
 ## The menu
 
@@ -150,9 +167,8 @@ cp bazinga/theme/templates/404.html theme/templates/404.html
 Now edit `theme/templates/404.html` and build. **What you should see:** your change on `/404.html`, and every other
 page unchanged.
 
-The same works for stylesheets. The default theme's labels, menu and buttons use the CSS variable `--mono`, the
-same one as code. To give them a font of their own, copy the layout sheet and replace `var(--mono)` where you want
-the other font:
+The same works for stylesheets. Copy the layout sheet and edit the copy (for fonts, colours and the width of the
+text, the settings above are enough):
 
 ```bash
 mkdir -p theme/assets/css

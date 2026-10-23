@@ -47,14 +47,13 @@ positional arguments:
     editor     the Editor, the local writing window
     studio     the same as editor
     publish    publish one page
-    wiki       index, ingest, lint, highlights, describe
+    wiki       index, query, ingest, lint, highlights, describe, equation,
+               figure, log
 
 options:
   -h, --help   show this help message and exit
   --root ROOT  the site folder (default: the current folder)
 ```
-
-The `wiki` line is short: `wiki` also has `query`, `equation`, `figure` and `log` ([wiki](#wiki)).
 
 `--root` goes **before** the command and points at another site folder:
 
@@ -198,7 +197,7 @@ its file, line and a hint, and the exit code is 1.
 
 ```text
 usage: python -m bazinga serve [-h] [--port PORT] [--open] [--drafts]
-                               [--no-editor] [--studio-port STUDIO_PORT]
+                               [--no-editor] [--editor-port STUDIO_PORT]
 
 options:
   -h, --help            show this help message and exit
@@ -207,7 +206,7 @@ options:
   --drafts              also show drafts and scheduled pages (local preview)
   --no-editor, --no-studio
                         do not start the Editor (no Write button)
-  --studio-port STUDIO_PORT
+  --editor-port, --studio-port STUDIO_PORT
                         port of the Editor on 127.0.0.1 (default: the serve
                         port + 1, or a free one)
 ```
@@ -411,8 +410,8 @@ error: no builder type 'nope'. Choose one of: function, shapes, bars, heatmap, d
 
 `figure preview` prints the full path on your computer. `figure test` exits with 1 when a figure fails, so the tests
 and the build catch a broken figure. To use a copied drawing starter, place it with `::drawing <name>.<function>`;
-for example the `pipeline` starter's function is `steps`, so `::drawing my_pipe.steps`. For a drawing starter the
-command still prints `Use it in a post with ::figure my_pipe`; ignore that line and write `::drawing my_pipe.steps`. The full starter list and the form are in
+for example the `pipeline` starter's function is `steps`, so `::drawing my_pipe.steps`. The command prints that line
+for you: `Use it in a post with ::drawing my_pipe.steps`. The full starter list and the form are in
 [Interactive figures](../figures.md) and [Diagrams](../diagrams.md).
 
 ## editor
@@ -518,10 +517,8 @@ usage: python -m bazinga wiki <command>
   figure "<description>"     draft a figure module from the closest starter
   log <op> "<subject>"       append an entry to wiki/log.md
 
-<page> is an id (post:attention), a slug or a file path. Proposals go to proposals/; nothing in content/ changes.
+<page> is an id (read:attention-from-scratch), a slug or a file path. Proposals go to proposals/; nothing in content/ changes.
 ```
-
-The example id `post:attention` is an old one; on the example site use `read:…`, `paper:…` or `project:…`.
 
 | Sub-command | Needs a model |
 |---|---|

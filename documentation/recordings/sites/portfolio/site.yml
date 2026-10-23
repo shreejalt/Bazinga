@@ -127,8 +127,6 @@ theme:
   font_ui: "Courier Prime"
   font_code: "Courier Prime"
   font_math: "STIX Two Math"            # needs a font with a MATH table
-  width: 720
-  mode: light
 
 features: {ask: false, explore: false, series: false, feed: false, llms_txt: true, credit: true}   # credit: the small "Made with Bazinga" link in the side rail
 

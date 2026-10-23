@@ -96,6 +96,16 @@ topics: [attention, writing]
     shows only in the Editor and in previews made with `--drafts`. The same is true of a page whose `date` is still
     in the future.
 
+    A page that is not a draft must have a `status` and a `date` the build can read. A typo such as
+    `status: publshed` or `date: 2026/01/05` stops the build with the file and the line:
+
+    ```text
+    content/reads/my-first-post.md:3: error: date: '2026/01/05' is not a date (so this page would not be published)
+        hint: write dates as YYYY-MM-DD, e.g. 2026-10-20
+    ```
+
+    A date that does not exist, such as `2026-02-30`, is reported the same way: `… 2026-02-30 is not a real date`.
+
 ### Other kinds of page
 
 The example site has four kinds, each a folder in `content/`:

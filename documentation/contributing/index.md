@@ -35,6 +35,19 @@ Run one group while you work, for example the Editor's:
 
 Some tests run `node --check` on the site's scripts when Node is installed; without Node they are skipped.
 
+The tests that time things (a figure must draw in 30 ms, and the like) are skipped unless you ask for them, so a
+busy build machine never fails a deploy. Run them before you send a change that could make something slower:
+
+```bash
+BAZINGA_PERF_TESTS=1 .venv/bin/python -m unittest discover tests
+```
+
+**What you should see:** `OK` on the last line, with no tests skipped for speed.
+
+The tests never read the site's own pages, figures, drawings or `site.yml`; a test checks that. A test that needs
+example pages builds its own copy from `tests/fixtures/example-site/`, so the tests pass on every site made from
+Bazinga, including one with no example pages left. Put new example files a test needs there.
+
 ## Try your change on the example site
 
 ```bash

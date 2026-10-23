@@ -91,9 +91,9 @@ button opens the map with only that topic shown.
 
 ## Turning the map off
 
-Set `features: {explore: false}` in `site.yml` and take Explore out of `nav:`. The map page and the home page's
-Explore section go away; the topic pages stay (for now their **On the map** button and the line about Explore on
-`/topics/` still link to the map, which is then missing). `series: false` also removes the generated-series box.
+Set `features: {explore: false}` in `site.yml`. The map page, the home page's Explore section and the Explore item
+in the menu go away (even if `nav:` still lists it), and so do the **Explore** and **On the map** buttons on lists,
+series and topic pages. The topic pages stay. `series: false` also removes the generated-series box.
 
 ## What's next
 

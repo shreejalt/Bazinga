@@ -13,10 +13,14 @@ do. Read the line that starts with `hint:` or `Instead:` first.
     anything else (no Node.js).
 
 ??? question "`pip install -r requirements.txt` fails on numpy"
-    numpy is only used by one example figure (`fourier_series`, which lists `REQUIRES = ["numpy"]`). If your Python
-    is very new and numpy has no ready-made package for it yet, install a Python version numpy supports, or delete
-    `figures/fourier_series.py` and the page that uses it. The rest of Bazinga needs only the standard library plus
-    Markdown, PyYAML, Jinja2, latex2mathml and Pygments.
+    numpy is only used by one example figure (`fourier_series`, which lists `REQUIRES = ["numpy"]`).
+    `requirements.txt` picks a numpy that suits your Python (2.4.6 on Python 3.11, 2.5.4 on 3.12 and newer). If your
+    Python is so new that numpy has no ready-made package for it yet, delete the numpy lines from
+    `requirements.txt` and install again. The site still builds without numpy: a figure that needs it shows a short
+    note in its place, and the build prints a warning such as
+    `figure 'fourier_series': figure 'fourier_series' needs numpy, which is not installed here, …`. Readers' browsers
+    load numpy by themselves, so the figure still works on the live site. The rest of Bazinga needs only Markdown,
+    PyYAML, Jinja2, latex2mathml and Pygments.
 
 ??? question "`No module named bazinga` or `No module named yaml`"
     Run commands from your site folder (the one with `site.yml`), with the Python of your virtual environment:
@@ -55,7 +59,10 @@ list for one page without building.
 | `maths: …` | follow the hint; test one formula with `python -m bazinga math "<latex>"` |
 | `figure '…': there is no figure …` | the name after `::figure` must match a file `figures/<name>.py` |
 | `site.yml: theme.accent must be a hex colour such as '#3b5bdb' (got 'blue')` | write colours as hex, in quotes: `"#0F52BA"` |
-| `site.yml is not valid YAML (line N)` | look at line N: usually a missing space after `:`, or a tab |
+| `site.yml:N: not valid YAML: …` | look at line N: usually a missing space after `:`, or a tab |
+| `…:N: 2026-02-30 is not a real date` | that day does not exist; write a real date as `YYYY-MM-DD`. It can be in a page, `site.yml`, `content/references.yml` or `content/cv.yml` |
+| `date: '2026/01/05' is not a date (so this page would not be published)` | write dates as `YYYY-MM-DD` |
+| `status 'publshed' is not draft or published (so this page would not be published)` | write `status: published` (or leave the line out), or `status: draft` |
 
 ??? question "A formula looks wrong or will not build"
     Check it on its own. The command shows where the problem is and what to write instead:
@@ -109,8 +116,8 @@ list for one page without building.
     Put a square picture (about 600 × 600 pixels) in `static/images/` and point `home.photo` at it in `site.yml`:
     `photo: /static/images/me.jpg`. The build does not check that the file exists, so a wrong name shows a broken
     picture: check the spelling and the folder. `photo: ""` removes the photo, and the role lines under it go too.
-    The browser-tab icon is a separate setting, `site.avatar`, written without the leading slash:
-    `avatar: static/images/me.jpg`. See [Your portfolio](home-and-cv.md#the-top).
+    The browser-tab icon is a separate setting, `site.avatar`:
+    `avatar: static/images/me.jpg` (a leading `/` works too). See [Your portfolio](home-and-cv.md#the-top).
 
 ??? question "How do I hide the blog and keep only my portfolio?"
     Delete the example posts, keep only `projects:` under `kinds:`, trim `nav:` to Home, Projects and CV, and turn
@@ -131,8 +138,8 @@ list for one page without building.
 ??? question "How do I start from an empty site?"
     Follow [A portfolio without the blog](home-and-cv.md#a-portfolio-without-the-blog): it says which folders to
     delete (`content/reads`, `content/papers`, `content/elsewhere` and the example project) and what to change in
-    `site.yml` and `content/cv.yml`. Add the `reads` kind back when you want to write posts. Then read
-    [The tests check the example pages](deploying.md#step-2-check-everything) before you deploy.
+    `site.yml` and `content/cv.yml`. Add the `reads` kind back when you want to write posts. The tests still pass
+    after you delete the example pages, so you can deploy as usual.
 
 ??? question "How do I add analytics?"
     Copy the page frame into your own theme and add your analytics script to it:
@@ -154,10 +161,10 @@ list for one page without building.
 
 ## The Editor and serve
 
-??? question "`OSError: [Errno 48] Address already in use`"
-    Another program, or another copy of `serve`, uses the port. Stop it, or pick another port:
-    `python -m bazinga serve --port 8001`. The Editor then uses the next port; choose it yourself with
-    `--studio-port 8011`. (On Linux the number is 98 instead of 48.)
+??? question "`Port 8000 is in use`"
+    Another program, or another copy of `serve`, uses the port. Stop it, or pick another port, as the message
+    suggests: `python -m bazinga serve --port 8010`. The Editor then uses the next port; choose it yourself with
+    `--editor-port 8021`.
 
     For the Editor on its own the message is `Cannot listen on 127.0.0.1:8000: [Errno 48] Address already in use`;
     use `python -m bazinga editor --port 9000`.
@@ -208,9 +215,9 @@ The model errors start with `error: every model failed (…: ` and the reason, s
 
 ??? question "Publish stopped"
     Publish runs the checks, tests the page's figures, builds, commits and pushes, and stops at the first failure.
-    A failure before the commit puts your page back as it was. If only the push fails, the commit stays on your
-    computer; push it yourself with `git push` once the problem is fixed. Try the whole run safely first:
-    `python -m bazinga publish content/reads/my-post.md --dry-run`.
+    A failure before the commit puts your page and the wiki files back as they were and leaves nothing staged in
+    git. If only the push fails, the commit stays on your computer; push it yourself with `git push` once the problem
+    is fixed. Try the whole run safely first: `python -m bazinga publish content/reads/my-post.md --dry-run`.
 
 ??? question "`Not committed: git does not know your name and email.`"
     The commit needs a name and an email, and git has none. Run these once in your site folder, then publish again:
@@ -220,17 +227,17 @@ The model errors start with `error: every model failed (…: ` and the reason, s
     git config user.email you@example.com
     ```
 
-    Or set `publish.author: "Your Name <you@example.com>"` in `site.yml`. Your page was put back as it was.
+    Or set `publish.author: "Your Name <you@example.com>"` in `site.yml`. Your page and the wiki files were put back
+    as they were, and nothing was staged.
 
 ??? question "`No such page: content/reads/…`"
     The path is wrong. Give the path from your site folder, as `content/<kind>/<file>.md`.
 
 ??? question "The deploy fails on the host but builds on my computer"
     Vercel, Netlify and the GitHub Pages workflow run the tests before they build
-    (`python3 -m unittest discover tests`). A failing test stops
-    the deploy and the old site stays up. Run the same command on your computer to see the failure. If the failing
-    tests are about the example pages you removed, see
-    [The tests check the example pages](deploying.md#step-2-check-everything).
+    (`python3 -m unittest discover tests`). A failing test stops the deploy and the old site stays up. Run the same
+    command on your computer to see the failure. The tests do not use your pages (they build their own copy of the
+    example site), so deleting the example pages does not make them fail.
 
 ??? question "GitHub Pages shows nothing, or a scheduled post did not go live"
     See [Deploying: when something goes wrong](deploying.md#when-something-goes-wrong).

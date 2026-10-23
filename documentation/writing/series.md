@@ -136,10 +136,10 @@ Read the proposal first. Models make mistakes, and this text will appear on your
 
 ## Turning series off
 
-`series: false` under `features:` in `site.yml` leaves out the `/series/` pages. Posts that still have a `series:`
-line keep their list of parts, and the "Series:" link at the top then leads nowhere. So when you turn series off,
-also remove the `series:` lines from your posts and the Series item from `nav:`. See
-[Configuration](../reference/configuration.md).
+`series: false` under `features:` in `site.yml` leaves out the `/series/` pages and the Series item in the menu
+(even if `nav:` still lists it). Posts that still have a `series:` line keep their list of parts, and the "Series:"
+link at the top then leads nowhere. So when you turn series off, also remove the `series:` lines from your posts.
+See [Configuration](../reference/configuration.md#features).
 
 ## What's next
 

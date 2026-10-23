@@ -34,7 +34,7 @@ Who you are and where the site lives.
 | `site.description` | What search engines show for the home page. | `""` | text, up to 155 characters |
 | `site.origin` | The address the site will have. Used for canonical links (the one official address of each page that search engines record), the sitemap, the feed and share cards (the preview picture and text shown when someone posts your link). If it has a path (`https://you.github.io/notes`), every link the build writes starts with that path. | `"https://example.com"` | must start with `http://` or `https://`; may have a path; no `?` or `#`; a trailing `/` is removed |
 | `site.language` | The language of the pages (the `lang` the browser and screen readers use, and share previews). | `"en"` | a language code |
-| `site.avatar` | A picture used as the browser-tab icon and the share image. Without it the tab shows the Bazinga mark. | `""` | a path inside your site folder without a leading `/`, such as `static/avatar.png` (unlike `home.photo`, which starts with `/`) |
+| `site.avatar` | A picture used as the browser-tab icon and the share image. Without it the tab shows the Bazinga mark. | `""` | a path inside your site folder, such as `static/avatar.png` or `/static/avatar.png` |
 | `site.links` | Buttons on the home page. GitHub, X, LinkedIn and Scholar always come first, in that order; other names follow in the order you write them. Empty ones are hidden. | `github`, `x`, `linkedin`, `email`, `scholar` (all empty) | a mapping of name → address |
 
 The example site sets `name: "Your Name"`, `tagline: "Notes on the things I build and learn"`, a one-sentence
@@ -160,7 +160,6 @@ role, About, Experience, Education and Contact.
 | `home.courses` | A line folded away under Education. | none | text |
 | `home.contact` | The Contact section. | none | `lead`, `areas`, `stack`, `close`, `email_button`, `links_text`, `elsewhere` |
 | `home.ask_examples` | Up to four example questions on the Ask page. | made from your pages | a list of questions |
-| `home.show` | Checked, but not used by the default theme. | `[latest, series, map]` | a list |
 
 ## cv
 
@@ -188,11 +187,10 @@ Colours and fonts. More, with the default colours, in [Theme and customising](..
 | `theme.accent` | Links, the current menu item, read boxes on the map. | `"#3b5bdb"` | a hex colour such as `"#0F52BA"` |
 | `theme.accent_dark`, `ground`, `paper`, `tint`, `ink`, `ink_2`, `ink_3`, `rule_2`, `rule_3`, `ref`, `alert` | The theme's other colours. What each one colours, and its default, is in [Colours](../theme.md#colours). | `""` (the theme's own colours) | a hex colour or empty |
 | `theme.font_text` | The body text. | `"Source Serif 4"` | a Google Fonts family name |
-| `theme.font_code` | Code, and the default theme's labels, menu and buttons. | `"JetBrains Mono"` | a Google Fonts family name |
+| `theme.font_ui` | The typewriter face of the menu, labels, buttons and the text of reads and papers. | the same as `font_code` when you set only that; else `"JetBrains Mono"` | a Google Fonts family name |
+| `theme.font_code` | Code blocks and code in the text. | `"JetBrains Mono"` | a Google Fonts family name |
 | `theme.font_math` | Equations. | `"STIX Two Math"` | a font with a maths table |
-| `theme.font_ui` | Loaded, but not used by the default theme. | `"Inter"` | a Google Fonts family name |
-| `theme.width` | Checked, but not used by the default theme. | `720` | a number from 480 to 1200 |
-| `theme.mode` | Checked, but not used: the default theme is light only. | `"auto"` | `auto`, `light` or `dark` |
+| `theme.width` | The width of the reading column, in pixels. | none (the theme's own, about 780) | a number from 480 to 1200 |
 
 The example site sets:
 
@@ -203,21 +201,23 @@ theme:
   font_ui: "Courier Prime"
   font_code: "Courier Prime"
   font_math: "STIX Two Math"
-  width: 720
-  mode: light
 ```
+
+The site has one look, light. There is no dark mode and no setting for one; a `mode:` line left in an older
+`site.yml` is ignored.
 
 ## features
 
-Turn parts of the site off. Every one is on by default. Remove the matching item from `nav:` as well. A portfolio
-with no blog usually turns off `ask`, `explore`, `series` and `feed`.
+Turn parts of the site off. Every one is on by default. A portfolio with no blog usually turns off `ask`, `explore`,
+`series` and `feed`. A part you turn off also leaves the menu, even if `nav:` still lists it, and its buttons and
+links on other pages go too.
 
 | Key | When `false` |
 |---|---|
-| `features.ask` | no Ask page and no Ask button |
-| `features.explore` | no map page and no Explore section on the home page |
-| `features.series` | no series pages (remove the `series:` lines and the menu item too; see [Series](../writing/series.md)) |
-| `features.feed` | no `/feed.xml` |
+| `features.ask` | no Ask page, Ask button, Ask menu item or "Ask the map" lines |
+| `features.explore` | no map page, Explore section on the home page, Explore menu item, or **Explore** and **On the map** buttons |
+| `features.series` | no series pages and no Series menu item (remove the `series:` lines too; see [Series](../writing/series.md#turning-series-off)) |
+| `features.feed` | no `/feed.xml`, and no menu item that links to it |
 | `features.llms_txt` | no `/llms.txt` and `/llms-full.txt` |
 | `features.credit` | no small "Made with Bazinga" link at the foot of the side rail |
 
@@ -295,7 +295,7 @@ Settings read from the environment, not from `site.yml`. Where each one applies:
 | `ASK_PER_VISITOR` | Instead of `ask.per_visitor`. | written answers only |
 | `ASK_DAILY_CAP` | Instead of `ask.daily_cap`. | written answers only |
 | `BAZINGA_ORIGIN` | The site's address for this build, instead of `site.origin` (may have a path). `--origin` wins over it. | `python -m bazinga build` only |
-| `SITE_URL` | 1. For `build`: the same as `BAZINGA_ORIGIN`, when that is not set, so on a host set it to the address you want search engines to show (your own domain, not `vercel.app`). 2. For `api/ask.py`: where it fetches `/data/passages.json` when the deployment does not include `_site/data/` (default: the request's own address). | `python -m bazinga build`, and Vercel (`api/ask.py`) |
+| `SITE_URL` | 1. For `build`: the same as `BAZINGA_ORIGIN`, when that is not set, so on a host set it to the address you want search engines to show (your own domain, not `vercel.app`). 2. For `api/ask.py`: your site's address, which written answers use to fetch `/data/passages.json` when the deployment does not include `_site/data/`, and to keep only links into your site (default: `site.origin`; never the request's own address; with neither set, written answers are off). | `python -m bazinga build`, and Vercel (`api/ask.py`) |
 | `BAZINGA_STUDIO_DEV` | Any value makes the Editor rebuild its own app page on every load. Only for working on the Editor itself. | the Editor only |
 
 "Written answers" means `/api/ask/`: `api/ask.py` on Vercel, and the same endpoint under `python -m bazinga serve`.

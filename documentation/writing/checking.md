@@ -16,8 +16,9 @@ python -m bazinga check
 Checked 16 page(s): 0 error(s), 0 warning(s).
 ```
 
-The command checks every page in `content/` (posts, papers and projects), drafts included. It ends with exit code 0 when there are no errors and
-1 when there is at least one, so you can use it in scripts.
+The command checks every page in `content/` (posts, papers and projects), drafts included. It ends with exit code 0
+when there are no errors and 1 when there is at least one, so you can use it in scripts. A page whose header cannot
+be read at all counts as an error too.
 
 ## Step 2: read a problem and fix it
 

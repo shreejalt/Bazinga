@@ -132,7 +132,7 @@ Useful options (all of them are in the [commands reference](reference/commands.m
 | `--open` | open the browser for you |
 | `--drafts` | also show drafts and scheduled pages |
 | `--no-editor` | do not start the Editor, so there is no Write button |
-| `--studio-port 9001` | the Editor's port (the default is the serve port + 1, or a free one) |
+| `--editor-port 9001` | the Editor's port (the default is the serve port + 1, or a free one) |
 
 Press **Ctrl+C** in the terminal to stop.
 
@@ -195,8 +195,9 @@ Your host runs these before every deploy, so it is worth knowing they pass on yo
 python -m unittest discover tests
 ```
 
-**What you should see:** rows of dots, then `Ran 453 tests in …` and `OK` (under a minute). A few warning lines
-among the dots are normal; only `FAILED` means something is wrong.
+**What you should see:** rows of dots, then `Ran 497 tests in …` and `OK (skipped=3)` (under a minute). The three
+skipped tests time things and run only when you ask for them. A few warning lines among the dots are normal; only
+`FAILED` means something is wrong.
 
 ## What's next
 

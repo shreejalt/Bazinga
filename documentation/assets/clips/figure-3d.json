@@ -2,7 +2,7 @@
   "kind": "browser",
   "bar": "127.0.0.1:8000/reads/making-figures/",
   "caption": "Turn a 3-D figure by dragging it, then drag the point P: the tangent plane follows.",
-  "seconds": 16.9,
+  "seconds": 17.0,
   "width": 1280,
   "height": 800
 }

@@ -66,7 +66,7 @@ section from anywhere on the page.
 
 Put `::pagebreak` on a line of its own between two sections. The page draws a thin footer and a new page header
 (your first initial and surname, and the month and year), like a printed memo; the footer shows your surname and
-the page number:
+the number of the page it ends:
 
 ![A section, then a page footer and the header of the next page, then the next section](../assets/images/writing-pagebreak.png){ .shot }
 

@@ -26,7 +26,8 @@
 }
 .md-typeset { font-size: .86rem; line-height: 1.65; }
 .md-typeset h1, .md-typeset h2, .md-typeset h3 { font-weight: 700; letter-spacing: 0; }
-.md-typeset code { font-size: .82em; }
+/* Code in the text: never under 13 px, also in tables and notes (whose text is smaller). */
+.md-typeset code { font-size: max(.82em, 13px); }
 
 /* Clips: a looping video framed as a small window (a bar with three dots and the page address). */
 .md-typeset figure.clip { margin: 1.4em 0 1.8em; max-width: 100%; }
@@ -61,6 +62,12 @@
   padding: 2.5em 1em; text-align: center; border: 1px dashed var(--md-default-fg-color--lighter);
   color: var(--md-default-fg-color--light); border-radius: 6px;
 }
+/* The commands typed in a terminal clip, as a code block to copy. The clip's text is too small to read on a phone,
+   so the block shows on narrow screens only; wider screens read the clip itself. */
+.md-typeset .clip-steps { display: none; }
+@media screen and (max-width: 44.9375em) {
+  .md-typeset .clip-steps { display: block; margin: -1em 0 1.6em; }
+}
 /* Screenshots: same frame as the clips. */
 .md-typeset img.shot { border: 1px solid var(--md-default-fg-color--lightest); border-radius: 6px; max-width: 100%; height: auto; }
 /* Wide tables scroll inside themselves on phones instead of widening the page. */
@@ -87,6 +94,9 @@
 
 .md-typeset .home-cards > ul > li > p.card-title { margin: 0 0 .2em; }
 .md-typeset .home-cards > ul > li figure.clip { width: 100%; }
+/* Eight feature cards: two columns on wide screens (four even rows), one on phones, so no card sits alone. */
+.md-typeset .home-cards.grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media screen and (max-width: 44.9375em) { .md-typeset .home-cards.grid { grid-template-columns: minmax(0, 1fr); } }
 .md-typeset .home-start > ul > li { padding: .8rem 1rem; }
 
 /* Header: always show "Bazinga" in bold; never swap it for the page title while scrolling */

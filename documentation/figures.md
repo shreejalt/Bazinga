@@ -72,8 +72,15 @@ switches at any time.
 ## Describe it (when a model is set up)
 
 If you set up a model ([Ask and the wiki](ask-and-wiki.md#connect-a-model)), **New figure** shows a fourth choice,
-**Describe it**. Write one sentence, press **Write a draft**, then read, test and change the code before you save.
-Nothing is saved until you press **Save**. From a terminal, `python -m bazinga wiki figure "…"` does the same
+**Describe it**. Write one sentence and press **Write a draft**.
+
+The draft opens as code, with a note above it, and it does not run yet. Read it first. The note also lists anything
+in it that a figure does not need, such as an import other than `math`, `random`, `statistics`, the figure kits and
+(when the figure declares it) `numpy`; remove those lines. Then press **I have read it: run it** to test it, or save
+it, which tests it too.
+
+**What you should see:** the note `Written from your description and not run yet. Read it, then run it to test it.`,
+and, where the preview would be, `Read the draft, then run it to see it.` Nothing is saved until you press **Save**. From a terminal, `python -m bazinga wiki figure "…"` does the same
 ([An equation or a figure from words](ask-and-wiki.md#an-equation-or-a-figure-from-words)).
 
 ## Start from an example

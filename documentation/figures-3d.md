@@ -12,6 +12,12 @@ Everything else about figures (controls, presets, testing, placing them in a pos
 The example site's *Making Interactive Figures* page has a working one, `figures/tangent_plane.py`: drag P across
 the surface, drag anywhere else to look from another side, and bend the surface with the sliders.
 
+Readers can also use the keyboard. Press Tab until the picture is selected, then the left and right arrow keys turn
+it and the up and down keys tilt it; hold Shift for small steps. A handle such as P can be selected with Tab too,
+and the arrow keys move it. Screen readers announce the new angle after each turn. The hint under the figure says
+`Drag the picture to turn it, or select it and use the arrow keys.` You write nothing for this: every 3-D figure
+the reader can turn gets it.
+
 ## How it works
 
 You describe the scene in ordinary x, y, z coordinates, with z pointing up. `bazinga/scene3d.py` works out where
@@ -177,7 +183,7 @@ Same as [Test it](figures.md#test-it), plus every handle is dragged a little, wi
   too slow.
 - A surface is a grid of `n × n` pieces. More pieces look smoother and cost more; `surface_plot` takes about
   ten times longer to test than the simple examples.
-- The reader turns the view and drags handles; there is no zoom.
+- The reader turns the view and drags handles (with the mouse, a finger or the arrow keys); there is no zoom.
 
 ## What's next
 

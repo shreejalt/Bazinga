@@ -75,7 +75,7 @@ All explained in [The Editor](editor.md).
 | Written answers | optional answers written by a language model from your pages only | [Ask and the wiki](ask-and-wiki.md#written-answers-for-your-readers) |
 | Search engines and feeds | sitemap, robots, canonical links, previews, structured data, an Atom feed | [SEO and feeds](seo-and-feeds.md) |
 | `llms.txt` | your site laid out for language models, plus a Markdown copy of every page | [SEO and feeds](seo-and-feeds.md#llmstxt-and-the-markdown-copies) |
-| The look | colours, fonts, the menu, kinds of pages, your own theme files | [Theme and customising](theme.md) |
+| The look | colours, fonts, the width of the text, the menu, kinds of pages, your own theme files (light only) | [Theme and customising](theme.md) |
 
 ## The wiki and models
 

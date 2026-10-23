@@ -96,7 +96,7 @@ Under the lead you always get one button per kind of page (Reads, Papers, Projec
 
 **Your photo:** put a square picture (about 600 × 600 pixels) in `static/images/` and point `photo:` at it, for
 example `/static/images/me.jpg`. Note the leading `/`. To use the same picture as the browser-tab icon and the
-picture in link previews, also set `site: avatar: static/images/me.jpg`. Note: `avatar` has no leading `/`, unlike `photo`.
+picture in link previews, also set `site: avatar: static/images/me.jpg` (with or without the leading `/`).
 
 **What you should see:** your photo, round, with your role under it.
 
@@ -321,8 +321,7 @@ What you should see: the page opens with the title, the tagline and the lead, th
 
 ## A portfolio without the blog
 
-If you only want a portfolio, turn the blog parts off. Their pages and buttons go away. Two links stay behind for
-now: the "Ask the map" line at the end of each project page, and the link to the map on `/topics/`.
+If you only want a portfolio, turn the blog parts off. Their pages, menu items, buttons and links go away.
 
 1. **Delete the example posts:** the folders `content/reads/`, `content/papers/` and `content/elsewhere/`, and the
    example project:
@@ -373,8 +372,8 @@ now: the "Ask the map" line at the end of each project page, and the link to the
 **What you should see:** with one project, `Built 1 pages (7 HTML files) into _site/`, and a site with Home,
 Projects and CV only. The pictures and the clip on this page come from such a site.
 
-Before you deploy it, read [The tests check the example pages](deploying.md#step-2-check-everything): the tests
-that come with Bazinga expect the example pages you just deleted.
+The tests that come with Bazinga still pass: they use their own copy of the example pages, not yours. Deploy it as
+in [Deploying](deploying.md), with nothing to change in `vercel.json`, `netlify.toml` or the Pages workflow.
 
 Want a blog later? Add the `reads` kind back and write your first post: see [Writing](writing/index.md).
 

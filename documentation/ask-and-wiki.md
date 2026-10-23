@@ -45,9 +45,8 @@ home:
     - "What connects softmax and attention?"
 ```
 
-To turn Ask off, set `features: {ask: false}` in `site.yml` and delete the `- {label: Ask, href: /ask/}` line under
-`nav:`. The build then leaves out the Ask page and the Ask button. (For now, the "Ask the map" line at the end of
-each page still links to `/ask/`.)
+To turn Ask off, set `features: {ask: false}` in `site.yml`. The build then leaves out the Ask page, the Ask button,
+the Ask item in the menu (even if `nav:` still lists it) and the "Ask the map" line at the end of each page.
 
 ## What the build writes for the wiki
 
@@ -91,8 +90,7 @@ All of them start with `python -m bazinga wiki`. Run them from your site folder.
 `<page>` is a page id such as `read:softmax-and-temperature`, a file name without `.md`, or a file path. `<series>`
 is the series name as written in the pages' `series:` field, in quotes when it has spaces.
 
-`python -m bazinga wiki` on its own prints the same list (its example `post:attention` is an old id; use `read:…`,
-`paper:…` or `project:…`).
+`python -m bazinga wiki` on its own prints the same list.
 
 ### Without a model
 
@@ -124,13 +122,11 @@ Run it again and it says `unchanged`. Each line of `wiki/index.md` looks like th
 python -m bazinga wiki query "what does the temperature do to the softmax"
 ```
 
-What you should see: the short answer, then the sections it came from. (A long section is split into pieces, so
-the same section can be listed twice. The run of words "at onceHow" is a known glitch where two blocks are joined.)
+What you should see: the short answer, then the sections it came from, each listed once.
 
 ```text
-In the next part the softmax runs over words instead of classes, and its temperature is fixed at \sqrt{d}. Temperature controls two things at onceHow confident the probabilities look, measured by the entropy, and how much gradient can flow back through the softmax.
+In the next part the softmax runs over words instead of classes, and its temperature is fixed at \sqrt{d}. Temperature controls two things at once How confident the probabilities look, measured by the entropy, and how much gradient can flow back through the softmax.
 
-- Softmax, Temperature and Entropy — How the softmax learns: /reads/softmax-and-temperature/#how-the-softmax-learns
 - Softmax, Temperature and Entropy — How the softmax learns: /reads/softmax-and-temperature/#how-the-softmax-learns
 - Softmax, Temperature and Entropy — introduction: /reads/softmax-and-temperature/
 - Softmax, Temperature and Entropy — Temperature: /reads/softmax-and-temperature/#temperature
@@ -344,8 +340,8 @@ python -m bazinga figure test softmax_bars
 ```
 
 What you should see: `ok   softmax_bars  (13 ms for all states)`. Always test a drafted figure, and read it before
-you use it: in one of our runs the draft set a preset to 5 while its slider stopped at 3. The [Editor](editor.md)
-runs the test for you before it saves a draft.
+you use it: in one of our runs the draft set a preset to 5 while its slider stopped at 3. In the Editor a draft is
+not run until you have read it; see [Describe it](figures.md#describe-it-when-a-model-is-set-up).
 
 ## Written answers for your readers
 
@@ -423,8 +419,9 @@ list is in [Configuration: environment variables](reference/configuration.md#env
 
 Written answers run on **Vercel**: `api/ask.py` is the function. Set the key there (Project → Settings →
 Environment Variables, the name from `key_env`), never in a file. The function reads the passages from the
-deployment. If it cannot find them, it fetches them from `SITE_URL`, or else from the address the request came to.
-See [Deploying](deploying.md).
+deployment. If it cannot find them, it fetches them from your site's address: `SITE_URL`, or else `site.origin`, never
+the address a request says it came to. Links that do not point into your site are dropped. Without either address
+the written answer is off and says so. See [Deploying](deploying.md#written-answers-on-vercel).
 
 On **Netlify**, **GitHub Pages** and other static hosts there is no server, so the button stays hidden. The quick
 answer still works everywhere, because it runs in the reader's browser.

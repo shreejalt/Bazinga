@@ -3,7 +3,7 @@ title: "Weather App"
 date: 2026-05-01
 summary: "A small app that shows tomorrow's weather for any city, built to learn a mobile toolkit."
 topics: [tools]
-type: Side project
+type: Personal
 stack: "Python · Flask"
 github: "https://github.com/your-handle/weather-app"
 ---

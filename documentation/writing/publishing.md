@@ -116,16 +116,17 @@ What happened, step by step:
    `site.yml`. If your branch tracks none yet, it runs `git push -u origin HEAD`.
 9. **Live address.** Your host builds the site from the push. The page is live when it finishes.
 
-If a step fails before the commit, your page file is put back as it was. The line in `wiki/log.md` stays, and files
-may be left staged in git; `git status` shows them. If only the push fails, the commit stays and the message says
-so; push again when you can.
+If a step fails before the commit, nothing is left behind: your page, `wiki/index.md` and `wiki/log.md` are put back
+as they were, and any file Publish staged in git is unstaged again. If only the push fails, the commit stays and the
+message says so; push again when you can.
 
-If git does not know your name and email, it stops at the commit:
+Publish checks who commits before it stages anything. If git does not know your name and email, it stops at the
+commit:
 
 ```text
 [ failed] Commit - Not committed: git does not know your name and email.
           Set publish.author in site.yml ("Your Name <you@example.com>") or run `git config user.name "Your Name"` and `git config user.email you@example.com`.
-          Restored content/reads/my-first-post.md to how it was before publishing.
+          Restored content/reads/my-first-post.md and the wiki files to how they were before publishing.
 ```
 
 Do what it says, then publish again. The commits are always yours: Bazinga never makes up a name.

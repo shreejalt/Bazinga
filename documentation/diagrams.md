@@ -74,18 +74,16 @@ python -m bazinga figure new my_steps --from pipeline
 ```
 
 ```text
-Created drawings/my_steps.py. Use it in a post with ::figure my_steps
+Created drawings/my_steps.py. Use it in a post with ::drawing my_steps.steps
 ```
 
-!!! warning "Use `::drawing`, not `::figure`"
-    The message above says `::figure`, but a drawing is placed with `::drawing <file>.<function>`. The pipeline
-    starter's function is `steps`, so the line is:
+A drawing is placed with `::drawing <file>.<function>`, and the message gives you the line. Add a caption after `|`:
 
-    ```markdown
-    ::drawing my_steps.steps | Three steps from files to a saved model.
-    ```
+```markdown
+::drawing my_steps.steps | Three steps from files to a saved model.
+```
 
-    Each starter names its function in its first lines.
+Each starter names its function in its first lines.
 
 If the function name is wrong, the check says which functions the file has:
 

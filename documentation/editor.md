@@ -30,7 +30,7 @@ There are two ways. Both open the same Editor.
     Open <http://127.0.0.1:8000>, then press **Write** in the column on the left of the page (the rail), or
     **Edit this page** on a page.
 
-    `serve --no-editor` leaves the Editor and the Write button out; `serve --studio-port 9001` picks its port.
+    `serve --no-editor` leaves the Editor and the Write button out; `serve --editor-port 9001` picks its port.
 
 === "On its own"
 
@@ -279,6 +279,10 @@ draft. Its settings and what to do when a push fails are in [Writing, step 9: Pu
 - It needs a new key (the `token` in its address) every time it starts. The key is swapped for a cookie and leaves
   the address bar.
 - It refuses requests from other sites and other host names.
+- Previews of your pages and figures open from a second local port that can only read. A page's script or a
+  figure's code runs there, so it cannot save anything through the Editor.
+- Every change it saves needs a write key that is new each time the Editor starts and that only the Editor's own
+  page has. You never see it or type it.
 - It can only write inside `content/`, `figures/`, `drawings/`, `static/uploads/` and your references and topics
   files.
 - None of its files are copied to `_site/`, and a test checks that.

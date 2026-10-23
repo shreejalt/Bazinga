@@ -17,7 +17,7 @@ Bazinga, add a row here and a section where it belongs.
 | `python -m bazinga --root` | [reference/commands › the-whole-program](../reference/commands.md#the-whole-program) |
 | `new` with `--kind`, `--slug` | [reference/commands › new](../reference/commands.md#new) |
 | `build` with `--drafts`, `--quiet` | [reference/commands › build](../reference/commands.md#build) |
-| `serve` with `--port`, `--open`, `--drafts`, `--no-editor` (`--no-studio`), `--studio-port` | [reference/commands › serve](../reference/commands.md#serve) |
+| `serve` with `--port`, `--open`, `--drafts`, `--no-editor` (`--no-studio`), `--editor-port` (`--studio-port`) | [reference/commands › serve](../reference/commands.md#serve) |
 | `check` with files and `--errors-only` | [reference/commands › check](../reference/commands.md#check) |
 | `cite` with `--key` | [reference/commands › cite](../reference/commands.md#cite) |
 | `math` with `--display`, `--html`, and `-` for input | [reference/commands › math](../reference/commands.md#math) |
@@ -46,11 +46,11 @@ Bazinga, add a row here and a section where it belongs.
 | `home.map_text` | [home-and-cv › explore](../home-and-cv.md#explore) |
 | `home.experience`, `education`, `courses` | [home-and-cv › experience-and-education](../home-and-cv.md#experience-and-education) |
 | `home.contact` (`lead`, `areas`, `stack`, `close`, `email_button`, `links_text`, `elsewhere`) | [home-and-cv › contact](../home-and-cv.md#contact) |
-| `home.ask_examples`, `home.show` | [reference/configuration › home](../reference/configuration.md#home) |
+| `home.ask_examples` | [reference/configuration › home](../reference/configuration.md#home) |
 | `cv.pdf` | [home-and-cv › a-pdf-copy](../home-and-cv.md#a-pdf-copy) |
 | `theme.accent` and the optional colours | [theme › colours](../theme.md#colours) |
 | `theme.font_text`, `font_ui`, `font_code`, `font_math` | [theme › fonts](../theme.md#fonts) |
-| `theme.width`, `theme.mode` (checked, not used by the default theme) | [reference/configuration › theme](../reference/configuration.md#theme) |
+| `theme.width`; no dark mode | [theme › the-width-of-the-text](../theme.md#the-width-of-the-text), [theme › light-only](../theme.md#light-only) |
 | `features.ask`, `explore`, `series`, `feed`, `llms_txt`, `credit` | [reference/configuration › features](../reference/configuration.md#features) |
 | `llm.base_url`, `model` (with fallbacks), `key_env` | [reference/configuration › llm](../reference/configuration.md#llm) |
 | `ask.written_answers`, `per_visitor`, `daily_cap` | [reference/configuration › ask](../reference/configuration.md#ask) |

@@ -44,13 +44,9 @@ python -m unittest discover tests
 last line of the tests. Every host runs the same tests before it builds. A failing test stops the deploy, and the
 old site stays up.
 
-!!! warning "The tests check the example pages"
-    Some of the tests in `tests/` build the example site and look for its pages. Once you delete or rewrite the
-    example pages, those tests fail (on a portfolio-only site, 16 of 453), and because every host runs the tests
-    before it builds, the deploy stops. Until Bazinga's tests are fixed, take the tests out of the host's build: in
-    `vercel.json` change `buildCommand` to `python3 -m bazinga build`; in `netlify.toml` remove
-    `python3 -m unittest discover tests && ` from `command`; in `.github/workflows/pages.yml` delete the line
-    `- run: python -m unittest discover tests`. The build itself still checks every page and stops on an error.
+The tests do not need the example pages. They build their own copy of the example site (in
+`tests/fixtures/example-site/`), so they pass on your site too, even after you delete every example page or keep
+only a portfolio. Leave the test step in `vercel.json`, `netlify.toml` and the Pages workflow as it is.
 
 ### Step 3: put your site on GitHub
 
@@ -149,13 +145,19 @@ Written answers need a model and its key. Set them in Vercel, never in a file yo
     | `ASK_PER_VISITOR` | written answers per visitor per day (default 5, from `ask.per_visitor`) |
     | `ASK_DAILY_CAP` | written answers per day for the whole site (default 300, from `ask.daily_cap`) |
     | `ASK_WRITTEN` | `off` turns written answers off without removing the key |
-    | `SITE_URL` | your site's public address; only needed when the function cannot find the passages. The build also uses it in place of `site.origin`, so set it to the address you want search engines to show (your own domain, not `vercel.app`) |
+    | `SITE_URL` | your site's public address, such as `https://my-site.com`. Without it, `site.origin` is used. The build also uses it in place of `site.origin`, so set it to the address you want search engines to show (your own domain, not `vercel.app`) |
 
 5. Go to **Deployments**, open the latest one and choose **Redeploy**, so the new variables take effect.
 
 **What you should see:** on your site's Ask page, a **Written answer** button next to the quick answer. Opening
 `https://<your-site>/api/ask/` shows `{"on": true, ...}`. Without a key it shows `{"on": false}` and the button
 stays hidden.
+
+Written answers use only your own site. The function takes its address from `SITE_URL`, or else from `site.origin`
+([Step 1](#step-1-set-the-sites-address)), never from the visitor's request, and it drops any link that does not
+point into your site. If neither address is set (the origin is still `https://example.com`) and the function cannot
+find the passages in the deployment, written answers stay off, and `/api/ask/` says
+`The written answer is off: the site's address is not set.`
 
 Every name above is read by `bazinga/ask_server.py` (and `SITE_URL` by `api/ask.py`); the full list is in the
 [configuration reference](reference/configuration.md#environment-variables).
