@@ -27,6 +27,8 @@ pull the new version in.
 - **Python 3.11 works again.** `requirements.txt` pinned numpy 2.5.4, which needs Python 3.12, so the whole install
   failed on 3.11. It now picks numpy 2.4.6 on 3.11. A build without numpy no longer stops: a figure that needs it
   is replaced by a short note and a warning.
+- **The map works by tap on iPhone and iPad.** The first tap on a page now shows its connections and the second
+  opens it, as on Android; before, Safari opened the page at once.
 - **Safer links and data blocks.** A reference whose `url` is not an `http(s)` address or a path on your site (for
   example `javascript:`) is no longer turned into a link; the arXiv or DOI link is used instead, if there is one.
   Titles containing `</script>` or `<!--` can no longer break out of the page's structured data. The local server's

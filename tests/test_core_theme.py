@@ -152,6 +152,16 @@ class Stylesheet(unittest.TestCase):
         self.assertNotIn("var(--on-dark)", first.split(".rail{", 1)[1])   # dead dark-rail colours are gone
 
 
+class MapTouch(unittest.TestCase):
+    def test_first_tap_on_a_phone_shows_connections(self):
+        """M1: Safari's click after a tap reports pointerType "mouse", so the tap must be remembered from the
+        pointerdown/touchstart, not read from the click."""
+        js = (Path(__file__).resolve().parent.parent / "bazinga/theme/assets/js/explore.js").read_text(encoding="utf-8")
+        self.assertIn("const touch=lastPointer==='touch'||e.pointerType==='touch';", js)
+        self.assertIn("addEventListener('touchstart',()=>{lastPointer='touch';}", js)
+        self.assertNotIn("(e.pointerType||lastPointer)", js)
+
+
 class LocalWriteButton(unittest.TestCase):
     PAGE = b'<html><body class="post" data-page="read:welcome"><aside class="rail"><!-- local-tools --></aside></body></html>'
 
