@@ -174,7 +174,7 @@ UPS = {
     "y": ((0.0, 1.0, 0.0), (0.0, 0.0, -1.0), (1.0, 0.0, 0.0)),
 }
 WIDE_W, NARROW_W, GAP = 880, 480, 44                    # the renderer's picture widths (bazinga/plot.py)
-TEXT_SCALE = {0: 1.1, 1: 1.3}                          # scene text is set a little larger than its nominal size
+TEXT_SCALE = {0: 1.1, 1: 1.65}       # scene text is set larger than its nominal size (on phones: 10 -> 16.5)
 NEAR = 0.05
 
 

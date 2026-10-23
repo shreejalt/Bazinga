@@ -871,3 +871,10 @@ svg.links .bx.soft rect{fill-opacity:.85}
 .rail .made{display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-decoration:none}
 .rail .made img{border-radius:5px;flex:none}
 .rail .made:hover{color:var(--accent)}
+
+/* ---------- phones: more width for figures (their smallest text is then about 10 px on a 360-px screen) ---------- */
+@media (max-width:600px){
+  .sheet,body.mappage .sheet{margin:0 8px 8px}
+  .sheet{padding:22px 14px 44px}
+  .memo .body > .fig,.memo .body > .drawing,.memo .body > figure.drawing{margin-left:0}
+}

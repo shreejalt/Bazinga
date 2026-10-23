@@ -27,6 +27,9 @@ pull the new version in.
 - **Python 3.11 works again.** `requirements.txt` pinned numpy 2.5.4, which needs Python 3.12, so the whole install
   failed on 3.11. It now picks numpy 2.4.6 on 3.11. A build without numpy no longer stops: a figure that needs it
   is replaced by a short note and a warning.
+- **Figure text is readable on phones.** The smallest labels were 6-8 px on a 360-px phone; the phone layout now
+  sets them larger (about 11 px there), insets of 3-D figures included, and pages give figures a little more width
+  on phones.
 - **The map works by tap on iPhone and iPad.** The first tap on a page now shows its connections and the second
   opens it, as on Android; before, Safari opened the page at once.
 - **Safer links and data blocks.** A reference whose `url` is not an `http(s)` address or a path on your site (for

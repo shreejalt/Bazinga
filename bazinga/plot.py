@@ -28,11 +28,13 @@ STYLES = ("main", "second", "third", "fourth", "muted", "faint", "highlight", "g
           "dashed", "dotted", "area", "points", "thick", "thin", "label", "ink")
 
 # Layout constants. Wide figures are drawn 880 units wide (shown at about 720-1000 px);
-# narrow ones 480 wide (shown at about 330-480 px on phones, so their text is set larger).
+# narrow ones 480 wide (shown at about 290-480 px on phones, so their text is set larger: the smallest, 16.5 units,
+# is about 10 px on a 360-px phone).
+NARROW_MIN_FS = 16.5
 LAYOUTS = {
     0: {"W": 880, "fs": 13.5, "fs_small": 12.5, "fs_title": 14.5, "gap": 44, "pad": 6,
         "h1": 380, "h2": 330, "h3": 300},
-    1: {"W": 480, "fs": 15.5, "fs_small": 14, "fs_title": 16.5, "gap": 34, "pad": 4,
+    1: {"W": 480, "fs": 18, "fs_small": NARROW_MIN_FS, "fs_title": 19, "gap": 34, "pad": 4,
         "h1": 330, "h2": 300, "h3": 280},
 }
 
@@ -1761,16 +1763,19 @@ def _panel_scene3d(ctx, p, X, Y, W, H, where):
         out.append('<g class="s3-inset" data-inset="%s" transform="translate(%s %s) scale(%s)">' % (
             _esc(n.get("name", "")), _f(ix), _f(iy), ("%.3f" % s).rstrip("0").rstrip(".")))
         out.append('<rect class="s3-inset-frame" x="-1" y="-1" width="%s" height="%s"/>' % (_f(iw + 2), _f(ih + 2)))
-        out.append(_s3_items(n.get("items"), (0.0, 0.0, iw, ih), 1.0, w_ + ".items"))
+        # on phones an inset's text is set so that, after the inset's own scale, it is as large as the rest
+        its = max(1.0, NARROW_MIN_FS / (10.5 * s * k)) if p.get("narrow") else 1.0
+        out.append(_s3_items(n.get("items"), (0.0, 0.0, iw, ih), its, w_ + ".items"))
         if n.get("ticks") and n.get("frame"):
             fw, fh = n["frame"]
             for x_, lab, a in ((0, 0, "start"), (iw / 2, fw / 2, "middle"), (iw, fw, "end")):
-                out.append(_text(x_, ih + 13, fmt_num(lab), "s3-text s3-tick", 10.5, a))
+                out.append(_text(x_, ih + 3 + 10.5 * its, fmt_num(lab), "s3-text s3-tick", 10.5 * its, a))
             for y_, lab in ((ih / 2 + 3, fh / 2), (ih + 3, fh)):
-                out.append(_text(-4, y_, fmt_num(lab), "s3-text s3-tick", 10.5, "end"))
+                out.append(_text(-4, y_, fmt_num(lab), "s3-text s3-tick", 10.5 * its, "end"))
         out.append("</g>")
         if n.get("title"):
-            out.append(_text(ix, iy - 8, str(n["title"]), "s3-text s3-inset-title", 11.5 * (ts if s > 1 else 1.0)))
+            tfs = max(11.5 * (ts if s > 1 else 1.0), NARROW_MIN_FS / k if p.get("narrow") else 0)
+            out.append(_text(ix, iy - 8, str(n["title"]), "s3-text s3-inset-title", tfs))
     for j, h in enumerate(_list(p.get("handles"), where + ".handles")):
         w_ = "%s.handles[%d]" % (where, j)
         P = _s3_pt(h.get("P") or h.get("p"), w_)
