@@ -8,23 +8,21 @@ if you want one. You write YAML and Markdown files; one command turns them into 
 can serve. There is no Node and no bundler, and the built pages work
 without JavaScript: scripts only add the moving parts.
 
-::clip site-tour | The example site: the home page, a list of posts, and a post with its contents.
-
 ## Your portfolio
 
-| Part | What it gives you | Where it is explained |
-|---|---|---|
-| Name, links and email | the name on every page, your profile links and the Contact buttons | [Your portfolio](home-and-cv.md#your-name-and-links) |
-| Photo and tab icon | a round photo on the home page; `avatar` for the browser tab and share picture | [Your portfolio](home-and-cv.md#the-top) |
-| Home page sections | headline, About, Experience (each role opens), Education, Contact | [Your portfolio](home-and-cv.md#the-home-page-section-by-section) |
-| Contact | what you work on, your tools, an email button and where else to find you | [Your portfolio](home-and-cv.md#contact) |
-| CV page | your full record at `/cv/`, from `content/cv.yml`, checked when the site is built | [Your portfolio](home-and-cv.md#the-cv-page) |
-| CV as a PDF | a **Download CV** button that opens your PDF | [Your portfolio](home-and-cv.md#a-pdf-copy) |
-| Projects | one page per project, with its stack, a GitHub link and usage | [Your portfolio](home-and-cv.md#your-projects) |
-| A portfolio without the blog | only Home, Projects and CV | [Your portfolio](home-and-cv.md#a-portfolio-without-the-blog) |
-| Your own address | a custom domain on Vercel, Netlify or GitHub Pages | [Deploying](deploying.md) |
+All explained in [Your portfolio: home page, CV and projects](home-and-cv.md), except your own address.
 
-::clip portfolio-tour | A portfolio with no blog: the home page, a role in Experience, Contact, the CV and a project.
+| Part | What it gives you |
+|---|---|
+| [Name, links and email](home-and-cv.md#your-name-and-links) | the name on every page, your profile links and the Contact buttons |
+| [Photo and tab icon](home-and-cv.md#the-top) | a round photo on the home page; `avatar` for the browser tab and share picture |
+| [Home page sections](home-and-cv.md#the-home-page-section-by-section) | headline, About, Experience (each role opens), Education, Contact |
+| [Contact](home-and-cv.md#contact) | what you work on, your tools, an email button and where else to find you |
+| [CV page](home-and-cv.md#the-cv-page) | your full record at `/cv/`, from `content/cv.yml`, checked when the site is built |
+| [CV as a PDF](home-and-cv.md#a-pdf-copy) | a **Download CV** button that opens your PDF |
+| [Projects](home-and-cv.md#your-projects) | one page per project, with its stack, a GitHub link and usage |
+| [A portfolio without the blog](home-and-cv.md#a-portfolio-without-the-blog) | only Home, Projects and CV |
+| [Your own address](deploying.md) | a custom domain on Vercel, Netlify or GitHub Pages |
 
 ## Writing
 
@@ -32,7 +30,7 @@ without JavaScript: scripts only add the moving parts.
 |---|---|---|
 | Pages | one Markdown file per page, in `content/reads/`, `papers/`, `projects/` and `elsewhere/` | [Your first post](writing/first-post.md) |
 | Header fields | title, date, status, summary, topics, series, builds-on, citations, description and more | [Your first post](writing/first-post.md#the-header-fields) |
-| Project pages | tagline, usage, limitations, a GitHub link and other project fields | [Your first post](writing/first-post.md#project-pages) |
+| Project pages | tagline, usage, limitations, a GitHub link and other project fields | [Your portfolio](home-and-cv.md#project-pages) |
 | Articles elsewhere | entries that open where they were published, with author and publication | [Your first post](writing/first-post.md#other-kinds-of-page) |
 | Sections and contents | numbered headings, a table of contents with page numbers, `::pagebreak` | [Sections and contents](writing/sections.md) |
 | Equations | LaTeX turned into MathML when the site is built; numbering and `[eq:name]` references | [Equations](writing/equations.md) |
@@ -57,13 +55,15 @@ without JavaScript: scripts only add the moving parts.
 
 ## The Editor
 
-| Part | What it gives you | Where it is explained |
-|---|---|---|
-| The writing window | a library of your pages, a writing pane, and a live preview of the real page | [The Editor](editor.md) |
-| Helpers | equation, figure, diagram, drawing, citation, link and image helpers | [The Editor](editor.md#the-helpers) |
-| Details, checks, versions | the header as a form, live checks, earlier versions to restore | [The Editor](editor.md#details) |
-| Publish | publish, schedule, unpublish, and a dry run | [The Editor](editor.md#publish) |
-| Safety | it runs on your computer only, behind a key made each time it starts | [The Editor](editor.md#why-it-is-safe) |
+All explained in [The Editor](editor.md).
+
+| Part | What it gives you |
+|---|---|
+| [The writing window](editor.md) | a library of your pages, a writing pane, and a live preview of the real page |
+| [Helpers](editor.md#the-helpers) | equation, figure, diagram, drawing, citation, link and image helpers |
+| [Details, checks, versions](editor.md#details) | the header as a form, live checks, earlier versions to restore |
+| [Publish](editor.md#publish) | publish, schedule, unpublish, and a dry run |
+| [Safety](editor.md#why-it-is-safe) | it runs on your computer only, behind a key made each time it starts |
 
 ## The site your readers see
 
@@ -79,13 +79,15 @@ without JavaScript: scripts only add the moving parts.
 
 ## The wiki and models
 
-| Part | What it gives you | Where it is explained |
-|---|---|---|
-| Wiki files | `wiki/index.md` (the catalog) and `wiki/log.md` (the log), written for you | [Ask and the wiki](ask-and-wiki.md#what-the-build-writes-for-the-wiki) |
-| Wiki commands | `index`, `query`, `lint` and `log` without a model; `ingest`, `highlights`, `describe`, `equation`, `figure` with one | [Ask and the wiki](ask-and-wiki.md#the-wiki-commands) |
-| Any model | OpenRouter, OpenAI, or a model on your own computer | [Ask and the wiki](ask-and-wiki.md#connect-a-model) |
-| Proposals | a model only suggests; you accept or reject in `proposals/` | [Ask and the wiki](ask-and-wiki.md#suggestions-the-model-proposes-you-decide) |
-| AI coding agents | `AGENTS.md` tells an agent how the site works | [Ask and the wiki](ask-and-wiki.md#working-with-ai-coding-agents) |
+All explained in [Ask and the wiki](ask-and-wiki.md).
+
+| Part | What it gives you |
+|---|---|
+| [Wiki files](ask-and-wiki.md#what-the-build-writes-for-the-wiki) | `wiki/index.md` (the catalog) and `wiki/log.md` (the log), written for you |
+| [Wiki commands](ask-and-wiki.md#the-wiki-commands) | `index`, `query`, `lint` and `log` without a model; `ingest`, `highlights`, `describe`, `equation`, `figure` with one |
+| [Any model](ask-and-wiki.md#connect-a-model) | OpenRouter, OpenAI, or a model on your own computer |
+| [Proposals](ask-and-wiki.md#suggestions-the-model-proposes-you-decide) | a model only suggests; you accept or reject in `proposals/` |
+| [AI coding agents](ask-and-wiki.md#working-with-ai-coding-agents) | `AGENTS.md` tells an agent how the site works |
 
 ## Running it
 
@@ -114,5 +116,5 @@ Every folder and file, and whether you edit it, is in [Getting started: a tour o
 
 ## What's next
 
-Next: how to bring a newer Bazinga into your site later, in [Updating Bazinga](updating.md). Ready to write
-instead? Go to [Writing](writing/index.md).
+Next, make it yours: [Your portfolio: home page, CV and projects](home-and-cv.md). Ready to write instead? Go to
+[Writing](writing/index.md). Later, [Updating Bazinga](updating.md) shows how to bring a newer Bazinga into your site.

@@ -1,10 +1,11 @@
 # The demo GIF
 
-The README has a short terminal demo: the example site is built, a figure is added and tested, and the site is
-served. On this page you'll see which tool makes it, how to make it again with one command, and what to do when the
-tool will not start.
+Bazinga has a short terminal demo for places that do not play video (a README, an issue, a chat): the example site
+is built, a figure is added and tested, and the site is served. It is kept as a GIF and as a clip; the README does
+not show it yet. On this page you'll see which tool makes it, how to make it again with one command, and what to do
+when the tool will not start.
 
-::clip demo | The demo, as it appears in the README.
+::clip demo | The terminal demo: build the example site, add a figure, test it, and serve it.
 
 ## The tool
 
@@ -32,17 +33,18 @@ From the repository root, with the template's Python environment:
 **What you should see:** VHS runs the tape, then a line such as
 
 ```text
-demo                    17.9 s   mp4    80 KB   webm    95 KB   poster   40 KB, gif 410 KB
+demo                    16.0 s   mp4   102 KB   webm   145 KB   poster   58 KB, gif 76 KB
 ```
 
 It writes:
 
 | File | Used by |
 |---|---|
-| `documentation/assets/gifs/demo.gif` | the README (GitHub shows GIFs everywhere; videos do not autoplay there) |
+| `documentation/assets/gifs/demo.gif` | places that do not play video (GitHub shows GIFs everywhere; videos do not autoplay there) |
 | `documentation/assets/clips/demo.{mp4,webm,jpg}` | this page |
 
-Keep the GIF under about 800 KB and 20 seconds. If it grows, shorten the `Sleep` lines in the tape.
+The GIF is 1200 px wide and at most 20 seconds long (`gif_width` and `gif_seconds` at the top of the tape). Keep it
+under about 800 KB. If it grows, shorten the `Sleep` lines in the tape.
 
 ## If VHS will not start
 

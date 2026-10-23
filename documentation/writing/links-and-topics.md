@@ -8,8 +8,9 @@ the page. See [The map and topics](../map-and-topics.md) for what readers see.
 
 ## Page ids
 
-Bazinga names every page by an id: the kind, a colon, and the file name without `.md`. The kind is the folder's
-singular name in lowercase:
+Bazinga names every page by an id: the kind, a colon, and the file name without `.md`. The kind is the kind's
+`singular:` name from `site.yml`, in lowercase: `reads` is *Read*, so `read:`; `elsewhere` is *Article*, so
+`article:`.
 
 | File | Id |
 |---|---|
@@ -60,8 +61,6 @@ builds_on: [read:welcome, read:softmax-and-temperature]
   **Related**, **Go deeper** and **Go broader** lists.
 - On the [map](../map-and-topics.md), your post sits below the pages it builds on.
 
-::clip explore-map | On the map, every page hangs below what it builds on; pointing at one shows what is nearest.
-
 The checks stop the obvious mistakes: an id that does not exist (with "did you mean"), a page that builds on itself,
 and a published page that builds on a draft.
 
@@ -107,6 +106,9 @@ published.
 Add a line to a group in `content/topics.yml`, with a `slug` (lowercase words and dashes, used in addresses), a
 `label` (what readers see) and a one-line `blurb` (the topic page's introduction). Groups only arrange the `/topics/`
 page; add, rename or remove them freely. If you remove a slug that pages still use, the build tells you which pages.
+
+**What you should see:** after the next build the topic appears on `/topics/` under its group; `/topics/<slug>/`
+exists once a published page uses it.
 
 ## What's next
 

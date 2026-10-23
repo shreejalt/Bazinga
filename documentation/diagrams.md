@@ -1,8 +1,8 @@
 # Diagrams
 
 A diagram in Bazinga is drawn when the site is built, in the page's own colours, with no script in the reader's
-browser. Most diagrams are written as a few lines of text inside the post. A few are better drawn by a small Python
-function. On this page you will do both.
+browser. Most diagrams are written as a few lines of text inside the page (a post or a project page). A few are
+better drawn by a small Python function. On this page you will do both.
 
 ## Diagrams written as text
 
@@ -30,10 +30,14 @@ The syntax at a glance:
 | `A -> B: "label"`, `A ->|label| B` | a label on the arrow (the second form works in the middle of a chain) |
 | `(Start)`, `{Valid?}`, `((Join))`, `[/Data/]` | rounded ends, a diamond, a circle, a cylinder |
 | `[accent]`, `[emphasis]`, `[muted]`, `[data]` | the box the text is about, the result, a side detail, data |
+| `Name [diamond]`, `Name [style=accent, shape=round]` | a shape word, or several settings at once (`style`, `shape`, `label`, `sub`, `note`) |
 | `Name: "second line"`, `Name [label="Other text"]` | a quieter second line, or other text than the name |
+| `"Step 1: load" -> B` | quotes around a name that holds `:` `;` `#` `&` `[` or an arrow |
+| `A; B -> C`, `# a comment` | several statements on one line; a comment |
 | `note Name: "…"`, `note: "…"`, `caption: "…"` | a note by a box, a note under the diagram, a caption |
 | `group Name { A -> B }` | a frame around some boxes |
 | `direction: down` | top to bottom instead of left to right |
+| `title: "…"` | the name a screen reader announces |
 | `kind: timeline`, `kind: tree` | a timeline (one `date: event` per line) or a tree (from indentation) |
 
 A mistake never draws a wrong picture. The checks name the line and what to write instead, for example
@@ -53,7 +57,7 @@ Text is the right tool for almost every diagram. A function is better when the b
 when a layout needs exact positions.
 
 A drawing is a function in a file under `drawings/`. It takes `narrow` (1 for the phone version) and returns SVG
-text. You place it in a post with the module name, the function name and an optional caption:
+text (the picture as a string, `<svg …>…</svg>`). You place it in a post with the module name, the function name and an optional caption:
 
 ```markdown
 ::drawing pipeline.overview | From a Markdown file to the live site.
@@ -114,11 +118,15 @@ def steps(narrow=0):
     return d.svg()
 ```
 
+Save it as `drawings/my_steps.py` and write `::drawing my_steps.steps | A caption` in a page.
+
+**What you should see:** four boxes left to right (top to bottom on a phone) and the note under them.
+
 | Function | Takes |
 |---|---|
-| `draw.flow(nodes, edges, direction="right", groups=None, notes=None, title=None, narrow=0)` | nodes as names, `(name, second line)` pairs, or dicts with `label`, `sub`, `style` (accent, muted, data, emphasis), `shape` (box, round, diamond, circle, cylinder) and `note`; edges as `(a, b)` or `(a, b, label)`, or dicts with `line` ("dashed", "thick") and `heads` ("end", "both", "none"); groups as `{title: [names]}` |
-| `draw.timeline(items, direction="right", title=None, narrow=0)` | items as `(date, title[, detail[, style]])` |
-| `draw.tree(root, direction="down", title=None, narrow=0)` | a node is a string, a `(label, [children])` pair, or a dict |
+| `draw.flow(…)` | `nodes, edges, direction="right", groups=None, notes=None, title=None, narrow=0`: nodes as names, `(name, second line)` pairs, or dicts with `label`, `sub`, `style` (accent, muted, data, emphasis), `shape` (box, round, diamond, circle, cylinder) and `note`; edges as `(a, b)` or `(a, b, label)`, or dicts with `line` ("dashed", "thick") and `heads` ("end", "both", "none"); groups as `{title: [names]}` |
+| `draw.timeline(…)` | `items, direction="right", title=None, narrow=0`: items as `(date, title[, detail[, style]])` |
+| `draw.tree(…)` | `root, direction="down", title=None, narrow=0`: a node is a string, a `(label, [children])` pair, or a dict |
 
 Each returns the diagram, so you can add a `d.note(...)` before `d.svg()`. Pass `narrow` on: that is how the phone
 version is drawn. `title` is what a screen reader announces.
@@ -126,7 +134,8 @@ version is drawn. `title` is what a screen reader announces.
 ### Place every box yourself: `Diagram` {#diagram-class}
 
 When you need exact positions, `bazinga.draw.Diagram` lets you place the boxes yourself. Coordinates are drawing
-units; the drawing scales to the column. This one was checked in a post with `::drawing by_hand.overview`:
+units; the drawing scales to the column. Saved as `drawings/by_hand.py`, this one is placed with
+`::drawing by_hand.overview`:
 
 ```python
 from bazinga.draw import Diagram

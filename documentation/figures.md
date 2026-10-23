@@ -1,10 +1,9 @@
 # Interactive figures
 
 A figure is a picture with controls under it. The reader moves a slider and the picture follows. On this page you
-will make one three ways: with a form (no code), from a ready-made example, and by hand. Then you will test it and
-keep it fast. Placing it in a post is [Writing, step 5](writing/figures-in-posts.md).
-
-::clip figure-slider | A reader drags a slider and presses a preset; the plot redraws each time.
+will make one three ways: with a form (no code), from a ready-made example, and by hand; a fourth way, from a
+description, appears when a model is set up. Then you will test it and keep it fast. Placing it in a post or a
+project page is [Writing, step 5](writing/figures-in-posts.md), which also shows a reader moving one.
 
 ## How a figure works
 
@@ -21,16 +20,20 @@ The same file runs in two places:
 
 Colours come from the theme, not the figure, so figures always match the site.
 
+Figures work the same in posts, paper pages and project pages, so a project on your portfolio can show its own
+results live.
+
 ## Make one with the form (no code)
 
-1. In the Editor, press **Figure…** in the toolbar (or type `/` on an empty line and choose **Figure…**).
+1. In the Editor, press the **Figure** button in the toolbar (hover the icons to see their names), or type `/` on an
+   empty line and choose **Figure…**.
 2. Press **New figure**, then **Fill in a form**.
 3. Pick what to draw:
 
     | Kind | What it draws | You write |
     |---|---|---|
     | Function plot | one or more curves y = f(x) | `y =` an expression in `x`, such as `a*sin(f*x)*exp(-d*x)` |
-    | Shapes and curves | points, lines, arrows, circles and parametric curves | an expression for each number |
+    | Shapes and curves | points, lines, arrows, circles and curves drawn by x(t) and y(t) | an expression for each number |
     | Bars | bars whose heights move with the sliders | a height for each bar |
     | Heatmap | a grid of coloured cells | the value of the cell in row `i`, column `j` |
     | Distribution | normal, uniform, exponential, binomial or Poisson | nothing: its parameters become sliders |
@@ -65,6 +68,13 @@ field red and says what is wrong, for example `unknown name 'freqq' — did you 
 The form writes an ordinary, commented Python file. Its last line keeps the form's settings, so the Editor reopens
 the figure in the form. If you change the code by hand, the Editor opens it as code from then on. **Open as code**
 switches at any time.
+
+## Describe it (when a model is set up)
+
+If you set up a model ([Ask and the wiki](ask-and-wiki.md#connect-a-model)), **New figure** shows a fourth choice,
+**Describe it**. Write one sentence, press **Write a draft**, then read, test and change the code before you save.
+Nothing is saved until you press **Save**. From a terminal, `python -m bazinga wiki figure "…"` does the same
+([An equation or a figure from words](ask-and-wiki.md#an-equation-or-a-figure-from-words)).
 
 ## Start from an example
 
@@ -120,7 +130,8 @@ ok   my_plot  (79 ms for all states)
 ```
 
 `--from builder:<kind>` writes the form's example of a kind instead, which the Editor then opens in the form. The
-kinds are `function`, `shapes`, `bars`, `heatmap`, `distribution`, `data` and `scene3d`:
+kinds are `function`, `shapes`, `bars`, `heatmap`, `distribution`, `data` and `scene3d`. `--from builder` alone
+writes the Function plot example:
 
 ```bash
 python -m bazinga figure new my_bars --from builder:bars
@@ -160,13 +171,19 @@ def compute(f=2, _narrow=0):
     }
 ```
 
-Save it as `figures/wave.py` and put `::figure wave` in a post.
+Save it as `figures/wave.py` and put `::figure wave` in a post or a project page. Test it:
+
+```bash
+python -m bazinga figure test wave
+```
+
+**What you should see:** `ok   wave` and the time it took.
 
 | Name | What it is |
 |---|---|
 | `TITLE`, `CAPTION` | shown above the figure; say in the caption what the controls do |
 | `REQUIRES` | extra packages, such as `["numpy"]`. Leave it empty when you can: a package adds a few seconds before the first redraw |
-| `CONTROLS` | shown in order. A `slider` has `min`, `max`, `step`, `value` and optionally `"play": True`. A `toggle` has two `options` and gives 0 or 1. `steps` has several `options` and gives the position of the chosen one. Any control may also have a `group`: controls with the same group fold together under that heading |
+| `CONTROLS` | shown in order. A `slider` has `min`, `max`, `step`, `value` and optionally `"play": True`, which adds a Play button that moves the slider by itself. A `toggle` has two `options` and gives 0 or 1. `steps` has several `options` and gives the position of the chosen one. Any control may also have a `group`: controls with the same group fold together under that heading |
 | `PRESETS` | buttons that set some controls. **Reset** is added for you |
 | `compute()` | one argument per control, with the same names, plus `_narrow`, which is 1 when drawing for a phone. Same values in, same picture out |
 
@@ -189,8 +206,7 @@ The full reference for every field is the example site's guide *Making Interacti
 
 ### Every other field {#spec-fields}
 
-These all go in the dictionary `compute()` returns. Each one was drawn in a test figure that passed
-`figure test`.
+These all go in the dictionary `compute()` returns.
 
 **On the whole figure**
 
@@ -239,10 +255,6 @@ These all go in the dictionary `compute()` returns. Each one was drawn in a test
 
 The kind `scene3d` is the 3-D panel; it is made with the 3-D kit, see [3-D figures](figures-3d.md).
 
-## Place it in a post, and open it at a preset
-
-Placing a figure (`::figure my_plot`) and opening it at a preset are in [Writing, step 5](writing/figures-in-posts.md).
-
 ## Test it
 
 The Editor tests a figure each time you save it. From a terminal:
@@ -252,8 +264,8 @@ python -m bazinga figure test my_plot   # one figure
 python -m bazinga figure test           # all of them
 ```
 
-The test draws the figure at its starting values (wide and phone-sized), at every preset, and at 20 random settings
-including the ends of every slider. Each drawing must finish in under 30 milliseconds, contain no `nan` or infinity,
+The test draws the figure at its starting values (wide and phone-sized), at every preset, and at 20 random settings,
+some of them at the ends of the sliders. Each drawing must finish in under 30 milliseconds, contain no `nan` or infinity,
 and be a well-formed picture. 3-D figures also have every handle dragged a little.
 
 A failure names the setting and the line. Two real examples:
@@ -277,15 +289,8 @@ python -m bazinga figure preview my_plot   # a page with the figure at every pre
 python -m bazinga figure list              # every figure, how it was made, and where it is used
 ```
 
-`figure list` on the example site:
-
-```text
-attention_weights    Attention weights for five tokens     code             3 controls, 2 presets; papers/attention-is-all-you-need.md, reads/attention-from-scratch.md
-coin_flips           Heads in n tosses                     form, then code  3 controls, 0 presets; reads/making-figures.md
-compound_interest    Interest on interest                  form, then code  1 control, 2 presets; reads/making-figures.md
-...
-9 figures. Test them with: python -m bazinga figure test
-```
+What `figure list` prints on the example site is shown in
+[Writing, step 5](writing/figures-in-posts.md#step-1-place-an-interactive-figure).
 
 ## Keep it fast
 
@@ -293,7 +298,7 @@ The 30 milliseconds are for the reader: a slider that answers within a frame or 
 
 - A curve needs about 200 points. A thousand look the same and cost five times as much.
 - Work out what does not depend on the controls once, outside `compute()`.
-- Prefer the standard library to packages, and a few hundred shapes to thousands.
+- Prefer what comes with Python (the standard library) to packages, and a few hundred shapes to thousands.
 
 ## Common mistakes
 
@@ -305,11 +310,11 @@ The 30 milliseconds are for the reader: a slider that answers within a frame or 
 | Colours in the code | use a style name such as `"second"` |
 | The arguments of `compute()` do not match `CONTROLS` | give every control an argument with exactly its name |
 | Reading files or the network in `compute()` | the code runs in the reader's browser, where neither exists; put the data in the file |
-| A crowded phone layout | use `_narrow` to drop a panel or shorten labels; check with **Phone width** or `figure preview` |
+| A crowded phone layout | use `_narrow` to drop a panel or shorten labels; check with the phone button above the preview (**Phone width**) or `figure preview` |
 | In the form: `sin x` | write `sin(x)`; a power is `^` |
 
 ## What's next
 
 - Turn figures in 3-D: [3-D figures](figures-3d.md).
-- Diagrams that do not move: [Diagrams from code](diagrams.md).
+- Diagrams that do not move: [Diagrams](diagrams.md).
 - Put them in a post: [Writing, step 5](writing/figures-in-posts.md).

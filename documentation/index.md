@@ -34,7 +34,10 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
 Open <http://127.0.0.1:8000>. You see the example site, and it rebuilds every time you save a file.
-[Getting started](getting-started.md) walks through it slowly.
+On Windows, use `.venv\Scripts\pip` and `.venv\Scripts\python`.
+
+This copy is for trying it out. To make your own site that you can publish, start from your own copy on GitHub:
+[Getting started](getting-started.md) walks through it step by step.
 
 ## What you get
 
@@ -44,6 +47,11 @@ Open <http://127.0.0.1:8000>. You see the example site, and it rebuilds every ti
 <p class="card-title"><strong>Your portfolio and CV</strong></p>
 ::clip portfolio-tour
 <p>Your photo, who you are, experience, education, projects, a CV page and a contact section, all from one settings file. <a href="home-and-cv/">Your portfolio →</a></p>
+</li>
+<li>
+<p class="card-title"><strong>A CV page from one file</strong></p>
+<img class="shot" src="assets/portfolio-cv.jpg" alt="A CV page: roles, education and skills laid out from one file." loading="lazy">
+<p>Your roles, education, skills and open-source work in <code>content/cv.yml</code>, checked when the site is built, with an optional PDF to download. <a href="home-and-cv/#the-cv-page">The CV page →</a></p>
 </li>
 <li>
 <p class="card-title"><strong>Figures your readers can move</strong></p>

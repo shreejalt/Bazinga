@@ -4,7 +4,7 @@ A figure can also be a small 3-D scene. The reader turns it by dragging the pict
 their handles. On this page you will make one with the form, start one from the four examples, and write one by
 hand with `bazinga.scene3d`.
 
-Everything else about figures (controls, presets, testing, placing them in a post) works as in
+Everything else about figures (controls, presets, testing, placing them in a post or a project page) works as in
 [Interactive figures](figures.md).
 
 ::clip figure-3d | Turning a surface by dragging it, then dragging the point P across it.
@@ -16,17 +16,17 @@ the surface, drag anywhere else to look from another side, and bend the surface 
 
 You describe the scene in ordinary x, y, z coordinates, with z pointing up. `bazinga/scene3d.py` works out where
 everything lands on the screen, draws what is nearer on top of what is behind, and keeps the labels clear of each
-other. It uses the standard library only, so the same file runs when the site is built and in the reader's
+other. It uses only what comes with Python (the standard library), so the same file runs when the site is built and in the reader's
 browser, like every other figure.
 
 ## Make one with the form
 
-1. In the Editor, press **Figure…**, then **New figure**, then **Fill in a form**.
+1. In the Editor, press the **Figure** button in the toolbar, then **New figure**, then **Fill in a form**.
 2. Choose **3-D scene**.
 3. Fill in what you need:
     - **Surface:** optional, `z =` an expression in `x` and `y`, coloured by height, and **Pieces along each side**
       (4 to 24).
-    - **Points:** x, y and z (up) as expressions, a label and a colour. **Repeat n times** draws several, with
+    - **Points:** x, y and z (up) as expressions, a label and a colour. **Repeat** (n times) draws several, with
       `k = 0, 1, 2 …` inside the expressions.
     - **Segments and arrows:** from a point to a point, with **Arrow at the end**, a label, a colour and a line.
     - **Boxes:** a box between two opposite corners, with see-through sides.
@@ -66,6 +66,10 @@ ok   my_vectors  (54 ms for all states)
 All four pass `figure test` as they come. Each file explains itself in comments, and all four work on the example
 site's templates page (`/reads/templates/`).
 
+The 30 ms limit is timed on your computer. If it is busy, a surface can miss it: the message says
+`took 34.0 ms (budget 30 ms)`. The file is still created. Run `python -m bazinga figure test my_scene` again when the
+computer is quieter, or lower **Pieces along each side** in the form (or `n=` in `surface()`).
+
 ## Write one by hand
 
 A complete 3-D figure:
@@ -86,6 +90,14 @@ def compute(view=(35, 25), _narrow=0):
     return sc.render(view=view, narrow=_narrow, dist=5)
 ```
 
+Save it as `figures/saddle.py`, test it, and put `::figure saddle` in a page:
+
+```bash
+python -m bazinga figure test saddle
+```
+
+**What you should see:** `ok   saddle` and its time; on the page, a saddle you turn by dragging.
+
 `Scene()` has z up. `Scene(up="-y")` uses the camera convention (y down, z forward), and `Scene(up="y")` has y up.
 
 ### What a scene can hold
@@ -94,7 +106,8 @@ def compute(view=(35, 25), _narrow=0):
 |---|---|
 | `point(p, label)`, `line(a, b)`, `vector(origin, v, label)` | points, segments and arrows |
 | `path(points)`, `poly(corners)` | a path, and a flat polygon |
-| `box(lo, hi, faces=True)`, `plane(point, normal)` | boxes and pieces of planes |
+| `box(lo, hi)`, `box(lo, hi, faces=True)` | a wire box, or one with see-through sides |
+| `plane(point, normal)` | a piece of a plane |
 | `surface(f, x=(lo, hi), y=(lo, hi), n=18)` | the surface z = f(x, y), coloured by height |
 | `curve(f, t0, t1)` | a curve through space, f(t) = (x, y, z) |
 | `axes3d(lo, hi, ticks=4)`, `axes(length)`, `grid(size, n)` | axes with numbers, plain axes, and a floor |
@@ -135,8 +148,7 @@ example.
 
 ### More of the kit {#more-of-the-kit}
 
-The rest of `bazinga.scene3d`, for bigger figures. Each name below was used in a test figure that passed
-`figure test`.
+The rest of `bazinga.scene3d`, for bigger figures.
 
 | Name | What it does |
 |---|---|
@@ -152,13 +164,12 @@ The rest of `bazinga.scene3d`, for bigger figures. Each name below was used in a
 | `declutter(items, width, height)`, `label_report(spec)` | how labels are kept off each other (`render` does this for you), and a check for tests that lists overlapping labels |
 | `fmt`, `vec`, `sig`, `nice_ticks` | number formatting for readouts and ticks |
 
-The example site's `camera_rig` starter uses the camera helpers together; copy it with
+The `camera_rig` starter uses the camera helpers together; copy it with
 `figure new my_rig --from camera_rig` to see them working.
 
 ## Testing
 
-`figure test` checks a 3-D figure like any other (starting values, every preset, 20 random settings, under
-30 milliseconds each, no `nan`), and also drags every handle a little, wide and on a phone.
+Same as [Test it](figures.md#test-it), plus every handle is dragged a little, wide and on a phone.
 
 ## Limits
 
@@ -170,7 +181,7 @@ The example site's `camera_rig` starter uses the camera helpers together; copy i
 
 ## What's next
 
-Next, diagrams that are drawn once and do not move: [Diagrams from code](diagrams.md).
+Next, diagrams that are drawn once and do not move: [Diagrams](diagrams.md).
 
 - Place a 3-D figure in a post: [Writing, step 5](writing/figures-in-posts.md).
 - Everything else about figures: [Interactive figures](figures.md).

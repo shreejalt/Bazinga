@@ -2,7 +2,7 @@
 # Build it:   pip install -r documentation/requirements.txt && mkdocs build --strict
 # Preview it: mkdocs serve -a 127.0.0.1:8030
 site_name: Bazinga
-site_description: User guide for Bazinga, a Python template for a personal site and technical blog with live figures, a map and Ask.
+site_description: User guide for Bazinga, a Python template for your portfolio, CV and (if you want one) a technical blog with live figures, a map and Ask.
 site_url: https://bazinga.shreejal.ai/
 repo_url: https://github.com/shreejalt/Bazinga
 repo_name: shreejalt/Bazinga
@@ -104,6 +104,7 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.highlight:
       anchor_linenums: true
+      pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.keys
   - pymdownx.snippets:
@@ -117,6 +118,7 @@ nav:
   - Getting started:
       - getting-started.md
       - "What's in Bazinga": whats-in-bazinga.md
+      - "Your portfolio: home page, CV and projects": home-and-cv.md
       - Updating Bazinga: updating.md
       - "What's new": whats-new.md
   - Writing:
@@ -135,11 +137,10 @@ nav:
           - The Editor: editor.md
           - Interactive figures: figures.md
           - 3-D figures: figures-3d.md
-          - Diagrams from code: diagrams.md
+          - Diagrams: diagrams.md
       - Your site:
           - The map and topics: map-and-topics.md
           - Ask and the wiki: ask-and-wiki.md
-          - "Your portfolio: home page, CV and projects": home-and-cv.md
           - Theme and customising: theme.md
       - Going live:
           - Deploying: deploying.md

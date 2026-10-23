@@ -4,6 +4,10 @@ The Editor is Bazinga's writing window. It is a list of your pages, a Markdown p
 page, helpers for equations, figures, diagrams and citations, the checks, saved versions, and a Publish button. On
 this page you will open it, write in it, and publish from it with a dry run first.
 
+You write every kind of page here: reads and papers for the blog, and projects for your portfolio (pick **Project**
+as the kind). Your home page and CV are not edited in the Editor: they live in `site.yml` and `content/cv.yml`; see
+[Your portfolio](home-and-cv.md).
+
 It only ever runs on your own computer. Nothing of it is copied into the built site, so the live site cannot be
 changed through it.
 
@@ -17,13 +21,16 @@ There are two ways. Both open the same Editor.
     python -m bazinga serve
     ```
 
-    The Editor starts with the site, on the serve port + 1:
+    The Editor starts with the site, on the serve port + 1 (or a free port if that one is taken):
 
     ```text
       The Editor runs at http://127.0.0.1:8001/ (the Write button opens it)
     ```
 
-    Open <http://127.0.0.1:8000>, then press **Write** in the rail (or **Edit this page** on a post).
+    Open <http://127.0.0.1:8000>, then press **Write** in the column on the left of the page (the rail), or
+    **Edit this page** on a page.
+
+    `serve --no-editor` leaves the Editor and the Write button out; `serve --studio-port 9001` picks its port.
 
 === "On its own"
 
@@ -46,7 +53,7 @@ There are two ways. Both open the same Editor.
 
 ## Only you see the Write button
 
-The **Write** button in the rail and the **Edit this page** button on a post appear only while you run
+The **Write** button in the rail and the **Edit this page** button on a page appear only while you run
 `python -m bazinga serve` on your own computer. They are added to the page as it is served to you; they are never
 written into the built site.
 
@@ -68,7 +75,8 @@ date, its word count, how many figures it has, when you last edited it, and whet
 - **All kinds** filters by kind (Reads, Papers, Projects, Elsewhere on the example site).
 - **Search titles, summaries, topics** finds a page as you type. ++cmd+k++ (++ctrl+k++ on Windows and Linux)
   jumps to the search box.
-- **Live site** opens the site served by `serve`, and the moon button switches the Editor between light and dark.
+- **Live site** opens your published site, at the `origin` set in `site.yml` (until you set it, that is the
+  placeholder `https://example.com`). The moon button switches the Editor between light and dark.
 
 ## Start a post
 
@@ -77,8 +85,9 @@ date, its word count, how many figures it has, when you last edited it, and whet
 3. Pick a **Kind** (Read, Paper, Project or Article on the example site).
 4. Press **Create draft**.
 
-**What you should see:** the writing screen, with your title, a summary to replace, and a short starting text
-with a heading, an equation and a link. The file is `content/reads/my-first-post.md`, with `status: draft`.
+**What you should see:** the writing screen, with your title, a summary to replace, and a starting text that shows
+the basics: two headings, an equation with a number, a link, a citation and a tip box. Replace it with your own. The
+file is `content/reads/my-first-post.md`, with `status: draft` and the topic `writing`.
 A draft is private until you publish it.
 
 ::clip editor-write | Write opens the Editor; a new post, a paragraph and an equation, and the preview following.
@@ -96,6 +105,13 @@ A draft is private until you publish it.
   eye), light or dark, and **Publish**.
 
 The Editor saves by itself about two seconds after you stop typing. ++cmd+s++ saves at once and keeps a version.
+
+Drag the line between the two panes to resize them. On a narrow window (under about 980 px) the preview is hidden;
+the eye button swaps between text and preview.
+
+If you change the same file in another program while the Editor has it open, a bar says **This page was changed
+outside the Editor since you opened it.** Press **Load the file** to take the other version, or **Keep my version**
+to overwrite it.
 
 ### The toolbar and the "/" menu
 
@@ -134,7 +150,9 @@ On Windows and Linux use ++ctrl++ where this says ++cmd++.
 | ++cmd+k++ | link to a page |
 | ++cmd+b++, ++cmd+i++ | bold and italic around the selection |
 | ++cmd+enter++ | insert, in the equation and diagram helpers |
-| ++esc++ | close a dialog or drawer |
+| ++esc++ | close a dialog |
+
+Close the **Details** or **Checks** drawer with its × button, or press the same button again.
 
 ## The helpers
 
@@ -146,14 +164,16 @@ If the formula has a mistake, the message says where and what to write instead, 
 give. Choose **On its own line** or **Inside a sentence**, and give a displayed equation a name if you want to refer
 to it as `[eq:name]`. ++cmd+enter++ inserts it.
 
-::clip editor-equation | The equation helper: a formula built and inserted, with its preview.
+Tick **Number this equation** to number it; **Insert reference** puts `[eq:name]` for an equation already on the
+page. **Structures** builds a matrix, cases or a derivation of lined-up lines. Click an equation in your text to open
+it here again (**Update equation**). With a model set up, describe the equation in words and press **Write it**.
 
-[Writing, step 3](writing/equations.md) covers the LaTeX itself.
+[Writing, step 3](writing/equations.md#in-the-editor) covers the LaTeX itself and has a clip of this helper.
 
 ### Figure
 
-**Figure…** shows **Your figures**, each one live with its kind (Code, or Form then code), its controls and the
-pages it is used in. Pick one to try it and place it in the text, or press **New figure** and choose:
+**Figure…** (the figure button in the toolbar) shows **Your figures**, each one live with how it was made (**Made
+with the form**, **Form, then code** or **Code**), its controls and the pages it is used in. Pick one to try it and place it in the text, or press **New figure** and choose:
 
 - **Fill in a form:** no code. Pick a kind, type expressions such as `a*sin(f*x)`, add sliders, readouts and
   presets, and watch the preview and its test as you type. **Save and place in the text** writes
@@ -163,23 +183,22 @@ pages it is used in. Pick one to try it and place it in the text, or press **New
 When a model is set up (see [Ask and the wiki](ask-and-wiki.md)), a third way appears that drafts a figure from a
 description. The figure is always tested before you can save it.
 
-::clip editor-figure-form | A figure made with the form: pick a kind, change the expression, and the preview and its test follow.
-
-[Interactive figures](figures.md) explains each kind and the code behind them.
+[Interactive figures](figures.md#make-one-with-the-form-no-code) explains each kind and the code behind them, with a
+clip of the form.
 
 ### Diagram
 
 **Diagram…** opens a text box with examples (Pipeline, Model architecture, Flowchart, Timeline, Tree) and a
 preview in **Wide** and **Phone** layouts. Write the boxes and arrows, watch the drawing, and press
-**Insert diagram**. A mistake turns the line red and says what to write instead.
-
-::clip editor-diagram | Writing a diagram as text, with the drawing beside it.
+**Insert diagram**. A mistake turns the line red and says what to write instead. An existing diagram block in the
+text has an **Edit diagram** button that opens it here again (**Update diagram**). **From a code file…** switches to
+Drawing from code. [Diagrams](diagrams.md) has the syntax and a clip of this helper.
 
 ### Drawing from code
 
 **Drawing from code…** lists the drawings in `drawings/` (for example `pipeline.overview`). Pick one to see it, edit
 its code, give it a caption and press **Insert drawing**, or press **New drawing** to start from a starter. See
-[Diagrams from code](diagrams.md).
+[Diagrams](diagrams.md#diagrams-from-code).
 
 ### Citation
 
@@ -190,12 +209,14 @@ have** lists your references. See [Writing, step 4](writing/citations.md).
 ### Link to page
 
 **Link to page…** (++cmd+k++) lists every page with its status and id, such as `read:welcome`. Pick one and
-`[[read:welcome]]` goes in. Readers see the page's title as the link.
+`[[read:welcome]]` goes in. Readers see the page's title as the link. Select some words first and they become the
+link text: `[[read:welcome|these words]]`.
 
 ### Image upload
 
 Paste or drop an image into the text, or use **Image upload**. It is saved under `static/uploads/` and placed in the
-text. PNG, JPEG, GIF, WebP and AVIF are accepted, up to 8 MB; SVG and HTML are refused.
+text. PNG, JPEG, GIF, WebP and AVIF are accepted, up to 8 MB; SVG and HTML are refused. The file name is put in the
+brackets as a description. Replace it with what the picture shows; the checks warn about an image without one.
 
 ## Details
 
@@ -213,7 +234,8 @@ text. PNG, JPEG, GIF, WebP and AVIF are accepted, up to 8 MB; SVG and HTML are r
 | Share image | optional, shown when the page is shared |
 | Date, Updated | publishing sets today's date, or schedule it from Publish |
 
-When a model is set up, Description gets a **Suggest** button.
+When a model is set up, Description gets a **Suggest** button. Type a topic that does not exist yet and choose it to
+add it to `content/topics.yml`. Renaming a published page changes its live address the next time you publish.
 
 ## Checks
 
@@ -225,41 +247,31 @@ same checks as `python -m bazinga check` and the build; see [Writing, step 8](wr
 ## Versions
 
 **Earlier versions** (the clock) lists saved copies of the page, newest first, with their word counts. Pick one to
-read it and restore it. They are kept on this computer only, in `.studio/history/`, which git ignores.
+read it and restore it. A version is kept each time you press ++cmd+s++, and at most once a minute while you write;
+the last 60 are kept. **Restore this version** keeps your current text as a version first. They are kept on this
+computer only, in `.studio/history/`, which git ignores.
 
 ## Publish
 
-!!! note "What the Publish button does"
-    Publish takes the page you are writing and puts it on your live site. In order, it:
+**Publish** checks, builds, commits and pushes the page, the same steps as `python -m bazinga publish`; each step is
+explained in [Writing, step 9: Publishing](writing/publishing.md#step-2-publish).
 
-    1. **Checks** the page. Errors stop it; warnings ask you first.
-    2. **Marks it published:** sets `status: published` and today's date (or your scheduled date).
-    3. **Tests the figures** the page uses.
-    4. **Builds** the whole site, so links, the map and Ask include the new page.
-    5. **Updates the wiki files:** `wiki/index.md` and a line in `wiki/log.md`.
-    6. **Commits** only this page and its own files (figures, drawings, uploads, new references), in your name.
-    7. **Pushes** the commit to your GitHub repository, to the branch yours tracks (normally `main`).
-    8. **Runs your deploy command**, if you set `publish.command` in `site.yml`.
-    9. **Shows the live address.** Your host (Vercel, Netlify or GitHub Pages) builds from the push and the page is
-       online a minute or two later.
-
-    If a step fails before the commit, your page is put back as it was. Use **Dry run** to see every step without
-    changing anything. To publish without pushing, set `publish: {push: false}` in `site.yml`.
-
-**Publish** opens a dialog with two tabs, **Publish now** and **Schedule**. On a page that is already published the
-first tab is **Publish changes**, and there is a third, **Unpublish**.
+It opens a dialog with two tabs, **Publish now** and **Schedule**. On a published page the first tab is **Publish
+changes**; on a scheduled page the second is **Reschedule**. Both have a third tab, **Unpublish**. On a page that is
+already published, **Publish changes** keeps its first date and sets `updated:` to today.
 
 Before you publish for real, tick **Dry run**: it goes through every step on a copy of the site and changes nothing.
 
-**What you should see:** the steps tick off one by one (check, status and date, figures, build, wiki files, commit,
-push, deploy command, live address). A dry run ends with **The dry run went through every step** and the address the
-page would have.
+**What you should see:** the steps tick off one by one: Check the page, Set status and date, Test its figures, Build
+the site, Update the wiki files, Suggested links and topics, Commit, Push, Deploy command, Live address. A dry run
+ends with **The dry run went through every step** and the address the page would have.
 
 ::clip editor-publish | Publish with a dry run: every step runs on a copy, and nothing changes.
 
-Without **Dry run** the same steps run for real. Errors stop it; warnings need **Publish anyway**. **Schedule** sets a
-future date instead, and **Unpublish** turns the page back into a draft. Everything Publish does, its settings and
-what to do when a push fails are in [Writing, step 9: Publishing](writing/publishing.md).
+Without **Dry run** the same steps run for real. Errors stop it; warnings need the **Publish anyway** box ticked.
+When a model is set up, **Ask for links and topics** shows suggestions you can **Accept** or **Reject**; nothing
+changes unless you accept. **Schedule** sets a future date instead, and **Unpublish** turns the page back into a
+draft. Its settings and what to do when a push fails are in [Writing, step 9: Publishing](writing/publishing.md).
 
 ## Why it is safe
 
@@ -269,8 +281,7 @@ what to do when a push fails are in [Writing, step 9: Publishing](writing/publis
 - It refuses requests from other sites and other host names.
 - It can only write inside `content/`, `figures/`, `drawings/`, `static/uploads/` and your references and topics
   files.
-- None of its files are copied to `_site/`, and a test checks that. The **Write** and **Edit this page** buttons are
-  added only while `serve` runs on your computer; see [Only you see the Write button](#only-you-see-the-write-button).
+- None of its files are copied to `_site/`, and a test checks that.
 
 ## What's next
 

@@ -86,7 +86,13 @@ python -m bazinga wiki highlights "Getting started"
 Proposal: <your site folder>/proposals/highlights-getting-started.md
 ```
 
-Nothing on your site changes. The command writes three files to `proposals/` (which git ignores): a `.md` to read, a
+Without a model it prints this and changes nothing:
+
+```text
+No model configured: set llm.model in site.yml and the key in the environment variable named by llm.key_env (or .env.local).
+```
+
+With a model, nothing on your site changes either. The command writes three files to `proposals/` (which git ignores): a `.md` to read, a
 `.json`, and a `.yml` that is ready to copy. It also adds a line to `wiki/log.md`. The proposal looks like this
 (shortened; this is real output from a free model):
 

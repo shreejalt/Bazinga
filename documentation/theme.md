@@ -63,6 +63,9 @@ theme:
 
 Each family named here is loaded from Google Fonts with the weights the theme needs.
 
+If you delete a key, Bazinga uses its own default: Source Serif 4 for text, JetBrains Mono for code, STIX Two Math
+for equations, and `#3b5bdb` for the accent. Keep the keys to keep the look of the example site.
+
 !!! note "Honest notes on three theme keys"
     - **`font_ui`**: the default theme draws its interface in the code font. Setting `font_ui` loads the font
       but changes nothing you can see. To change the interface font, change `font_code` (code changes with it),
@@ -88,8 +91,8 @@ nav:
   - {label: CV, href: /cv/}
 ```
 
-Every item needs a `label` and an `href`, or the site does not build. On the home page, the rail shows the page's own
-sections instead, then the Series, Ask and CV items from this list.
+Every item needs a `label` and an `href`, or the site does not build. The home page's rail is different; see
+[The rail on the home page](home-and-cv.md#the-rail-on-the-home-page).
 
 ## Kinds of pages
 
@@ -101,7 +104,6 @@ kinds:
     label: Reads
     singular: Read
     blurb: "Explanations of a concept, built from several papers rather than one."
-    placeholder: "filter: attention, softmax, gradient ..."
   papers:
     label: Papers
     singular: Paper
@@ -112,20 +114,10 @@ kinds:
     label: Elsewhere
     singular: Article
     external: true
-    word: articles
 ```
 
-| Field | What it does | Default |
-|---|---|---|
-| `label` | the list page's title and its button on the home page | the folder name, capitalised |
-| `singular` | one item's name; also the start of page ids (`Read` gives `read:welcome`) | `label` without its last "s" |
-| `role` | the layout: `read`, `paper`, `project` or `external` | `paper` for `papers`, `project` for `projects`, else `read` |
-| `external` | entries that live on another site (no body) | `false` |
-| `blurb` | the line under the list's title | "<label> by <author>." |
-| `placeholder` | the hint in the list's filter box | "filter: a word from a title or a topic …" |
-| `word` | what the list calls its items | the label in lower case |
-
-The roles:
+Every field of a kind (`label`, `singular`, `role`, `external`, `blurb`, `placeholder`, `word`) and its default is in
+[Configuration: kinds](reference/configuration.md#kinds). The `role` sets the layout:
 
 - **read**: a concept explained, in the memo layout (header block, summary, contents, numbered sections,
   Connections).
@@ -177,6 +169,7 @@ Useful files to know:
 | `assets/css/tokens.css` | every colour and font, as CSS variables |
 | `assets/css/site.css` | the layout |
 | `assets/css/figure.css`, `math.css`, `diagram.css` | figures, equations, diagrams |
+| `assets/css/wiki.css` (you create it, under `theme/`) | extra styles; when the file exists, every page loads it, with no other change |
 | `templates/partials/lists.html` | the shared lists: Related, Go deeper, Go broader |
 | `assets/js/site.js`, `pager.js` | the rail and menus, and the ten-per-page lists |
 | `assets/js/figure.js`, `pyworker.js` | figure controls, and the worker that redraws figures in the browser |
@@ -184,7 +177,9 @@ Useful files to know:
 | `assets/img/` | the Bazinga mark (the default tab icon) and the paper textures |
 
 A new file you add (say `theme/assets/css/extra.css`) is copied to the site, but nothing links to it until you
-also override `base.html` to load it.
+also override `base.html` to load it. The one exception is `wiki.css`, which `base.html` already loads when it
+exists. The colours of code blocks (`assets/css/pygments.css`) are written by every build, so a copy under `theme/`
+is replaced.
 
 You can also replace the starter that `python -m bazinga new` copies: put your own at `theme/starters/post.md`.
 

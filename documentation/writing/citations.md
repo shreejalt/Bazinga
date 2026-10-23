@@ -11,29 +11,31 @@ All the papers you cite live in one file, `content/references.yml`. Each paper h
 Run `cite` with an arXiv id, an arXiv address or a DOI. It looks the paper up online and writes the entry for you:
 
 ```bash
-python -m bazinga cite 1512.03385
+python -m bazinga cite 2010.11929
 ```
 
 **What you should see:**
 
 ```text
-He15: Kaiming He et al. (2015). Deep Residual Learning for Image Recognition
-Cite it with [@He15] (or [@He15, p. 4]).
+Dosovitskiy20: Alexey Dosovitskiy et al. (2020). An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale
+Cite it with [@Dosovitskiy20] (or [@Dosovitskiy20, p. 4]).
 ```
 
 and at the end of `content/references.yml`:
 
 ```yaml
-He15:
-  title: "Deep Residual Learning for Image Recognition"
-  authors: [Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun]
-  year: 2015
-  venue: "IEEE Conference on Computer Vision and Pattern Recognition (CVPR) 2016"
-  arxiv: "1512.03385"
+Dosovitskiy20:
+  title: 'An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale'
+  authors: [Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, Jakob Uszkoreit, Neil Houlsby]
+  year: 2020
+  arxiv: '2010.11929'
 ```
 
-The key is the first author's surname and the year's last two digits. Choose your own with `--key`. A DOI works the
-same way:
+arXiv usually gives no venue; add a `venue:` line yourself if you want one.
+
+The key is the first author's surname and the year's last two digits. If that key is taken by another paper, `cite`
+adds b, c … (`He15b`). Choose your own with `--key`: it must start with a letter and not be in use yet. A DOI works
+the same way:
 
 ```bash
 python -m bazinga cite 10.1038/nature14539 --key LeCun15
@@ -61,7 +63,7 @@ Cite it with [@Vaswani17] (or [@Vaswani17, p. 4]).
 
 ## Step 2: or write the entry by hand
 
-Each entry is a key with these fields:
+Each entry is a key with these fields. This is the `Hinton15` entry from the example file:
 
 ```yaml
 Hinton15:
@@ -77,7 +79,7 @@ Hinton15:
 | `title` | The paper's title. |
 | `authors` | A list of names. |
 | `year` | The year. |
-| `venue` | Optional: the journal or conference. |
+| `venue` | Optional: the journal or conference. The list shows it only for papers without an arXiv id. |
 | `arxiv`, `doi`, `url` | At least one. The link in the list goes to `url` if there is one, otherwise to arXiv, otherwise to the DOI. |
 
 ## Step 3: cite it in a post
@@ -99,6 +101,8 @@ with a temperature is also how knowledge distillation works [@Hinton15, sec. 2].
 [1] Ashish Vaswani et al., "Attention Is All You Need", arXiv:1706.03762, 2017. Explained here →
 [2] Geoffrey Hinton, Oriol Vinyals and Jeff Dean, "Distilling the Knowledge in a Neural Network", arXiv:1503.02531, 2015.
 ```
+
+Cite several at once with `[@Vaswani17; @Hinton15]`, which shows **[1, 2]**.
 
 Papers are numbered in the order you first cite them. More than three authors become "First author et al.".
 **Explained here →** appears when one of your paper pages explains that paper (`explains: [Vaswani17]` in its
@@ -127,7 +131,7 @@ content/reads/broken.md:10: error: [@Vaswani] is not in content/references.yml
     hint: did you mean Vaswani17?
 ```
 
-The production build stops on it, so a broken citation never reaches the live site.
+`python -m bazinga build` (the build your host runs) stops on it, so a broken citation never reaches the live site.
 
 ## In the Editor
 

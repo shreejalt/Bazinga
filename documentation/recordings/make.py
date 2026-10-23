@@ -10,13 +10,15 @@ Run it from the repository root with the template's own Python (the one that has
 
 What it does, in order:
 
-1. Copies the template (every file git tracks, minus documentation/) into .cache/recordings/site and makes it a fresh
-   git repository, so clips start from the example site exactly as a new user gets it and never touch your files.
-2. Terminal clips: runs each tapes/<name>.tape with VHS (https://github.com/charmbracelet/vhs).
+1. Copies the template (every file git tracks, minus documentation/ and mkdocs.yml) into .cache/recordings/site and
+   makes it a fresh git repository, so clips start from the example site exactly as a new user gets it and never
+   touch your files.
+2. Terminal clips: runs each tapes/<name>.tape with VHS (https://github.com/charmbracelet/vhs) in its own copy at
+   /tmp/bazinga-clips/site, with a Python environment at /tmp/bazinga-clips/.venv (made on the first run).
 3. Browser clips: starts `python -m bazinga serve` on the work copy (port 8020, the Editor on 8021) and runs each
    clips/<name>.mjs with Playwright (lib/run.mjs), which records the page with a visible cursor.
 4. Converts every raw recording with ffmpeg: trimmed and sped up as the clip asks, to MP4 (H.264, +faststart, no
-   audio) and WebM (VP9), plus a poster frame (JPEG). Clips with `gif` set also get a 640-px GIF for the README,
+   audio) and WebM (VP9), plus a poster frame (JPEG). Clips with `gif` set also get a GIF (640 px, or gif_width),
    made with gifski when it is installed, else with ffmpeg's palettegen/paletteuse.
 
 Output: documentation/assets/clips/<name>.{mp4,webm,jpg} and documentation/assets/gifs/<name>.gif.

@@ -7,7 +7,8 @@ entry has what it does, its default, the values it accepts and a short example.
 ## How to read this page
 
 - **Default** is what Bazinga uses when you leave the key out (from `bazinga/config.py`).
-- **Example site** is what the template's own `site.yml` sets. The two differ in places, because the example is set
+- **Example site** is what the template's own `site.yml` sets (in a column, or in a block under the table). The two
+  differ in places, because the example is set
   up to look like a finished personal site. For example, the default accent is `#3b5bdb`, and the example sets
   `#0F52BA`.
 - Everything in `site.yml` is optional. Bazinga lays your file over its defaults, so a nearly empty file still
@@ -25,16 +26,19 @@ site.yml: site.origin must start with http:// or https:// (got 'example.com')
 
 Who you are and where the site lives.
 
-| Key | What it does | Default | Example site | Accepts |
-|---|---|---|---|---|
-| `site.name` | The name at the top of the side rail, in the browser tab, in search results and as the feed title. | `"Bazinga"` | `"Your Name"` | text |
-| `site.author` | Your name on every page's header block, in the feed and for search engines. | `"Your Name"` | `"Your Name"` | text |
-| `site.tagline` | The feed's subtitle, and the home page's search description when `description` is empty. | `"Notes on things I am learning"` | `"Notes on the things I build and learn"` | text |
-| `site.description` | What search engines show for the home page. | `""` | a sentence | text, up to 155 characters |
-| `site.origin` | The address the site will have. Used for canonical links, the sitemap, the feed and share cards. If it has a path (`https://you.github.io/notes`), every link the build writes starts with that path. | `"https://example.com"` | `"https://example.com"` | must start with `http://` or `https://`; may have a path; no `?` or `#`; a trailing `/` is removed |
-| `site.language` | The language of the pages (`<html lang>`, share previews). | `"en"` | `en` | a language code |
-| `site.avatar` | A picture used as the browser-tab icon and the share image. Without it the tab shows the Bazinga mark. | `""` | `""` | a path such as `static/avatar.png` |
-| `site.links` | Buttons on the home page, in the order you write them. Empty ones are hidden. | `github`, `x`, `linkedin`, `email`, `scholar` (all empty) | `github`, `linkedin`, `medium`, `scholar`, `x`, `email` | a mapping of name → address |
+| Key | What it does | Default | Accepts |
+|---|---|---|---|
+| `site.name` | The name at the top of the side rail, in the browser tab, in search results and as the feed title. | `"Bazinga"` | text |
+| `site.author` | Your name on every page's header block, in the feed and for search engines. | `"Your Name"` | text |
+| `site.tagline` | The feed's subtitle, and the home page's search description when `description` is empty. | `"Notes on things I am learning"` | text |
+| `site.description` | What search engines show for the home page. | `""` | text, up to 155 characters |
+| `site.origin` | The address the site will have. Used for canonical links (the one official address of each page that search engines record), the sitemap, the feed and share cards (the preview picture and text shown when someone posts your link). If it has a path (`https://you.github.io/notes`), every link the build writes starts with that path. | `"https://example.com"` | must start with `http://` or `https://`; may have a path; no `?` or `#`; a trailing `/` is removed |
+| `site.language` | The language of the pages (the `lang` the browser and screen readers use, and share previews). | `"en"` | a language code |
+| `site.avatar` | A picture used as the browser-tab icon and the share image. Without it the tab shows the Bazinga mark. | `""` | a path inside your site folder without a leading `/`, such as `static/avatar.png` (unlike `home.photo`, which starts with `/`) |
+| `site.links` | Buttons on the home page. GitHub, X, LinkedIn and Scholar always come first, in that order; other names follow in the order you write them. Empty ones are hidden. | `github`, `x`, `linkedin`, `email`, `scholar` (all empty) | a mapping of name → address |
+
+The example site sets `name: "Your Name"`, `tagline: "Notes on the things I build and learn"`, a one-sentence
+`description`, and the links `github`, `linkedin`, `medium`, `scholar`, `x` and `email`. A site of your own:
 
 ```yaml
 site:
@@ -72,7 +76,8 @@ The GitHub Pages workflow sets `BAZINGA_ORIGIN` for you (see [Deploying](../depl
 
 `site.links.email` is not shown as a link: it powers the Contact section's email button. These names get a proper
 label: `github`, `x`, `twitter`, `linkedin`, `email`, `scholar`, `medium`, `mastodon`, `bluesky`, `youtube`,
-`website`, `orcid`, `substack`. Any other name is shown capitalised.
+`website`, `orcid`, `substack`. Any other name is shown with each word capitalised and `_` as a space
+(`my_blog` → My Blog).
 
 ## nav
 
@@ -109,9 +114,9 @@ and its name must be lowercase letters, digits or `-` (it is a folder and an add
 |---|---|---|---|
 | `label` | The list page's title and the home page button. | the name, capitalised | text |
 | `singular` | The name of one item. In lower case it starts the page ids (`read:welcome`). | `label` without its last "s" | text |
-| `role` | The layout. | `paper` for `papers`, `project` for `projects`, `external` when external, else `read` | `read`, `paper`, `project`, `external` |
+| `role` | The layout. | `external` when `external: true`, `paper` for `papers`, `project` for `projects`, else `read` | `read`, `paper`, `project`, `external` |
 | `external` | Entries that live on another site (no body, they open there). | `false` | `true` or `false` |
-| `blurb` | The line under the list page's title. | "<label> by <author>." | text |
+| `blurb` | The line under the list page's title. | `<label> by <author>.` (for example "Reads by Your Name.") | text |
 | `placeholder` | The hint in the list's filter box. | "filter: a word from a title or a topic …" | text |
 | `word` | What the list calls its items. | the label in lower case | text |
 
@@ -138,8 +143,8 @@ role, About, Experience, Education and Contact.
 
 | Key | What it does | Default | Accepts |
 |---|---|---|---|
-| `home.title` | The home page's `<title>` and share title. Leave your name out: the site name is added after it. | `site.name` | text |
-| `home.photo` | A square picture, shown round. | none | a path such as `/static/images/photo.svg` |
+| `home.title` | The home page's `<title>` and share title. Leave your name out: the site name is added after it (while the whole stays within 65 characters), so `"Machine Learning Notes"` becomes `Machine Learning Notes — Your Name`. | `site.name` | text |
+| `home.photo` | A square picture, shown round. | none | a path starting with `/`, such as `/static/images/photo.svg` |
 | `home.role` | The first line under the photo; also starts the CV page. | none | text |
 | `home.working_at` | The second line under the photo. | none | text |
 | `home.employer` | The CV page says "role at employer". | none | text |
@@ -170,25 +175,36 @@ cv:
 
 The CV itself is `content/cv.yml`: see [below](#contentcvyml).
 
+The `/cv/` page is built only when `content/cv.yml` exists. Without that file there is no CV page, so remove CV from
+`nav:` or set `cv.pdf`; otherwise the menu item and the home page's **Read the CV** button open the "Page not found"
+page.
+
 ## theme
 
 Colours and fonts. More, with the default colours, in [Theme and customising](../theme.md).
 
-| Key | What it does | Default | Example site | Accepts |
-|---|---|---|---|---|
-| `theme.accent` | Links, the current menu item, read boxes on the map. | `"#3b5bdb"` | `"#0F52BA"` | a hex colour such as `"#0F52BA"` |
-| `theme.accent_dark`, `ground`, `paper`, `tint`, `ink`, `ink_2`, `ink_3`, `rule_2`, `rule_3`, `ref`, `alert` | The theme's other colours. What each one colours, and its default, is in [Colours](../theme.md#colours). | `""` (the theme's own colours) | `ground: ""`, `paper: ""` | a hex colour or empty |
-| `theme.font_text` | The body text. | `"Source Serif 4"` | `"STIX Two Text"` | a Google Fonts family name |
-| `theme.font_code` | Code, and the default theme's labels, menu and buttons. | `"JetBrains Mono"` | `"Courier Prime"` | a Google Fonts family name |
-| `theme.font_math` | Equations. | `"STIX Two Math"` | `"STIX Two Math"` | a font with a maths table |
-| `theme.font_ui` | Loaded, but not used by the default theme. | `"Inter"` | `"Courier Prime"` | a Google Fonts family name |
-| `theme.width` | Checked, but not used by the default theme. | `720` | `720` | a number from 480 to 1200 |
-| `theme.mode` | Checked, but not used: the default theme is light only. | `"auto"` | `light` | `auto`, `light` or `dark` |
+| Key | What it does | Default | Accepts |
+|---|---|---|---|
+| `theme.accent` | Links, the current menu item, read boxes on the map. | `"#3b5bdb"` | a hex colour such as `"#0F52BA"` |
+| `theme.accent_dark`, `ground`, `paper`, `tint`, `ink`, `ink_2`, `ink_3`, `rule_2`, `rule_3`, `ref`, `alert` | The theme's other colours. What each one colours, and its default, is in [Colours](../theme.md#colours). | `""` (the theme's own colours) | a hex colour or empty |
+| `theme.font_text` | The body text. | `"Source Serif 4"` | a Google Fonts family name |
+| `theme.font_code` | Code, and the default theme's labels, menu and buttons. | `"JetBrains Mono"` | a Google Fonts family name |
+| `theme.font_math` | Equations. | `"STIX Two Math"` | a font with a maths table |
+| `theme.font_ui` | Loaded, but not used by the default theme. | `"Inter"` | a Google Fonts family name |
+| `theme.width` | Checked, but not used by the default theme. | `720` | a number from 480 to 1200 |
+| `theme.mode` | Checked, but not used: the default theme is light only. | `"auto"` | `auto`, `light` or `dark` |
+
+The example site sets:
 
 ```yaml
 theme:
-  accent: "#2E7D32"
-  font_text: "Source Serif 4"
+  accent: "#0F52BA"
+  font_text: "STIX Two Text"
+  font_ui: "Courier Prime"
+  font_code: "Courier Prime"
+  font_math: "STIX Two Math"
+  width: 720
+  mode: light
 ```
 
 ## features
@@ -216,7 +232,7 @@ provider is in [Ask and the wiki](../ask-and-wiki.md#connect-a-model).
 
 | Key | What it does | Default | Accepts |
 |---|---|---|---|
-| `llm.base_url` | The address of the model's API. | `"https://openrouter.ai/api/v1"` | any OpenAI-compatible address, such as `http://localhost:11434/v1` for Ollama |
+| `llm.base_url` | The address of the model's API. | `"https://openrouter.ai/api/v1"` | any OpenAI-compatible address (one that accepts the same requests as OpenAI's API; most services and Ollama do), such as `http://localhost:11434/v1` for Ollama |
 | `llm.model` | The model's name. | `""` (no model) | text; several names separated by commas are tried in turn |
 | `llm.key_env` | The name of the environment variable that holds the key. | `"LLM_API_KEY"` | a variable name |
 
@@ -257,13 +273,12 @@ publish:
 
 Two things to know:
 
-- **Commits need a name and an email.** If `publish.author` is empty and git has no email set, Publish stops at the
-  commit step with `Not committed: git does not know your name and email.` and puts the page back as it was. Fix it
-  with `publish.author`, or once with `git config user.name "Your Name"` and
-  `git config user.email you@example.com`.
+- **Commits need a name and an email.** If git has none, Publish stops at the commit; see
+  [Troubleshooting](../troubleshooting.md#publishing-and-deploying).
 - **The push goes where your branch points.** If your branch tracks a remote branch (for example a local `work`
   that tracks `origin/main`), Publish runs `git push origin HEAD:main`, even when the names differ. With no tracked
-  branch it runs `git push -u origin HEAD`.
+  branch it runs `git push -u origin HEAD` (when a remote named `origin` exists; with no remote at all it stops with
+  `Committed, but there is no remote to push to.`).
 
 ## Environment variables
 
@@ -280,7 +295,7 @@ Settings read from the environment, not from `site.yml`. Where each one applies:
 | `ASK_PER_VISITOR` | Instead of `ask.per_visitor`. | written answers only |
 | `ASK_DAILY_CAP` | Instead of `ask.daily_cap`. | written answers only |
 | `BAZINGA_ORIGIN` | The site's address for this build, instead of `site.origin` (may have a path). `--origin` wins over it. | `python -m bazinga build` only |
-| `SITE_URL` | 1. For `build`: the same as `BAZINGA_ORIGIN`, when that is not set. 2. For `api/ask.py`: where it fetches `/data/passages.json` when the deployment does not include `_site/data/` (default: the request's own address). | `python -m bazinga build`, and Vercel (`api/ask.py`) |
+| `SITE_URL` | 1. For `build`: the same as `BAZINGA_ORIGIN`, when that is not set, so on a host set it to the address you want search engines to show (your own domain, not `vercel.app`). 2. For `api/ask.py`: where it fetches `/data/passages.json` when the deployment does not include `_site/data/` (default: the request's own address). | `python -m bazinga build`, and Vercel (`api/ask.py`) |
 | `BAZINGA_STUDIO_DEV` | Any value makes the Editor rebuild its own app page on every load. Only for working on the Editor itself. | the Editor only |
 
 "Written answers" means `/api/ask/`: `api/ask.py` on Vercel, and the same endpoint under `python -m bazinga serve`.
@@ -328,7 +343,8 @@ The block between `---` lines at the top of every page. Step-by-step use is in
 **Papers:** `explains: [Key]`, the citation key of the paper the page explains.
 
 **Projects:** `type`, `stack`, `tagline`, `lead`, `from`, `github`, `usage`, `limitations`, `credit`, `order`. What
-each one shows is in [Project pages](../writing/first-post.md#project-pages).
+each one shows is in [Project pages](../home-and-cv.md#project-pages). `launch` is read into the site's data too; the
+default theme does not show it.
 
 **External entries** (a kind with `external: true`): `external` (the address it opens, required), `author`,
 `publication`. They have no body.
@@ -430,6 +446,27 @@ longer has.)
 
 **What you should see:** with one published post in `content/posts/` and no `content/cv.yml`,
 `python -m bazinga build` prints `Built 1 pages (9 HTML files) into _site/`, and the menu has two items.
+
+### A minimal portfolio
+
+```yaml
+site:
+  name: "Ada Example"
+  author: "Ada Example"
+  origin: "https://ada.example"
+kinds:
+  projects: {label: Projects, singular: Project}
+nav:
+  - {label: Home, href: /}
+  - {label: Projects, href: /projects/}
+  - {label: CV, href: /cv/}
+features: {ask: false, explore: false, series: false, feed: false}
+```
+
+The CV item needs a `content/cv.yml` (see [cv](#cv)).
+
+**What you should see:** with one published project in `content/projects/` and a `content/cv.yml`,
+`python -m bazinga build` prints `Built 1 pages (7 HTML files) into _site/` (6 without the CV).
 
 ## What's next
 

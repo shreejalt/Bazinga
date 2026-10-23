@@ -5,8 +5,9 @@ to run the tests, and how to preview and build the documentation. Everything her
 
 ## Set up
 
-You need Python 3.11 or newer and git. Node is only needed to record the clips in these docs, and for one check in
-the tests (see below).
+You need Python 3.11 or newer and git. Node.js is only needed to record the clips in these docs, and for the tests
+that check the site's scripts (they are skipped without Node). The install is the same as in
+[Getting started](../getting-started.md#2-install), from a clone of Bazinga itself:
 
 ```bash
 git clone https://github.com/shreejalt/Bazinga.git
@@ -15,7 +16,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-**What you should see:** pip ends with a line starting `Successfully installed`.
+**What you should see:** pip prints `Successfully installed …` (a notice about a newer pip after it is fine).
 
 ## Run the tests
 
@@ -40,6 +41,8 @@ Some tests run `node --check` on the site's scripts when Node is installed; with
 .venv/bin/python -m bazinga serve
 ```
 
+**What you should see:** `Serving at http://127.0.0.1:8000/` among the lines it prints.
+
 Open `http://127.0.0.1:8000`. The example site is the best test bed: it uses every feature, and the guides in
 `content/reads/` show each one next to the text that makes it.
 
@@ -48,6 +51,22 @@ Before you send a change:
 1. `.venv/bin/python -m unittest discover tests` passes.
 2. `.venv/bin/python -m bazinga check` shows no errors.
 3. You looked at the pages you touched, at a wide and at a phone width.
+
+## Send your change
+
+1. Fork [shreejalt/Bazinga](https://github.com/shreejalt/Bazinga) on GitHub and clone your fork.
+2. Make a branch for the change:
+
+    ```bash
+    git switch -c my-change
+    ```
+
+3. Commit, push the branch to your fork, and open a pull request against `main`.
+4. If users will notice the change, add a line to `CHANGELOG.md` under today's date, and a row to
+   [Coverage](coverage.md) that points to the page documenting it.
+
+Found a bug without a fix? Open an issue at <https://github.com/shreejalt/Bazinga/issues> with the command, the
+message and your Python version.
 
 ## Where things live
 
@@ -77,7 +96,7 @@ Preview it while you write. The page reloads on save:
 .venv-docs/bin/mkdocs serve -a 127.0.0.1:8030
 ```
 
-Open `http://127.0.0.1:8030`.
+**What you should see:** `Serving on http://127.0.0.1:8030/`. Open that address.
 
 Build it the way the published site is built:
 
@@ -105,7 +124,7 @@ Short looping videos show the how-tos. A page places one with a line of its own:
 
 The clips are recorded by scripts in `documentation/recordings/`, so anyone can re-record them after the interface
 changes. [Recording clips](recording-clips.md) explains the pipeline, and [The demo GIF](demo-gif.md) covers the
-terminal demo in the README.
+terminal demo.
 
 ### How the docs are published
 
@@ -113,6 +132,10 @@ terminal demo in the README.
 on a push to `main` that changes `mkdocs.yml`, `documentation/` or the workflow itself, and only in the
 `shreejalt/Bazinga` repository. In your fork it does nothing; there, `pages.yml` publishes your own site instead
 (see [Deploying](../deploying.md#github-pages)).
+
+The guide's address is `bazinga.shreejal.ai`, set by the file `documentation/CNAME`, which MkDocs copies into the
+built site. The **Edit this page** links point at `documentation/` on `main`, so they work once the guide is merged
+there.
 
 ## What's next
 

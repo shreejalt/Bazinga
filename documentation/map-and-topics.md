@@ -39,6 +39,9 @@ between** for the chain from one to the other, or pick a tag and press **In read
 each page after the pages it builds on. These are suggestions to read from; a series you declare yourself is
 described in [Writing, step 7](writing/series.md).
 
+When the map opens, the box already lists the chains it found (**Found on the map**). A chain that is not a declared
+series has **Make it official: the header lines**: copy those lines into the pages' headers to make it a series.
+
 ## How a page lands on the map
 
 The map is drawn from one graph of your site. A page joins it through:
@@ -69,34 +72,8 @@ it.
 ## Topics
 
 Topics are the tags of your site. Pages may only use the topics listed in `content/topics.yml`, so you never end up
-with `attention`, `Attention` and `attn` as three tags.
-
-```yaml
-groups:
-  - name: Foundations
-    topics:
-      - {slug: linear-algebra, label: Linear algebra, blurb: "Vectors, matrices and the geometry behind them."}
-      - {slug: probability, label: Probability, blurb: "Distributions, expectations and how uncertainty is measured."}
-  - name: Machine learning
-    topics:
-      - {slug: attention, label: Attention, blurb: "Weighting inputs by relevance, the core of transformers."}
-```
-
-| Field | What it is |
-|---|---|
-| `slug` | what pages write in `topics: [...]`; also the address, `/topics/<slug>/` |
-| `label` | the name readers see |
-| `blurb` | the first line of the topic's page |
-| `name` (of a group) | a heading on the `/topics/` page; groups only organise that page |
-
-A page uses one to four topics:
-
-```yaml
-topics: [attention, transformers]
-```
-
-A topic that is not in the list stops the build with a "did you mean". Add, rename or remove topics freely; the build
-tells you about pages that still use a removed slug.
+with `attention`, `Attention` and `attn` as three tags. How to write that file and tag a page is in
+[Writing, step 6: tag it with topics](writing/links-and-topics.md#step-3-tag-it-with-topics).
 
 ### The topic pages
 
@@ -106,7 +83,17 @@ tells you about pages that still use a removed slug.
   after the pages it builds on, with a "read first" note), shows the **live figures** those pages use, each one
   working, and lists nearby topics that share pages with this one.
 
-A topic that no public page uses has no page yet.
+A topic that no public page uses has no page yet. Each topic page has two buttons: **All topics**, and **On the map**,
+which opens the map showing only that topic.
+
+**What you should see:** open <http://127.0.0.1:8000/topics/>; each topic links to its page, and its **On the map**
+button opens the map with only that topic shown.
+
+## Turning the map off
+
+Set `features: {explore: false}` in `site.yml` and take Explore out of `nav:`. The map page and the home page's
+Explore section go away; the topic pages stay (for now their **On the map** button and the line about Explore on
+`/topics/` still link to the map, which is then missing). `series: false` also removes the generated-series box.
 
 ## What's next
 

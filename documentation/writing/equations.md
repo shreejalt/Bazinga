@@ -114,10 +114,14 @@ Instead: write ^{10}
 
 Fix that and run it again, and it points at the next problem:
 
+```bash
+python -m bazinga math "x^{10} + \alpah"
+```
+
 ```text
-line 1, column 1: \alpah is not a known command, so it would show as raw text.
-    \alpah
-    ^^^^^^
+line 1, column 10: \alpah is not a known command, so it would show as raw text.
+    x^{10} + \alpah
+             ^^^^^^
 Instead: write \alpha if that is what you meant; otherwise, for a named function write \operatorname{alpah}, for words \text{alpah}
 ```
 
@@ -127,7 +131,7 @@ shows it rendered.
 ::clip math-check | Checking one formula in the terminal: the message points at the mistake and says what to write.
 
 The same messages appear in `python -m bazinga check`, in the Editor and in the build, with the file and line. A
-formula with an error stops the production build, so a broken equation never reaches the live site.
+formula with an error stops `python -m bazinga build` (the build your host runs), so a broken equation never reaches the live site.
 
 ## In the Editor
 

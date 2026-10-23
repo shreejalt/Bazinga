@@ -1,15 +1,14 @@
 # Deploying
 
-In this guide you will put your site online, portfolio and blog alike: a portfolio-only site deploys exactly the
-same way. Bazinga builds a plain folder of files, `_site/`, so any static host can serve it. Pick one host below and
-follow its steps; you never need more than one. Vercel, Netlify and GitHub Pages each have a step for your own domain,
-which is what most portfolios want.
+In this guide you put your site online. Bazinga builds a folder of plain files, `_site/`, and any static host (a
+service that serves files as they are) can serve it. Pick one host below and follow its steps. A portfolio and a
+blog deploy the same way. Vercel, Netlify and GitHub Pages each have a step for your own domain.
 
 | Host | What you set | Ask's written answers | Scheduled posts go live |
 |---|---|---|---|
 | [Vercel](#vercel) | the address in `site.yml`; a key, only if you want written answers | yes | with your next push, or a deploy hook you schedule |
 | [Netlify](#netlify) | the address in `site.yml` | no (quick answers work) | with your next push, or a build hook you schedule |
-| [GitHub Pages](#github-pages) | one setting in the repository | no (quick answers work) | by themselves, once a day |
+| [GitHub Pages](#github-pages) | one setting in the repository | no (quick answers work) | by themselves, once a day (see [Scheduled posts](#scheduled-posts)) |
 | [Anywhere else](#anywhere-else) | the address in `site.yml` | no (quick answers work) | when you build and upload again |
 
 Quick answers on the Ask page run in the reader's browser, so they work on every host. Only the optional written
@@ -45,17 +44,58 @@ python -m unittest discover tests
 last line of the tests. Every host runs the same tests before it builds. A failing test stops the deploy, and the
 old site stays up.
 
+!!! warning "The tests check the example pages"
+    Some of the tests in `tests/` build the example site and look for its pages. Once you delete or rewrite the
+    example pages, those tests fail (on a portfolio-only site, 16 of 453), and because every host runs the tests
+    before it builds, the deploy stops. Until Bazinga's tests are fixed, take the tests out of the host's build: in
+    `vercel.json` change `buildCommand` to `python3 -m bazinga build`; in `netlify.toml` remove
+    `python3 -m unittest discover tests && ` from `command`; in `.github/workflows/pages.yml` delete the line
+    `- run: python -m unittest discover tests`. The build itself still checks every page and stops on an error.
+
 ### Step 3: put your site on GitHub
 
-Vercel and Netlify also work with GitLab and Bitbucket; GitHub Pages needs GitHub. If your site folder is not in a
-repository yet, create an empty repository on GitHub, then from your site folder:
+Vercel and Netlify also work with GitLab and Bitbucket; GitHub Pages needs GitHub.
+
+=== "You followed Getting started"
+
+    Your folder is already a clone of your own copy on GitHub. Commit your changes and push them:
+
+    ```bash
+    git add -A
+    git commit -m "My site"
+    git push
+    ```
+
+    **What you should see:** git ends with a line such as `main -> main`.
+
+=== "Your folder is not in git yet"
+
+    Create an empty repository on GitHub, then from your site folder:
+
+    ```bash
+    git init -b main
+    git add -A
+    git commit -m "My site"
+    git remote add origin https://github.com/<you>/<your-site>.git
+    git push -u origin main
+    ```
+
+    **What you should see:** git uploads your files and ends with
+    `branch 'main' set up to track 'origin/main'.`
+
+### Step 4: not using GitHub Pages? Delete its workflow {#no-github-pages}
+
+Your copy holds `.github/workflows/pages.yml`, which runs on every push and once a day. Without Pages turned on, it
+fails at the `configure-pages` step and GitHub emails you each time. If you deploy on Vercel, Netlify or anywhere
+else, delete it:
 
 ```bash
-git remote add origin https://github.com/<you>/<your-site>.git
-git push -u origin main
+git rm .github/workflows/pages.yml
+git commit -m "Deploy without GitHub Pages"
+git push
 ```
 
-**What you should see:** git uploads your files and ends with `branch 'main' set up to track 'origin/main'.`
+**What you should see:** no new run under the **Actions** tab when you push.
 
 ## Vercel
 
@@ -67,7 +107,7 @@ git push -u origin main
 4. Leave **Framework Preset** as **Other**. Change nothing else.
 5. Press **Deploy**.
 
-You set nothing else because `vercel.json` in your repository already says how to build:
+You set nothing else because `vercel.json` in your repository already says how to build (shortened):
 
 ```json
 {
@@ -98,7 +138,8 @@ Written answers need a model and its key. Set them in Vercel, never in a file yo
     ```
 
 2. In Vercel, open your project, then **Settings → Environment Variables**.
-3. Add the key. Its name is whatever `llm.key_env` says in `site.yml`; the default is `LLM_API_KEY`.
+3. Add the key. Its name is whatever `llm.key_env` says in `site.yml`; the default is `LLM_API_KEY`. Tick
+   **Production** (and **Preview** if you want written answers on preview links too).
 4. Add any of these only if you need them:
 
     | Name | What it does |
@@ -108,7 +149,7 @@ Written answers need a model and its key. Set them in Vercel, never in a file yo
     | `ASK_PER_VISITOR` | written answers per visitor per day (default 5, from `ask.per_visitor`) |
     | `ASK_DAILY_CAP` | written answers per day for the whole site (default 300, from `ask.daily_cap`) |
     | `ASK_WRITTEN` | `off` turns written answers off without removing the key |
-    | `SITE_URL` | your site's address. The function fetches the site's passages from it when they are not in the deployment; the build also uses it as the site's address (see [A site under a path](reference/configuration.md#a-site-under-a-path)) |
+    | `SITE_URL` | your site's public address; only needed when the function cannot find the passages. The build also uses it in place of `site.origin`, so set it to the address you want search engines to show (your own domain, not `vercel.app`) |
 
 5. Go to **Deployments**, open the latest one and choose **Redeploy**, so the new variables take effect.
 
@@ -119,13 +160,14 @@ stays hidden.
 Every name above is read by `bazinga/ask_server.py` (and `SITE_URL` by `api/ask.py`); the full list is in the
 [configuration reference](reference/configuration.md#environment-variables).
 
-### Step 3 (optional): your own domain
+### Step 3 (optional): your own domain {#vercel-domain}
 
-1. In the project, open **Settings → Domains** and add your domain. Vercel shows the DNS records to create at your
-   domain registrar.
+1. In the project, open **Settings → Domains** and add your domain. Vercel shows the DNS records (entries at your
+   domain registrar that point the domain at the host) to create at your registrar.
 2. Set `site.origin` in `site.yml` to the new address and push.
 
 **What you should see:** the site at your domain, and its pages' canonical links using it.
+
 
 ## Netlify
 
@@ -155,10 +197,13 @@ push to `main` deploys again.
 They are not available. This template's Netlify setup serves files only and has no function for `/api/ask/`, so
 the **Written answer** button never appears. Quick answers work as usual. If you want written answers, use Vercel.
 
-### Your own domain
+### Step 2 (optional): your own domain {#netlify-domain}
 
 1. In the site, open **Domain management** and add your domain, then follow Netlify's DNS steps.
 2. Set `site.origin` in `site.yml` to the new address and push.
+
+**What you should see:** the site at your domain, and its pages' canonical links using it.
+
 
 ## GitHub Pages
 
@@ -167,6 +212,9 @@ the **Written answer** button never appears. Quick answers work as usual. If you
 1. Open your repository on GitHub.
 2. Go to **Settings → Pages**.
 3. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+
+**What you should see:** the page says your site is built by a GitHub Actions workflow. In a fork, also open the
+**Actions** tab once and turn workflows on: GitHub does not run a fork's workflows until you do.
 
 ### Step 2: push
 
@@ -198,10 +246,13 @@ GitHub Pages; the setting only matters for the build on your own computer.
 **What you should see** in the built pages of a project site called `notes`: links such as `/notes/reads/welcome/`
 and a canonical address such as `https://<you>.github.io/notes/reads/welcome/`.
 
-### Your own domain
+### Your own domain {#github-pages-domain}
 
 In **Settings → Pages**, enter it under **Custom domain** and follow GitHub's DNS steps. The next run of the workflow
 builds for the new address by itself.
+
+**What you should see:** after the next run, the site at your domain, and a green tick next to the domain in
+**Settings → Pages**.
 
 !!! note "Private repositories"
     On a free GitHub account, Pages works for public repositories only. Publishing from a private repository needs a
@@ -224,6 +275,10 @@ builds for the new address by itself.
 
 2. Upload everything inside `_site/` to your host's web root.
 
+    **What you should see:** your home page at the host's address.
+
+3. If the host asks for a not-found page, point it at `404.html`.
+
 Pages are folders with an `index.html` (`/reads/welcome/index.html`), so the host must serve `index.html` for a
 folder address. Almost every static host does.
 
@@ -240,9 +295,11 @@ Never deploy a `--drafts` build. It holds your drafts and tells search engines t
 A post with `status: published` and a date in the future is scheduled. Every build leaves it out until its date, and
 the first build on or after that date includes it. Bazinga has no timer of its own:
 
-- **GitHub Pages:** the workflow's daily run (06:15 UTC) takes care of it.
+- **GitHub Pages:** the workflow's daily run (06:15 UTC) takes care of it. GitHub pauses that daily run when the
+  repository has had no commits for 60 days. If a scheduled post did not appear, open **Actions → Deploy to GitHub
+  Pages** and press **Enable workflow**.
 - **Vercel and Netlify:** a build happens when you push, so the post appears with your next push on or after its
-  date. To publish it on the day without pushing, create a deploy hook (Vercel) or build hook (Netlify) in the
+  date. To publish it on the day without pushing, create a deploy hook (Vercel) or build hook (Netlify), a secret address that starts a build when called, in the
   host's settings and call it from any scheduler you like; the template does not set one up.
 
 ## How Publish fits in {#publishing-from-the-editor}
@@ -259,8 +316,9 @@ whose name the commit carries and what to do when a push fails are in [Publishin
 | Search results or link previews point to `example.com` | `site.origin` was never changed | set it and push |
 | No **Written answer** button | no key in the host's settings, or the host is not Vercel | add the key under Environment Variables and redeploy |
 | The deploy fails on the host | a test failed (the old site stays up) | read the host's build log, run `python -m unittest discover tests` on your computer, fix, push |
-| GitHub Pages shows nothing | Pages is not set to GitHub Actions | Settings → Pages → Source: **GitHub Actions** |
-| A scheduled post is not live | the host has not built since its date | GitHub Pages builds daily by itself; on Vercel or Netlify push again, or call a deploy hook on a schedule (the template does not set one up for you) |
+| The Deploy to GitHub Pages run fails at the `configure-pages` step, or the site shows nothing | Pages is not set to GitHub Actions | Settings → Pages → Source: **GitHub Actions** |
+| A failed Deploy to GitHub Pages run on every push, though you use Vercel or Netlify | `pages.yml` still runs | delete it ([Before you deploy, step 4](#no-github-pages)) |
+| A scheduled post is not live | the host has not built since its date | GitHub Pages builds daily by itself (unless the daily run was paused: **Enable workflow** in Actions); on Vercel or Netlify push again, or call a deploy hook on a schedule (the template does not set one up for you) |
 
 More answers are in [Troubleshooting](troubleshooting.md#publishing-and-deploying).
 

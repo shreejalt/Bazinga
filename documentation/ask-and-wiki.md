@@ -33,7 +33,7 @@ page takes that page as context, so its answers lean towards the page and its ne
 
 **What you should see:** under the box, a heading "From the pages" with two or three sentences, then "Pages that
 match best" with links into *Softmax, Temperature and Entropy* and *Welcome to Bazinga*. The line under the answer
-reads like "Answered from the map and 125 passages of this site." (the number grows with your site).
+reads like "Answered from the map and 134 passages of this site." (the number grows with your site).
 
 The example questions under the box are made from your own pages. To choose them yourself, list up to four in
 `site.yml` under `home:`:
@@ -45,7 +45,9 @@ home:
     - "What connects softmax and attention?"
 ```
 
-To turn Ask off everywhere, set `features: {ask: false}` in `site.yml`.
+To turn Ask off, set `features: {ask: false}` in `site.yml` and delete the `- {label: Ask, href: /ask/}` line under
+`nav:`. The build then leaves out the Ask page and the Ask button. (For now, the "Ask the map" line at the end of
+each page still links to `/ask/`.)
 
 ## What the build writes for the wiki
 
@@ -55,17 +57,17 @@ You do not run anything for these. `python -m bazinga build` (and `serve`) write
 |---|---|
 | `_site/data/passages.json` | one passage per section of every public page; this is what Ask searches |
 | `_site/data/graph.json` | the pages, their links and their places on the map |
-| `_site/llms.txt` | a short index of the site for language-model tools ([llmstxt.org](https://llmstxt.org) layout) |
-| `_site/llms-full.txt` | every public page as Markdown, in one file |
-| `_site/<kind>/<slug>/index.md` | a Markdown copy of each page, next to its HTML |
+| `_site/llms.txt`, `_site/llms-full.txt`, `_site/<kind>/<slug>/index.md` | your site for language-model tools, and a Markdown copy of each page ([SEO and feeds](seo-and-feeds.md#llmstxt-and-the-markdown-copies)) |
 
-Drafts and scheduled pages never appear in any of them. To leave out the two `llms` files, set
-`features: {llms_txt: false}`.
+Drafts and scheduled pages never appear in any of them.
 
 Two more files live in your repository and are meant to be committed:
 
 - `wiki/index.md` is the catalog: one line per public page with its summary, topics and what it builds on.
-- `wiki/log.md` is the log: one dated entry for each publish, lint, index and note.
+  `python -m bazinga build` rewrites it when a page changes (`serve` does not), and `wiki index` rewrites it without
+  a full build.
+- `wiki/log.md` is the log. The first wiki command creates it, and every wiki command, proposal and publish adds a
+  dated entry.
 
 `AGENTS.md` in the repository root explains this layout to coding agents, so an agent reads the catalog first.
 
@@ -89,7 +91,8 @@ All of them start with `python -m bazinga wiki`. Run them from your site folder.
 `<page>` is a page id such as `read:softmax-and-temperature`, a file name without `.md`, or a file path. `<series>`
 is the series name as written in the pages' `series:` field, in quotes when it has spaces.
 
-`python -m bazinga wiki --help` prints the same list.
+`python -m bazinga wiki` on its own prints the same list (its example `post:attention` is an old id; use `read:…`,
+`paper:…` or `project:…`).
 
 ### Without a model
 
@@ -121,11 +124,13 @@ Run it again and it says `unchanged`. Each line of `wiki/index.md` looks like th
 python -m bazinga wiki query "what does the temperature do to the softmax"
 ```
 
-What you should see: the short answer, then the sections it came from.
+What you should see: the short answer, then the sections it came from. (A long section is split into pieces, so
+the same section can be listed twice. The run of words "at onceHow" is a known glitch where two blocks are joined.)
 
 ```text
-In the next part the softmax runs over words instead of classes, and its temperature is fixed at \sqrt{d}. …
+In the next part the softmax runs over words instead of classes, and its temperature is fixed at \sqrt{d}. Temperature controls two things at onceHow confident the probabilities look, measured by the entropy, and how much gradient can flow back through the softmax.
 
+- Softmax, Temperature and Entropy — How the softmax learns: /reads/softmax-and-temperature/#how-the-softmax-learns
 - Softmax, Temperature and Entropy — How the softmax learns: /reads/softmax-and-temperature/#how-the-softmax-learns
 - Softmax, Temperature and Entropy — introduction: /reads/softmax-and-temperature/
 - Softmax, Temperature and Entropy — Temperature: /reads/softmax-and-temperature/#temperature
@@ -210,7 +215,8 @@ LLM_API_KEY=paste-your-key-here
 
 The variable name must match `key_env`. `.env.local` is listed in `.gitignore`, so git never commits it. Do not put
 the key in `site.yml`, in a post, or anywhere else in the repository. You can also set the variable in your shell
-instead (`export LLM_API_KEY=…`); the shell wins over the file.
+instead (`export LLM_API_KEY=…`). For the `wiki` commands the shell wins over the file; for written answers in
+`python -m bazinga serve`, the file wins.
 
 A model on your own computer (an address that starts with `http://localhost` or `http://127.0.0.1`) needs no key for
 the `wiki` commands.
@@ -231,7 +237,8 @@ If it says `No model configured`, the model name or the key is missing. See [Whe
 
 ## Suggestions: the model proposes, you decide
 
-A model never edits your pages. Each command writes a **proposal** to the `proposals/` folder. You read it, copy what
+A model never edits your pages. Each command (except `equation`, which only prints) writes a **proposal** to the
+`proposals/` folder: a `.md` file to read, and a `.json` copy for tools. You read it, copy what
 you like into your page, and ignore the rest. `proposals/` is in `.gitignore`, so proposals stay on your computer.
 
 The workflow is always the same:
@@ -304,36 +311,8 @@ summary and says so in the proposal ("Taken from the summary").
 
 ### Highlights for a series
 
-A series page shows three or four highlights under each part. Without accepted highlights it shows the part's own
-section headings. To get suggestions:
-
-```bash
-python -m bazinga wiki highlights "Getting started"
-```
-
-What you should see:
-
-```text
-Proposal: <your site folder>/proposals/highlights-getting-started.md
-```
-
-Next to it is `proposals/highlights-getting-started.yml`, ready to use. A trimmed real one:
-
-```yaml
-# content/series/getting-started.yml (proposal; copy it there when you accept it)
-series: "Getting started"
-parts:
-  read:writing-math:
-    - "Name an equation with {#eq:name} after its closing $$ to number it, then reference it anywhere with [eq:name] which becomes a link showing that number."
-  read:making-figures:
-    - "figure test draws the figure at start values, every preset, and 20 random settings; each draw must finish under 30 ms with no NaN or infinity values."
-  read:welcome:
-    []
-```
-
-A line is kept only when every number in it appears in the part's own text. A part with `[]` keeps its headings.
-
-To accept it, copy the file to `content/series/getting-started.yml`, edit what you like and build. The steps are in
+`python -m bazinga wiki highlights "<series>"` proposes 3 or 4 highlights per part from the part's own text; a line
+whose numbers are not in the page is dropped. The command, a real proposal and how to accept it are in
 [Series, step 4](writing/series.md#step-4-or-have-a-model-propose-them).
 
 ### Check for contradictions
@@ -346,13 +325,21 @@ This runs the fixed rules and then asks the model to compare pages that share a 
 section, "Possible contradictions". It reads many pages, so it is slow: on a free model it took about five minutes
 for the 14 example pages.
 
+**What you should see:** the same `Lint:` line, and a "Possible contradictions" section in `proposals/lint-site.md`.
+
 ### An equation or a figure from words
 
 `wiki equation` prints LaTeX (shown above). `wiki figure` prints a complete figure file drafted from the closest
-starter:
+starter, and also saves it in `proposals/`:
 
 ```bash
-python -m bazinga wiki figure "a bar chart of the softmax of five scores with a temperature slider" > figures/softmax_bars.py
+python -m bazinga wiki figure "a bar chart of the softmax of five scores with a temperature slider"
+```
+
+Copy the draft into `figures/` under the name you want, then test it:
+
+```bash
+cp proposals/figure-a-bar-chart-of-the-softmax-of-five-score.py figures/softmax_bars.py
 python -m bazinga figure test softmax_bars
 ```
 
@@ -422,28 +409,22 @@ ask:
   daily_cap: 300      # written answers per day for the whole site
 ```
 
-When a visitor has used theirs, they see "That is all the written answers for today. The quick answer still works."
+When a visitor has used theirs, the **Written answer** button turns grey; a request that still gets through is
+answered "That is all the written answers for today. The quick answer still works."
 If the model fails or finds nothing, the answer is not counted. The counts live in the server's memory only. On a
 host that starts many short-lived copies of the function, such as Vercel, the limits are best effort rather than exact.
 
 Questions and answers are never stored or logged, and the visitor's IP address is only hashed in memory to count.
 
-You can override the settings with environment variables on the server, without changing `site.yml`:
-
-| Variable | Overrides |
-|---|---|
-| `LLM_MODEL` | `llm.model` |
-| `LLM_BASE_URL` | `llm.base_url` |
-| `LLM_KEY_ENV` | `llm.key_env` |
-| `ASK_PER_VISITOR` | `ask.per_visitor` |
-| `ASK_DAILY_CAP` | `ask.daily_cap` |
-| `ASK_WRITTEN=0` | turns written answers off |
+You can override these settings with environment variables on the server, without changing `site.yml`. The full
+list is in [Configuration: environment variables](reference/configuration.md#environment-variables).
 
 ### On the deployed site
 
 Written answers run on **Vercel**: `api/ask.py` is the function. Set the key there (Project → Settings →
-Environment Variables, the name from `key_env`), never in a file. If your `site.origin` is not the address Vercel
-serves, also set `SITE_URL` to the deployed address. See [Deploying](deploying.md).
+Environment Variables, the name from `key_env`), never in a file. The function reads the passages from the
+deployment. If it cannot find them, it fetches them from `SITE_URL`, or else from the address the request came to.
+See [Deploying](deploying.md).
 
 On **Netlify**, **GitHub Pages** and other static hosts there is no server, so the button stays hidden. The quick
 answer still works everywhere, because it runs in the reader's browser.
@@ -485,26 +466,21 @@ change, for example the topics you allow or how you like pages written.
 
 ## When something goes wrong
 
-| What you see | Why | What to do |
-|---|---|---|
-| `No model configured: set llm.model in site.yml and the key …` | no `llm.model`, or no key found | set `llm.model`; put the key in `.env.local` under the name in `key_env` |
-| `No model configured (llm.model and a key); running the fixed rules only.` | `lint --model` without a model | the same; the fixed rules still ran |
-| `error: every model failed (…: HTTP 401)` | the key is wrong, expired, or for another service | copy the key again; check `base_url` belongs to the same service |
-| `error: every model failed (…: HTTP 429)` | the model is busy or you hit the service's rate limit | wait a minute, or add another model after a comma |
-| `error: every model failed (…: HTTP 404)` | the model name does not exist at that service | copy the exact name from the service's model list |
-| `error: every model failed (…: empty reply)` | the model returned nothing | try another model |
-| `error: every model failed (…: TimeoutError)` or `URLError` | no reply within 60 seconds (25 for written answers) | try a smaller or less busy model |
-| `error: the reply was not JSON` | the model wrote text, often its thinking, instead of the structured reply | use a model that answers directly |
-| `error: no public page '…'` | the page id is wrong, or the page is a draft | use the id shown in `wiki/index.md`, or the file path |
-| `error: no series '…'; known: …` | the series name does not match | copy a name from the list it prints |
-| Written answer button never appears | written answers are off | `curl -s http://127.0.0.1:8000/api/ask/` should say `"on": true`; see [What it needs](#what-it-needs) |
-| "No written answer right now" | the model failed for this question | it is not counted; try again, or add a fallback model |
+The most common ones:
 
-More problems and fixes are in [Troubleshooting](troubleshooting.md).
+| What you see | What to do |
+|---|---|
+| `No model configured` | set `llm.model`; put the key in `.env.local` under the name in `key_env` |
+| `HTTP 401` | the key is wrong or for another service: copy it again, and check that `base_url` belongs to the same service |
+| `HTTP 429` | the model is busy: wait a minute, or add another model after a comma |
+| Written answer button never appears | `curl -s http://127.0.0.1:8000/api/ask/` should say `"on": true`; see [What it needs](#what-it-needs) |
+
+Every model and Ask message, with its fix, is in
+[Troubleshooting: Ask and the language model](troubleshooting.md#ask-and-the-language-model).
 
 ## What's next
 
-Next, the personal side of your site: [Your portfolio: home page, CV and projects](home-and-cv.md).
+Next, change how the site looks: [Theme and customising](theme.md).
 
 - [Deploying](deploying.md): put the site online, with written answers on Vercel.
 - [Configuration reference](reference/configuration.md): every `llm:` and `ask:` setting in one table.

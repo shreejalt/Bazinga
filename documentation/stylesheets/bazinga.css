@@ -77,7 +77,8 @@
 
 /* Home page: the banner and the feature cards. */
 /* (the banner pair uses #only-light / #only-dark, which Material shows or hides by palette; do not set display here) */
-.md-typeset img[src*="assets/brand/banner-"] { width: 100%; height: auto; border-radius: 12px; }
+.md-typeset img[src*="assets/brand/banner-"] { width: auto; max-width: 100%; max-height: 34vh; height: auto; border-radius: 12px; }
+.md-typeset p:has(> img[src*="assets/brand/banner-"]) { text-align: center; }
 .md-typeset .home-cards figure.clip { margin: .4em 0 .8em; }
 .md-typeset .home-cards figure.clip .clip-bar { height: 22px; padding: 0 8px; }
 .md-typeset .home-cards figure.clip .clip-bar i { width: 7px; height: 7px; }
@@ -103,3 +104,17 @@
 .home-hero__actions { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; }
 .home-hero__actions .md-button { margin: 0; }
 @media (max-width: 600px) { .home-hero h1 { font-size: 1.9rem; } .home-hero__sub { font-size: 1rem; } }
+
+/* Outline buttons on dark: a light blue label and border (the dark sapphire is too dim on slate). */
+[data-md-color-scheme="slate"] .md-typeset .md-button:not(.md-button--primary) { color: #8AB4F8; border-color: #8AB4F8; }
+[data-md-color-scheme="slate"] .md-typeset .md-button:not(.md-button--primary):is(:hover, :focus) {
+  color: #fff; background-color: #0B3F91; border-color: #0B3F91;
+}
+
+/* Tables: names in code keep whole on phones; the table scrolls inside its wrapper instead. */
+.md-typeset td code { white-space: nowrap; }
+
+/* Command output (```text blocks) has nothing to copy, so it has no copy button. */
+.md-typeset .language-text .md-code__nav,
+.md-typeset .language-text .md-code__button,
+.md-typeset .language-text .md-clipboard { display: none; }

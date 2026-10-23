@@ -65,7 +65,8 @@ section from anywhere on the page.
 ## Step 2: split a long post with `::pagebreak`
 
 Put `::pagebreak` on a line of its own between two sections. The page draws a thin footer and a new page header
-(your initials and surname, and the month), like a printed memo:
+(your first initial and surname, and the month and year), like a printed memo; the footer shows your surname and
+the page number:
 
 ![A section, then a page footer and the header of the next page, then the next section](../assets/images/writing-pagebreak.png){ .shot }
 
@@ -122,7 +123,8 @@ Every heading gets an id, so you can link to it with `#id` and readers get a `#`
 ## Projects are different
 
 Project pages (`content/projects/`) use a project layout. Their headings are not numbered and have no page numbers,
-and the side menu lists **Overview**, your sections (or **Write-up** when there are none), and **Related**. The other
+and the side menu lists **Overview**, **Usage** (when the header has `usage:`), your sections (or **Write-up** when
+there are none), **Related**, and **Limitations** (when the header has `limitations:`). The other
 memo parts (Summary, Table of Contents, page breaks) belong to reads and papers.
 
 ## What's next

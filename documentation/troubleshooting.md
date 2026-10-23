@@ -9,7 +9,8 @@ do. Read the line that starts with `hint:` or `Instead:` first.
 ## Installing
 
 ??? question "Which Python do I need?"
-    Python 3.11 or newer. Check with `python3 --version`. There is no Node and no bundler to install.
+    Python 3.11 or newer. Check with `python3 --version` (on Windows: `py --version`). You don't need to install
+    anything else (no Node.js).
 
 ??? question "`pip install -r requirements.txt` fails on numpy"
     numpy is only used by one example figure (`fourier_series`, which lists `REQUIRES = ["numpy"]`). If your Python
@@ -19,12 +20,10 @@ do. Read the line that starts with `hint:` or `Instead:` first.
 
 ??? question "`No module named bazinga` or `No module named yaml`"
     Run commands from your site folder (the one with `site.yml`), with the Python of your virtual environment:
-    `python -m bazinga build`, or activate it first with `source .venv/bin/activate`. You can also point
-    at another folder with `python -m bazinga --root path/to/site build`.
+    `python -m bazinga build`, or activate it first with `source .venv/bin/activate`. If your site is in another
+    folder, stay in the folder that holds `bazinga/` and add `--root path/to/site` before the command.
 
 ## Building and checking
-
-::clip math-check | A formula the build cannot draw: the message points at the place and says what to write instead.
 
 When the build finds a problem it writes nothing, so the last good `_site/` stays as it was. It prints every
 problem at once:
@@ -61,8 +60,13 @@ list for one page without building.
 ??? question "A formula looks wrong or will not build"
     Check it on its own. The command shows where the problem is and what to write instead:
 
+    ```bash
+    python -m bazinga math 'x^10'
+    ```
+
+    **What you should see:**
+
     ```text
-    $ python -m bazinga math 'x^10'
     line 1, column 2: ^10 raises only the 1; the rest stays on the line.
         x^10
          ^^^
@@ -105,11 +109,13 @@ list for one page without building.
     Put a square picture (about 600 × 600 pixels) in `static/images/` and point `home.photo` at it in `site.yml`:
     `photo: /static/images/me.jpg`. The build does not check that the file exists, so a wrong name shows a broken
     picture: check the spelling and the folder. `photo: ""` removes the photo, and the role lines under it go too.
-    The browser-tab icon is a separate setting, `site.avatar`. See [Your portfolio](home-and-cv.md#the-top).
+    The browser-tab icon is a separate setting, `site.avatar`, written without the leading slash:
+    `avatar: static/images/me.jpg`. See [Your portfolio](home-and-cv.md#the-top).
 
 ??? question "How do I hide the blog and keep only my portfolio?"
     Delete the example posts, keep only `projects:` under `kinds:`, trim `nav:` to Home, Projects and CV, and turn
-    off `ask`, `explore`, `series` and `feed` under `features:`. The steps are in
+    off `ask`, `explore`, `series` and `feed` under `features:`. In `content/cv.yml`, keep only the `tags:` that
+    your projects use (or delete them), because a tag no page uses has no topic page. The steps are in
     [A portfolio without the blog](home-and-cv.md#a-portfolio-without-the-blog).
 
 ??? question "How do I offer my CV as a PDF?"
@@ -117,6 +123,27 @@ list for one page without building.
     The CV button in the home page's rail then says **Download CV** and opens the file. The `/cv/` page itself has no
     download button; link the PDF from your About text if you want one there. See
     [A PDF copy](home-and-cv.md#a-pdf-copy).
+
+??? question "The CV link opens Page not found"
+    The `/cv/` page is built only when `content/cv.yml` exists. Add that file, or take CV out of `nav:` (or set
+    `cv: {pdf: …}` so the home page's button opens your PDF). See [Configuration: cv](reference/configuration.md#cv).
+
+??? question "How do I start from an empty site?"
+    Follow [A portfolio without the blog](home-and-cv.md#a-portfolio-without-the-blog): it says which folders to
+    delete (`content/reads`, `content/papers`, `content/elsewhere` and the example project) and what to change in
+    `site.yml` and `content/cv.yml`. Add the `reads` kind back when you want to write posts. Then read
+    [The tests check the example pages](deploying.md#step-2-check-everything) before you deploy.
+
+??? question "How do I add analytics?"
+    Copy the page frame into your own theme and add your analytics script to it:
+
+    ```bash
+    mkdir -p theme/templates
+    cp bazinga/theme/templates/base.html theme/templates/base.html
+    ```
+
+    Put the script tag your analytics service gives you inside `<head>` in `theme/templates/base.html`, then build.
+    See [Your own copy of a theme file](theme.md#your-own-copy-of-a-theme-file).
 
 ??? question "How do I remove the \"Pick one\" buttons (Tea, Coffee, Water)?"
     Delete `starters_label` and `starters` under `home:` in `site.yml`. Nothing else needs to change.
@@ -146,22 +173,28 @@ list for one page without building.
     site never has it.
 
 ??? question "The writing pane of the Editor stays empty"
-    The Editor loads its text editor from a public CDN (esm.sh) the first time. It needs a network connection.
+    The Editor downloads its text editor from the internet (esm.sh) the first time you open it, so it needs a
+    connection.
 
 ## Ask and the language model
 
-| What you see | Why | What to do |
-|---|---|---|
-| `No model configured: set llm.model in site.yml and the key …` | no model name, or no key found | set `llm.model`; put the key in `.env.local` under the name in `llm.key_env` |
-| `error: every model failed (…: HTTP 401)` | wrong or expired key, or a key for another service | copy the key again; check `llm.base_url` |
-| `error: every model failed (…: HTTP 429)` | the model is busy, or you hit a rate limit | wait a minute, or add a second model after a comma |
-| `error: every model failed (…: HTTP 404)` | no model by that name at that service | copy the exact name from the service's list |
-| `error: every model failed (…: TimeoutError)` or `URLError` | no reply in time, or no connection | try again, or a smaller model; check the address |
-| `error: every model failed (…: empty reply)` | the model sent back nothing | use another model |
-| `error: the reply was not JSON` | the model wrote its thinking instead of the reply | use a model that answers directly |
-| The Written answer button never shows | written answers are off | the server needs `llm.model` and a non-empty key variable; see [Ask and the wiki](ask-and-wiki.md#what-it-needs) |
-| "That is all the written answers for today." | the visitor used their daily written answers | raise `ask.per_visitor`, or wait until tomorrow |
-| "No written answer right now." | the model failed for this question | not counted against the limit; try again |
+| Message | What to do |
+|---|---|
+| `No model configured` | no model name, or no key found: set `llm.model`; put the key in `.env.local` under the name in `llm.key_env` |
+| `running the fixed rules only` | `wiki lint --model` without a model; set one up as above (the fixed rules still ran) |
+| `HTTP 401` | a wrong or expired key, or a key for another service: copy the key again; check `llm.base_url` |
+| `HTTP 429` | the model is busy, or you hit a rate limit: wait a minute, or add a second model after a comma |
+| `HTTP 404` | no model by that name at that service: copy the exact name from the service's list |
+| `TimeoutError`, `URLError` | no reply within 60 seconds (25 for written answers), or no connection: try again, or a smaller model; check the address |
+| `empty reply` | the model sent back nothing: use another model |
+| `the reply was not JSON` | the model wrote its thinking instead of the reply: use a model that answers directly |
+| `no public page` | the page id is wrong, or the page is a draft: use the id shown in `wiki/index.md`, or the file path |
+| `no series` | the series name does not match: copy a name from the list it prints |
+| No Written answer button | written answers are off: the server needs `llm.model` and a non-empty key variable; see [Ask and the wiki](ask-and-wiki.md#what-it-needs) |
+| "That is all the written answers for today." | the visitor used their daily written answers: raise `ask.per_visitor`, or wait until tomorrow |
+| "No written answer right now." | the model failed for this question: it is not counted against the limit; try again |
+
+The model errors start with `error: every model failed (…: ` and the reason, such as `HTTP 429`.
 
 ??? question "Can a model on my laptop answer my readers?"
     No. The deployed site cannot reach your computer. A local model (Ollama, LM Studio) works for your own
@@ -193,13 +226,14 @@ list for one page without building.
     The path is wrong. Give the path from your site folder, as `content/<kind>/<file>.md`.
 
 ??? question "The deploy fails on the host but builds on my computer"
-    Vercel and Netlify run the tests before they build (`python3 -m unittest discover tests`). A failing test stops
-    the deploy and the old site stays up. Run the same command on your computer to see the failure.
+    Vercel, Netlify and the GitHub Pages workflow run the tests before they build
+    (`python3 -m unittest discover tests`). A failing test stops
+    the deploy and the old site stays up. Run the same command on your computer to see the failure. If the failing
+    tests are about the example pages you removed, see
+    [The tests check the example pages](deploying.md#step-2-check-everything).
 
-??? question "GitHub Pages shows nothing"
-    In your repository, open Settings → Pages and set Source to **GitHub Actions**. The workflow
-    `.github/workflows/pages.yml` runs on every push to `main` and once a day. If your branch has another name,
-    change `branches: [main]` in that file.
+??? question "GitHub Pages shows nothing, or a scheduled post did not go live"
+    See [Deploying: when something goes wrong](deploying.md#when-something-goes-wrong).
 
 ??? question "The site has no styles, or its links lead to 404 pages"
     The build wrote links for another address. Check `site.origin` in `site.yml`: it must be the address the site
@@ -209,19 +243,17 @@ list for one page without building.
     [A site under a path](reference/configuration.md#a-site-under-a-path).
 
 ??? question "Publish says `Committed, but there is no remote to push to.`"
-    Your site folder is not connected to a repository yet. Add yours, then publish again:
+    Your site folder is not connected to a repository yet. Your post is already committed, so do not publish again
+    (that would add an `updated:` date). Add your repository and push the commit:
 
     ```bash
     git remote add origin https://github.com/<you>/<your-site>.git
+    git push -u origin HEAD
     ```
 
     If the push itself fails, the message from git follows. The usual causes: you are not signed in to GitHub on
     this computer, or the branch is protected and only accepts pull requests. Your commit is safe; push it with
     `git push` once that is fixed.
-
-??? question "A scheduled post did not go live"
-    A scheduled post appears on the first build on or after its date. GitHub Pages rebuilds once a day by itself.
-    On Vercel or Netlify, start a build on that day (a push, or a scheduled build hook).
 
 See [Deploying](deploying.md) for each host.
 

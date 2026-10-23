@@ -1,6 +1,6 @@
 # How the banner is made
 
-`banner.html` draws one frame of the banner for any time `t` (a 7-second loop: numbered dots, the pencil joining
+`banner.html` draws one frame of the banner for any time `t` (a 5-second loop: numbered dots, the pencil joining
 them, the hand becoming the logo, the name and tagline). `frames.mjs` opens it in headless Chrome and saves every
 frame; ffmpeg and gifsicle turn the frames into the GIF:
 

@@ -31,11 +31,14 @@ content/reads/my-first-post.md already exists; pick another title or pass --slug
 
 Pick your own file name with `--slug` (the slug is the file name without `.md`, and the last part of the page's
 address), and another folder with `--kind` (the folders are the kinds in `site.yml`;
-the example site has `reads`, `papers`, `projects` and `elsewhere`):
+the example site has `reads`, `papers`, `projects` and `elsewhere`). Without `--kind`, the post goes in the first
+kind listed in `site.yml` (`reads` in the example):
 
 ```bash
 python -m bazinga new "What I built this summer" --kind projects --slug summer-project
 ```
+
+A project made this way starts with the same example body; replace it with your write-up.
 
 ::clip new-post | Creating a post from the terminal and opening the new file.
 
@@ -57,7 +60,7 @@ topics: [writing]
 ---
 ```
 
-Below the header is a short example body: an opening line, two sections, an equation, a link and a tip. Replace it
+Below the header is a short example body: an opening line, two sections, a numbered equation, a page link, a citation and a tip. Replace it
 with your own text whenever you like.
 
 Change the summary to your own two or three sentences, and pick one to four topics from `content/topics.yml`:
@@ -86,6 +89,8 @@ topics: [attention, writing]
 | `short` | no | A short name used where space is tight: the map's "chain between" pickers and the "Sits under" trail. |
 | `first_published` | no | Free text such as `"Medium, March 2021"`, shown as "First published: …" in the header block of a read or paper. |
 
+**to publish** means a draft may leave the field out, but the page cannot be published without it.
+
 !!! note "What a draft is"
     A page with `status: draft` is never written to the public site, the sitemap, the feed or the search data. It
     shows only in the Editor and in previews made with `--drafts`. The same is true of a page whose `date` is still
@@ -106,29 +111,8 @@ Look at `content/papers/attention-is-all-you-need.md`, `content/projects/bazinga
 `content/elsewhere/the-illustrated-transformer.md` for one working example of each. The kinds themselves are set in
 `site.yml`; see [Configuration](../reference/configuration.md).
 
-### Project pages {#project-pages}
-
-A project page takes a few more optional header fields. All of them were tried on a test page; this is what each one
-shows:
-
-```yaml
-type: Research                 # "Research project" at the foot of the rail, and the Type column of /projects/
-stack: "Python · NumPy"        # under the type, at the foot of the rail
-tagline: "One thing, done well."              # a large line under the title
-lead: "A longer opening line for the page."   # the opening paragraph (without it, the summary is used)
-from: "Example Labs"           # adds a facts box: Type, From, Headline result (the summary) and Tags
-github: "https://github.com/your-handle/demo-tool"   # "Source on GitHub" buttons, and a GitHub link in lists and the CV
-usage: |                       # a Usage section, shown as a code block
-  pip install demo-tool
-limitations:                   # a Limitations section, as a list
-  - Only works on small inputs.
-credit: "Built with help from a friend."      # a small note under Connected work
-order: 1                       # sorts the /projects/ list (smaller first; default 99, then by title)
-```
-
-What you should see: the page opens with the title, the tagline and the lead, then **Usage**, your write-up,
-**Connected work** and **Limitations**. The `bazinga.md` example uses `type`, `stack` and `short`. (A `launch:` field is read into the site's data too, but
-the default theme does not show it.)
+Project pages take a few more header fields (`tagline`, `usage`, `github` …); see
+[Your portfolio](../home-and-cv.md#project-pages).
 
 ## Step 3: watch it in the browser
 
@@ -164,7 +148,7 @@ and the page in your browser reloads by itself.
     Without `--drafts`, the server shows only published pages, exactly like the live site. Your new post is then
     missing, because it is still a draft.
 
-::clip editor-write | The same steps in the Editor: a new post, some text, and the preview following along.
+You can do the same steps in the Editor: see [Start a post](../editor.md#start-a-post), with a clip.
 
 ## Step 4: write the body
 
@@ -185,7 +169,7 @@ next to the text that makes it.
 
 ## Boxes, footnotes and the rest of Markdown {#markdown}
 
-Everything else is the Markdown you know, with a few small additions. Each line below was built on a test page.
+Everything else is the Markdown you know, with a few small additions.
 
 | You write | You get |
 |---|---|

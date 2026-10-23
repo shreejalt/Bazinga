@@ -16,7 +16,7 @@ python -m bazinga check
 Checked 16 page(s): 0 error(s), 0 warning(s).
 ```
 
-The command checks every page in `content/`, drafts included. It ends with exit code 0 when there are no errors and
+The command checks every page in `content/` (posts, papers and projects), drafts included. It ends with exit code 0 when there are no errors and
 1 when there is at least one, so you can use it in scripts.
 
 ## Step 2: read a problem and fix it
@@ -68,6 +68,12 @@ Give one or more files to check just those:
 python -m bazinga check content/reads/my-first-post.md
 ```
 
+**What you should see:**
+
+```text
+Checked 1 page(s): 0 error(s), 0 warning(s).
+```
+
 Add `--errors-only` to hide warnings:
 
 ```bash
@@ -76,7 +82,7 @@ python -m bazinga check --errors-only
 
 ## Errors and warnings
 
-**Errors** would make a wrong page, so they stop the production build. **Warnings** are worth a look but do not stop
+**Errors** would make a wrong page, so they stop `python -m bazinga build`, the same build your host runs. **Warnings** are worth a look but do not stop
 anything.
 
 | Errors (the build stops) | Warnings (the build goes on) |
@@ -88,6 +94,11 @@ anything.
 | a description over 155 characters, or more than four topics | a summary over 320 characters |
 | a published page that links to, or builds on, a draft | a Markdown link that matches no page of the site |
 | a missing image | an unknown callout type, such as `[!NOTES]` |
+| a page without a title | an unknown figure option, or an unknown code language |
+| an `explains:` key that is not in `references.yml`, or a drawing that fails | a code block that is never closed |
+| a series `part` below 1 | an `updated:` date before the `date:` |
+
+These are the common ones. [Troubleshooting](../troubleshooting.md) has more messages and what to do about them.
 
 A draft gets the same checks, except that a missing summary or topics is only a warning until you publish it.
 
@@ -111,10 +122,8 @@ never goes live; the old site stays up.
 When the build succeeds but finds warnings, it says so on its last line:
 
 ```text
-Built 16 pages (38 HTML files) into _site/ in 1.00s; 1 warning(s), see: python -m bazinga check
+Built 14 pages (36 HTML files) into _site/ in 1.00s; 1 warning(s), see: python -m bazinga check
 ```
-
-::clip build | Building the site and running the checks from the terminal.
 
 ## In your browser and in the Editor
 

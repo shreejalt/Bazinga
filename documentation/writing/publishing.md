@@ -1,7 +1,8 @@
 # 9. Publishing
 
 On this page you turn your draft into a live page. One command (or one button in the Editor) checks the post, builds
-the site, records it in the wiki log, commits the post with git and pushes it. Your host then puts it online.
+the site, records it in the wiki log, commits the post with git and pushes it. Your host then puts it online. It works
+the same for any page: a post, a paper or a project page (`content/projects/`).
 
 Publishing works only on your own computer. Nothing in the built site can publish or change anything.
 
@@ -36,7 +37,7 @@ python -m bazinga publish content/reads/my-first-post.md --dry-run
           +status: published
 [   done] Set status and date - status: published, date: 2026-10-22
 [skipped] Test its figures - This page has no figures
-          $ .venv/bin/python -m bazinga build
+          $ <your site folder>/.venv/bin/python -m bazinga build
           Built 15 pages (37 HTML files) into _site/ in 0.89s
 [   done] Build the site
 [   done] Update the wiki files - log: publish | My first post
@@ -68,15 +69,13 @@ python -m bazinga publish content/reads/my-first-post.md
 
 ```text
 [   done] Check the page - No problems
-          @@ -3,2 +3,2 @@
-          -date: 2026-10-22
+          @@ -4 +4 @@
           -status: draft
-          +date: 2026-10-23
           +status: published
 [   done] Set status and date - status: published, date: 2026-10-23
 [skipped] Test its figures - This page has no figures
-          $ .venv/bin/python -m bazinga build
-          Built 15 pages (37 HTML files) into _site/ in 0.94s
+          $ <your site folder>/.venv/bin/python -m bazinga build
+          Built 15 pages (37 HTML files) into _site/ in 0.97s
 [   done] Build the site
 [   done] Update the wiki files - log: publish | My first post
 [skipped] Suggested links and topics - None asked for
@@ -85,7 +84,9 @@ python -m bazinga publish content/reads/my-first-post.md
           staged wiki/log.md
           $ git commit -m 'Publish: My first post' -- content/reads/my-first-post.md content/references.yml content/topics.yml wiki/index.md wiki/log.md
           [main 4b61e62] Publish: My first post
-           3 files changed, 9 insertions(+), 3 deletions(-)
+           3 files changed, 37 insertions(+), 1 deletion(-)
+           create mode 100644 content/reads/my-first-post.md
+           create mode 100644 wiki/log.md
 [   done] Commit - 4b61e62 Publish: My first post
           $ git push origin HEAD:main
           To <your remote>
@@ -110,12 +111,14 @@ What happened, step by step:
 7. **Commit.** Only the page and the files that belong to it are committed: its figures, drawings and uploaded
    images, `content/references.yml`, `content/topics.yml` and the two wiki files. Other changes in your folder are
    left alone.
-8. **Push** to the branch yours tracks (`git push origin HEAD:main` above), then run the optional deploy command from
+8. **Push** the commit to GitHub, to the branch your local branch is linked to (usually `main`;
+   `git push origin HEAD:main` above), then run the optional deploy command from
    `site.yml`. If your branch tracks none yet, it runs `git push -u origin HEAD`.
 9. **Live address.** Your host builds the site from the push. The page is live when it finishes.
 
-If a step fails before the commit, your page file is put back as it was. If only the push fails, the commit stays
-and the message says so; push again when you can.
+If a step fails before the commit, your page file is put back as it was. The line in `wiki/log.md` stays, and files
+may be left staged in git; `git status` shows them. If only the push fails, the commit stays and the message says
+so; push again when you can.
 
 If git does not know your name and email, it stops at the commit:
 
@@ -130,12 +133,11 @@ Do what it says, then publish again. The commits are always yours: Bazinga never
 ## Step 3: or press Publish in the Editor
 
 In the Editor, **Publish** opens a dialog that runs the same steps with a live list and log. It has a dry run, shows
-warnings with a **Publish anyway** button, and offers **Schedule** and **Unpublish**. See [The Editor](../editor.md).
+warnings with a **Publish anyway** box to tick, and offers **Schedule** and **Unpublish**. See
+[The Editor](../editor.md#publish), which also has a clip of it.
 
 The **Write** button that opens the Editor is never part of the published site: readers of the live site do not see
 it. [Only you see the Write button](../editor.md#only-you-see-the-write-button) explains why.
-
-::clip editor-publish | Publishing from the Editor: a dry run with the steps ticking off one by one.
 
 ## Schedule a post for later
 
@@ -149,6 +151,12 @@ The page gets `status: published` and that date, and the commit says `Schedule: 
 with a future date is left out of every build until that day; the first build on or after it puts it online. So your
 host must build at least once a day. The GitHub Pages workflow that comes with the template builds every morning; see
 [Deploying](../deploying.md) for other hosts.
+
+**What you should see** at the end:
+
+```text
+[   done] Live address - Goes live on 2026-11-01, on the first build that day
+```
 
 A date that is not in the future stops with: `A scheduled day must be in the future; use Publish to publish today.`
 
@@ -174,8 +182,14 @@ pages would then point at a draft. Remove those links first.
 Your commit stays on your computer, so nothing is lost. Private repositories work like public ones: the push uses the
 git sign-in you already have. The usual causes of a failed push:
 
-- **No remote:** Publish says `Committed, but there is no remote to push to.` Add one with
-  `git remote add origin <url>`, then run `git push -u origin main`.
+- **No remote:** Publish says `Committed, but there is no remote to push to.` Your post is already committed, so do
+  not publish again (that would add an `updated:` date and a second commit), even though the message says so. Add the
+  remote and push the commit:
+
+    ```bash
+    git remote add origin <url>
+    git push -u origin HEAD
+    ```
 - **Not signed in:** sign in to GitHub on this computer (for example with `gh auth login`), then run `git push`.
 - **A protected branch** that only accepts pull requests: push to another branch and open a pull request.
 

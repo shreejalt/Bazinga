@@ -6,12 +6,24 @@ re-record a clip or add a new one with one command.
 
 ## The short version
 
-From the repository root, with the template's own Python:
+From the repository root, with the template's own Python.
+
+See what there is:
 
 ```bash
-.venv/bin/python documentation/recordings/make.py                 # every clip
-.venv/bin/python documentation/recordings/make.py figure-slider   # just one (or several names)
-.venv/bin/python documentation/recordings/make.py --list          # what there is
+.venv/bin/python documentation/recordings/make.py --list
+```
+
+Record one clip (or name several):
+
+```bash
+.venv/bin/python documentation/recordings/make.py figure-slider
+```
+
+Record every clip (this takes several minutes and needs every tool below):
+
+```bash
+.venv/bin/python documentation/recordings/make.py
 ```
 
 **What you should see:** a line per clip as it is filmed, then a table of what was written:
@@ -31,7 +43,11 @@ and the clip plays in its page.
 | Google Chrome | the browser that is filmed (Playwright's own Chromium works too: set `CLIP_CHANNEL=chromium` after `npx playwright install chromium`) | — |
 | [VHS](https://github.com/charmbracelet/vhs) | records the terminal clips from small `.tape` scripts | `brew install vhs` (it brings `ttyd` and `ffmpeg`) |
 | [ffmpeg](https://ffmpeg.org/) | turns the recordings into MP4, WebM, a poster frame and GIFs | `brew install ffmpeg` |
-| [gifski](https://gif.ski/) | optional: makes nicer GIFs for the README | `brew install gifski` |
+| [gifski](https://gif.ski/) | optional: makes nicer GIFs | `brew install gifski` |
+| Node.js 18 or newer | runs Playwright and the banner script | `brew install node`, or [nodejs.org](https://nodejs.org/) |
+
+The install commands are for macOS. On Linux, install ffmpeg, ttyd and Node.js with your package manager, and VHS
+from [its releases page](https://github.com/charmbracelet/vhs/releases).
 
 The clip scripts also need the template's Python environment (`.venv`, from `requirements.txt`), because they run
 the real `python -m bazinga serve`.
@@ -40,11 +56,13 @@ the real `python -m bazinga serve`.
 
 `make.py` does four things, in order:
 
-1. **A fresh copy of the template.** Every file git tracks (except `documentation/`) is copied to
+1. **A fresh copy of the template.** Every file git tracks (except `documentation/` and `mkdocs.yml`) is copied to
    `.cache/recordings/site` and made into its own git repository. Clips start from the example site exactly as a new
    user gets it, and they never touch your files. `.cache/` is git-ignored and sits outside `documentation/`, so
    MkDocs never sees it.
-2. **Terminal clips.** Each `documentation/recordings/tapes/<name>.tape` is run with VHS. A tape is a list of
+2. **Terminal clips.** Each `documentation/recordings/tapes/<name>.tape` is run with VHS in its own fresh copy at
+   `/tmp/bazinga-clips/site`, with a Python environment at `/tmp/bazinga-clips/.venv` (made the first time, so the
+   first run needs the internet). The fixed path keeps your folder names out of the output. A tape is a list of
    keystrokes and pauses; a hidden first part moves into the copy and sets a short prompt.
 3. **Browser clips.** `make.py` starts `python -m bazinga serve` on the copy (port 8020, the Editor on 8021). Then
    `lib/run.mjs` runs each `documentation/recordings/clips/<name>.mjs` in Chrome at a 1280×800 window, at twice the
@@ -66,9 +84,9 @@ viewer sees the target first.
 ### Sharp frames, and no waiting in the clip
 
 The runner films with Chrome's own screencast ([`Page.startScreencast`](https://chromedevtools.github.io/devtools-protocol/tot/Page/),
-through Playwright's CDP session). Chrome sends a JPEG of the page every time it changes, at the device's full
+through Playwright's CDP session; CDP is the Chrome DevTools Protocol, how programs control Chrome). Chrome sends a JPEG of the page every time it changes, at the device's full
 resolution: 2560×1600 for a 1280×800 window at 2x. ffmpeg then scales the frames down to 1280 px with a lanczos
-filter, which keeps small text crisp. (Playwright's built-in
+filter (a sharp way of shrinking pictures), which keeps small text crisp. (Playwright's built-in
 [`recordVideo`](https://playwright.dev/docs/videos) films at the window's CSS size, which looks soft next to a
 2x screenshot.)
 
@@ -85,13 +103,14 @@ For each clip, in `documentation/assets/clips/`:
 
 | File | What it is |
 |---|---|
-| `<name>.webm` | VP9, the first choice of browsers that play it. Small. |
-| `<name>.mp4` | H.264 with `+faststart` (it starts playing before it has fully downloaded), no audio. Plays everywhere. |
+| `<name>.webm` | VP9 (a video format), the first choice of browsers that play it. Small. |
+| `<name>.mp4` | H.264 (the most widely played video format) with `+faststart` (it starts playing before it has fully downloaded), no audio. Plays everywhere. |
 | `<name>.jpg` | the poster: the last frame, shown before the video starts and when videos are off. |
 | `<name>.json` | what the window bar above the clip says (the page address, or "Terminal"), its length and size. |
 
-A clip with `gif: true` also gets `documentation/assets/gifs/<name>.gif`, 640 px wide and about 8 seconds, for the
-README, made with gifski when it is installed and otherwise with ffmpeg's `palettegen`/`paletteuse` filters.
+A clip with `gif: true` also gets `documentation/assets/gifs/<name>.gif`, 640 px wide (or `gif_width`) and about 8
+seconds, for places that do not play video, made with gifski when it is installed and otherwise with ffmpeg's
+`palettegen`/`paletteuse` filters (which pick the 256 colours a GIF may use).
 
 ## Why video and not GIF
 
@@ -102,8 +121,8 @@ the size of the GIF, with full colour; web.dev's
 `<video autoplay loop muted playsinline>` pattern used here. A muted video with `autoplay` and `loop` behaves like a
 GIF in every current browser.
 
-GIFs are still made for one place: the README. GitHub does not reliably autoplay a video inside a README, and it
-shows a GIF everywhere.
+GIFs are still made for places that do not play video, such as a README: GitHub does not reliably autoplay a video
+inside a README, and it shows a GIF everywhere. (Bazinga's README shows only the banner for now.)
 
 ## How a clip gets into a page
 
@@ -116,7 +135,11 @@ Write one line in the Markdown of a page, on its own:
 The hook `documentation/hooks/clips.py` turns it into a framed, looping video with the right relative paths for that
 page (MkDocs does not rewrite paths inside raw HTML, which is why a hook does it). If the clip has not been recorded,
 `mkdocs build --strict` fails and names it. While you write, `BAZINGA_DOCS_DRAFT=1 mkdocs serve` shows a grey box in
-its place instead.
+its place instead:
+
+```bash
+BAZINGA_DOCS_DRAFT=1 .venv-docs/bin/mkdocs serve -a 127.0.0.1:8030
+```
 
 ## Re-recording a clip
 
@@ -133,6 +156,8 @@ filming again:
 .venv/bin/python documentation/recordings/make.py --convert-only editor-publish
 ```
 
+**What you should see:** the clip's line in the table (its length and file sizes), with no filming.
+
 Before committing, look at the frames. This makes a sheet of six frames from a clip:
 
 ```bash
@@ -140,6 +165,8 @@ ffmpeg -i documentation/assets/clips/editor-publish.mp4 \
   -vf "fps=6/$(ffprobe -v error -show_entries format=duration -of csv=p=0 documentation/assets/clips/editor-publish.mp4),scale=640:-1,tile=3x2" \
   -frames:v 1 sheet.png
 ```
+
+**What you should see:** `sheet.png`, six frames in a 3×2 grid.
 
 ## Adding a browser clip
 
@@ -175,13 +202,20 @@ The helpers (`h.*`), all in `lib/run.mjs`:
 | `h.type(text, delay)` | types at a human speed |
 | `h.slide(range, value, ms)` | drags a slider's thumb to a value |
 | `h.drag(target, dx, dy, ms)`, `h.dragFrom(x, y, dx, dy, ms)` | presses, drags, lets go |
-| `h.scroll(dy, ms)` | scrolls with the mouse wheel, smoothly |
+| `h.scroll(dy, ms)`, `h.scrollTo(target, ms)` | scrolls with the mouse wheel, smoothly, by an amount or to an element |
+| `h.press(key)` | presses a key, such as `"Enter"` |
+| `h.pause(ms)` | waits, on camera |
+| `h.url(path)` | the full address of a page of the example site |
 | `h.highlight(target)`, `h.unhighlight()` | the yellow box |
 | `h.offCamera(fn)`, `h.loaded(selector)` | do something, or wait for a page, without filming it |
 | `h.until(fn)` | waits until a test in the page is true (works under the Editor's strict security policy) |
 
 `meta` may also set `speed` (1.2 plays 20% faster), `trim: [start, end]` (seconds to cut at each end), `poster` (the
-second to use as the poster) and `bar` (other text for the window bar). The Editor clips share a few steps in
+second to use as the poster), `bar` (other text for the window bar), `viewport` (another window size),
+`colorScheme` (`"dark"`), `scale` (the pixel density; `CLIP_SCALE` in the environment overrides it), `crf` (the
+video quality: lower is sharper and bigger; the default is 23) and `site`. `site: "portfolio"` films another demo
+site: `make.py` deletes the paths listed in `documentation/recordings/sites/portfolio/REMOVE` from the copy, then
+copies that folder's files over it. The Editor clips share a few steps in
 `lib/editor.mjs` (open the Editor with the Write button, start a draft, set the page text).
 
 Then record it and place it:
@@ -189,6 +223,9 @@ Then record it and place it:
 ```bash
 .venv/bin/python documentation/recordings/make.py <name>
 ```
+
+**What you should see:** `== clip <name>` while it films, then its line in the table. Add a `::clip <name>` line to
+a page.
 
 ## Adding a terminal clip
 
@@ -205,21 +242,9 @@ Enter
 Sleep 3s
 ```
 
-The comment lines at the top are read by `make.py`: `caption`, `speed`, `trim` (two numbers), `gif`, `gif_width`,
-`gif_start` and `gif_seconds`. The `Output` line must be `raw/<name>.mp4`. The commands are in
+The comment lines at the top are read by `make.py`: `caption`, `speed`, `trim` (two numbers), `poster`, `gif`,
+`gif_width`, `gif_start` and `gif_seconds`. The `Output` line must be `raw/<name>.mp4`. The commands are in
 [VHS's README](https://github.com/charmbracelet/vhs#vhs-command-reference).
-
-## How other projects do it
-
-- **VHS** itself records its own demo GIFs from `.tape` files in its repository, so they can be re-made after every
-  change; see the [README](https://github.com/charmbracelet/vhs).
-- **Playwright** documents filming a browser session with [`recordVideo`](https://playwright.dev/docs/videos), the
-  usual way test suites keep a video of a failing run.
-- **Material for MkDocs** recommends plain images and figures with captions for documentation
-  ([Images](https://squidfunk.github.io/mkdocs-material/reference/images/)); the clips here follow the same
-  pattern, with a `<video>` in place of the `<img>`.
-- **ffmpeg's** guides for [H.264](https://trac.ffmpeg.org/wiki/Encode/H.264) and
-  [VP9](https://trac.ffmpeg.org/wiki/Encode/VP9) explain the quality settings `make.py` uses (`-crf`).
 
 ## The banner
 
@@ -227,7 +252,7 @@ The animated banner at the top of the README and of this site's home page is `ba
 `banner-dark.gif` in `documentation/assets/brand/`. It is made the same way as the clips, but it is drawn rather than
 filmed, so every frame is exact and the loop joins up seamlessly:
 
-1. `documentation/assets/brand/source/banner.html` draws one frame of the banner for any time `t` (a 7-second loop).
+1. `documentation/assets/brand/source/banner.html` draws one frame of the banner for any time `t` (a 5-second loop).
 2. `frames.mjs` (next to it) opens that page in headless Chrome, sets the time frame by frame (20 a second), and saves
    each frame as a PNG.
 3. ffmpeg's `palettegen`/`paletteuse` turns the frames into a GIF with a small palette, and
@@ -242,6 +267,18 @@ To make both banners again:
 It overwrites the two GIFs in `documentation/assets/brand/`. The folder's own `README.md` shows the same steps
 by hand.
 
+## How other projects do it
+
+- **VHS** itself records its own demo GIFs from `.tape` files in its repository, so they can be re-made after every
+  change; see the [README](https://github.com/charmbracelet/vhs).
+- **Playwright** documents filming a browser session with [`recordVideo`](https://playwright.dev/docs/videos), the
+  usual way test suites keep a video of a failing run.
+- **Material for MkDocs** recommends plain images and figures with captions for documentation
+  ([Images](https://squidfunk.github.io/mkdocs-material/reference/images/)); the clips here follow the same
+  pattern, with a `<video>` in place of the `<img>`.
+- **ffmpeg's** guides for [H.264](https://trac.ffmpeg.org/wiki/Encode/H.264) and
+  [VP9](https://trac.ffmpeg.org/wiki/Encode/VP9) explain the quality settings `make.py` uses (`-crf`: lower is sharper and bigger).
+
 ## What's next
 
-[The demo GIF](demo-gif.md) explains the README's terminal demo, which is made the same way.
+[The demo GIF](demo-gif.md) explains the terminal demo, which is made the same way.

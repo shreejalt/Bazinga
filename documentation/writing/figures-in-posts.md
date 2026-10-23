@@ -4,7 +4,7 @@ On this page you place three kinds of picture in a post: a figure readers can mo
 a drawing made by a small code file. Each takes one line or one short block.
 
 This page is about **placing** them. Making your own figure is its own guide: [Interactive figures](../figures.md).
-The full diagram syntax is in [Diagrams from code](../diagrams.md).
+The full diagram syntax is in [Diagrams](../diagrams.md).
 
 ## Step 1: place an interactive figure
 
@@ -80,7 +80,7 @@ Write, and Publish outlined in the accent colour. The build lays the boxes out a
 On a phone, a wide diagram is drawn again from top to bottom. Nothing runs in the reader's browser.
 
 Arrows, shapes, labels, groups, flowcharts, timelines and trees are all written this way. See
-[Diagrams from code](../diagrams.md) for the whole syntax, or `content/reads/drawing-diagrams.md` in the example site.
+[Diagrams](../diagrams.md) for the whole syntax, or `content/reads/drawing-diagrams.md` in the example site.
 
 ## Step 4: place a drawing made by code
 
@@ -105,17 +105,17 @@ When the boxes come from data or a loop, a small function in `drawings/` draws t
 A figure that does not exist is an error, with the closest name:
 
 ```text
-content/reads/broken.md:12: error: figure 'softmax_temprature': there is no figure 'softmax_temprature' (looked for figures/softmax_temprature.py). Did you mean 'softmax_temperature'?
+content/reads/broken.md:12: error: figure 'softmax_temprature': there is no figure 'softmax_temprature' (looked for <your site folder>/figures/softmax_temprature.py). Did you mean 'softmax_temperature'?
     hint: fix the figure file, or run: python -m bazinga figure test softmax_temprature
 ```
 
-The production build stops on it, so a missing figure never reaches the live site.
+`python -m bazinga build` (the build your host runs) stops on it, so a missing figure never reaches the live site.
 
 ## In the Editor
 
 In the Editor, **Figure…** in the toolbar (or `/` on an empty line) lets you pick a figure and see it working before
 you insert it, or make a new one with a form, no code needed. **Diagram…** shows the drawing next to the text as you
-type it. See [The Editor](../editor.md).
+type it. **Drawing from code…** lists the drawings in `drawings/` and inserts one. See [The Editor](../editor.md).
 
 ## What's next
 

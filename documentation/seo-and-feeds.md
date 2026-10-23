@@ -15,6 +15,7 @@ Open any built page, for instance `_site/reads/welcome/index.html`, and look at 
 <link rel="canonical" href="https://example.com/reads/welcome/">
 <meta property="og:site_name" content="Your Name">
 <meta property="og:title" content="Welcome to Bazinga">
+<meta property="og:description" content="A tour of Bazinga's Markdown: …">
 <meta property="og:url" content="https://example.com/reads/welcome/">
 <meta property="og:type" content="article">
 <meta property="og:locale" content="en">
@@ -30,18 +31,23 @@ Open any built page, for instance `_site/reads/welcome/index.html`, and look at 
 | Tag | Where the value comes from |
 |---|---|
 | `<title>` | the page title, plus " — " and `site.name` while the whole stays within 65 characters |
-| description | the page's `description:`, else its `summary:` cut at a sentence or clause near 155 characters |
+| description | the page's `description:`, else its `summary:` cut at a sentence or clause near 155 characters; on the home page, `site.description`, else `site.tagline` |
 | canonical (the one official address of the page) | `site.origin` + the page's address |
-| Open Graph (what chat apps and social sites show in a link preview) | title, description, address, type (`article` for posts), language from `site.language` |
+| Open Graph (what chat apps and social sites show in a link preview) | title, description, address, type (`article` for reads, papers and projects), language from `site.language` |
 | share image | the page's `cover:`, else `site.avatar` if that file exists; without either there is no `og:image` |
 | `twitter:card` | `summary_large_image` when the page has a cover, else `summary` |
 | `article:*` | the page's `date`, its `updated` when set, and `site.author` |
-| JSON-LD (a short description of the page that search engines read) | a `BlogPosting` for posts (headline, description, dates, topics as keywords, author with your `links` as `sameAs`); `WebSite` and `Person` on the home page; `WebPage` elsewhere |
+| JSON-LD (a short description of the page that search engines read) | a `BlogPosting` for reads, papers and projects (headline, description, dates, topics as keywords, author with your `links` as `sameAs`); `WebSite` and `Person` on the home page; `WebPage` elsewhere |
 
 !!! tip "The home page's title"
     The home page uses `home.title`, and the site name is added after it while it fits. The example's
     `"Your Name — Machine Learning Notes"` therefore becomes `Your Name — Machine Learning Notes — Your Name`.
     Leave your name out of `home.title` to avoid the repeat.
+
+!!! tip "For a portfolio"
+    The home page tells search engines who you are: a `Person` with your `site.author` and every address in
+    `site.links` as `sameAs`, so your GitHub, LinkedIn and Scholar profiles are tied to your name. Fill in
+    `site.description`, `home.title` and `site.links`; a portfolio needs nothing else here.
 
 ## Header fields that matter
 
@@ -97,6 +103,13 @@ and the start of its `sitemap.xml`:
 
 Drafts and scheduled pages never appear in any of these files. A `--drafts` build writes no sitemap or feed, and its
 `robots.txt` says `Disallow: /`.
+
+Entries of an external kind, such as Elsewhere, live on other sites: their list page is in the sitemap, but the
+entries are not in the sitemap, the feed or `llms.txt`.
+
+On a site under a folder (such as `https://you.github.io/notes`), every address above carries the folder. Search
+engines read `robots.txt` only at the root of the host, so submit `https://you.github.io/notes/sitemap.xml` in their
+webmaster tools yourself.
 
 ## The feed
 

@@ -1,7 +1,10 @@
 # Writing
 
-This section walks you from an empty folder to a published post, one step at a time. Read it top to bottom the first
+This section walks you from a new file to a published post, one step at a time. Read it top to bottom the first
 time. Each page ends with a link to the next one.
+
+Project pages for your portfolio are written the same way. If you only want a portfolio, read step 1 and then
+[Your portfolio: home page, CV and projects](../home-and-cv.md).
 
 You need a working copy of the template first. If you have not built the example site yet, do
 [Getting started](../getting-started.md) and come back.
@@ -30,7 +33,8 @@ Every step works in two ways, and both change the same file:
   same things: equations, figures, citations, links and publishing. See [The Editor](../editor.md).
 
 !!! tip "Keep the server running"
-    Start `python -m bazinga serve --drafts` once in a terminal and leave it open while you write. It rebuilds the
+    Start `python -m bazinga serve --drafts` (use `.venv/bin/python` if you have not activated the virtual
+    environment) once in a terminal and leave it open while you write. It rebuilds the
     site every time you save a file and reloads the page in your browser.
 
 ## What's next

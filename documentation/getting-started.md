@@ -1,7 +1,7 @@
 # Getting started
 
 In ten minutes you will have Bazinga's example site running on your own computer. You will install it, build it
-once, serve it with live reload, and take a short tour of the folders. You need nothing but Python.
+once, serve it with live reload, and take a short tour of the folders. You need Python, git and a GitHub account.
 
 ## What you'll have
 
@@ -17,16 +17,17 @@ Use either part on its own, or both. The example site shows everything; you remo
 
 ## What you need
 
-- **Python 3.11 or newer.** Check with `python3 --version`.
+- **Python 3.11 or newer.** Check with `python3 --version` (on Windows: `py --version`).
 - **git**, to get the code and, later, to publish.
+- **A GitHub account**, to make your own copy of Bazinga.
 - A terminal and a text editor. Bazinga also has its own writing window, [the Editor](editor.md).
 
 There is no Node, no bundler and no database.
 
 ## 1. Get the code
 
-On GitHub, open [shreejalt/Bazinga](https://github.com/shreejalt/Bazinga) and press **Use this template** to make
-your own copy. Then clone your copy:
+On GitHub, open [shreejalt/Bazinga](https://github.com/shreejalt/Bazinga) and press **Fork** to make your own copy
+(or **Use this template**, if you see that button). Then clone your copy:
 
 ```bash
 git clone https://github.com/<you>/<your-site>.git
@@ -39,7 +40,7 @@ Replace `<you>` and `<your-site>` with your GitHub name and the name you gave th
 
 ## 2. Install
 
-Make a virtual environment inside the folder and install the few packages Bazinga needs:
+Make a virtual environment (a private set of Python packages for this one folder) inside the folder and install the few packages Bazinga needs:
 
 ```bash
 python3 -m venv .venv
@@ -62,7 +63,7 @@ On Windows: `.venv\Scripts\activate`. Do this once in every new terminal. (Witho
 
 **What you should see:** `(.venv)` at the start of your prompt.
 
-::clip install | Making the virtual environment and installing the requirements.
+::clip install | Make the virtual environment, install the requirements, and serve the site for the first time.
 
 !!! tip "Why numpy?"
     Only one example figure (`fourier_series`) uses numpy. A figure that does not ask for it never loads it.
@@ -159,7 +160,7 @@ What lives where:
 | `figures/` | interactive figures, one small Python file each | yes |
 | `drawings/` | diagrams drawn by code (most diagrams are written as text in the post instead) | sometimes |
 | `static/` | images and other files, copied as they are | yes |
-| `wiki/` | `index.md` and `log.md`, written by the build and by publishing | no |
+| `wiki/` | `index.md` (rewritten by every build) and `log.md` (added to when you publish or run a `wiki` command) | no |
 | `bazinga/` | the engine, the default theme and the Editor | no; see [Theme](theme.md) to change the look |
 | `tests/` | the tests your host runs before each deploy | no |
 | `_site/` | the built site | no, it is rebuilt every time |
@@ -176,9 +177,14 @@ What lives where:
 | `AGENTS.md` | how the site works, for AI coding agents ([Ask and the wiki](ask-and-wiki.md#working-with-ai-coding-agents)) | when you change the rules |
 | `docs/` | notes for people working on Bazinga itself | no |
 | `LICENSE`, `THIRD_PARTY.md` | the code's licence and the parts it uses ([What's in Bazinga](whats-in-bazinga.md#licences)) | no |
+| `README.md`, `CHANGELOG.md` | what Bazinga is, and what changed in each version ([What's new](whats-new.md)) | no |
+| `requirements.txt` | the Python packages Bazinga needs | no |
+| `CLAUDE.md` | points coding agents to `AGENTS.md` | no |
+| `documentation/`, `mkdocs.yml` | this user guide; not part of your site, so delete them if you like | no |
 
-The example site also holds four guides in `content/reads/`: *Welcome to Bazinga*, *Writing Equations*, *Making
-Interactive Figures* and *Drawing Diagrams*, plus a gallery of every figure template. Keep them until you no
+The example site also holds its own guides in `content/reads/`, a five-part series called *Getting started*:
+*Welcome to Bazinga*, *Writing Equations in Bazinga*, *Making Interactive Figures*, *Drawing Diagrams*, and
+*Templates for Figures and Diagrams* (a gallery of every figure template). Keep them until you no
 longer need them; they are the best way to see each feature next to the text that makes it.
 
 ## 6. Run the tests (optional)
@@ -189,7 +195,8 @@ Your host runs these before every deploy, so it is worth knowing they pass on yo
 python -m unittest discover tests
 ```
 
-**What you should see:** a row of dots, then `OK`.
+**What you should see:** rows of dots, then `Ran 453 tests in …` and `OK` (under a minute). A few warning lines
+among the dots are normal; only `FAILED` means something is wrong.
 
 ## What's next
 

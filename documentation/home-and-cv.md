@@ -5,7 +5,7 @@ experience, education and a contact section, a CV page, and a page for each of y
 with no blog at all, as a blog, or as both. In this guide you will put your own name, photo, words, record and
 projects on the site.
 
-Three places hold everything personal:
+These are the places that hold everything personal:
 
 | What visitors see | Where you change it |
 |---|---|
@@ -13,13 +13,13 @@ Three places hold everything personal:
 | Photo, role, headline, About, Experience, Education, Contact | `site.yml` → `home:` |
 | The CV page at `/cv/` (and an optional PDF) | `content/cv.yml`, and `site.yml` → `cv:` |
 | Your projects | one file each in `content/projects/` |
-| The menu on the left | `site.yml` → `nav:` |
+| The rail (the menu down the left side) | `site.yml` → `nav:` |
 
 ![A portfolio made with Bazinga: photo, role, a short introduction and the sections.](assets/portfolio-home.jpg)
 
 Keep `python -m bazinga serve` running while you edit. The page reloads every time you save.
 
-::clip site-tour | The example site: the home page, then a list of posts and one post.
+::clip portfolio-tour | A portfolio: the home page, a role in Experience, Contact, the CV and a project.
 
 ## Your name and links
 
@@ -51,11 +51,11 @@ site:
 | `description` | what search engines show for the home page (155 characters at most) |
 | `origin` | the address the site will live at, with no `/` at the end; used for canonical links, the sitemap and the feed |
 | `avatar` | optional picture, such as `static/avatar.png`: the browser-tab icon and the share image. Without it, the tab shows the Bazinga mark |
-| `links` | buttons on the home page, in this order; leave a value empty to hide it |
+| `links` | buttons on the home page. GitHub, X, LinkedIn and Scholar always come first, in that order; other names follow in the order you write them. Leave a value empty to hide it |
 
 The link names `github`, `linkedin`, `medium`, `scholar`, `x`, `twitter`, `mastodon`, `bluesky`, `youtube`,
-`website`, `orcid` and `substack` get a proper label (GitHub, LinkedIn, ...). Any other name is shown with its
-first letter in capitals. `email` is special: it is never shown as a plain link; it feeds the Contact section's
+`website`, `orcid` and `substack` get a proper label (GitHub, LinkedIn, ...). Any other name is shown with each
+word capitalised and `_` as a space (`my_blog` → My Blog). `email` is special: it is never shown as a plain link; it feeds the Contact section's
 email button instead.
 
 **What you should see:** after saving, the rail shows your name and the home page shows your links.
@@ -69,7 +69,7 @@ missing is left out.
 
 ```yaml
 home:
-  title: "Your Name — Machine Learning Notes"
+  title: "Machine Learning Notes"
   photo: /static/images/photo.svg
   role: "Machine Learning Engineer"
   employer: "Example Labs"
@@ -82,12 +82,12 @@ home:
 
 | Field | What it does |
 |---|---|
-| `title` | the home page's `<title>` and its link-preview title (default: `site.name`) |
+| `title` | the home page's `<title>` (your `site.name` is added after it while the whole stays within 65 characters, so leave your name out) and its link-preview title (default: `site.name`) |
 | `photo` | a square picture, shown round at 230 px; under it go `role` and `working_at` |
 | `role` | first line under the photo; the CV page also says "role at employer" |
 | `employer` | used only by the CV page's first line |
 | `working_at` | second line under the photo |
-| `tagline` | the big line at the top of the page |
+| `tagline` | the big line at the top of the page (default: `site.name`) |
 | `statement` | an optional bold line under the tagline |
 | `lead` | the opening paragraph |
 | `intro` | optional extra paragraph, written in Markdown (links, emphasis) |
@@ -96,7 +96,9 @@ Under the lead you always get one button per kind of page (Reads, Papers, Projec
 
 **Your photo:** put a square picture (about 600 × 600 pixels) in `static/images/` and point `photo:` at it, for
 example `/static/images/me.jpg`. Note the leading `/`. To use the same picture as the browser-tab icon and the
-picture in link previews, also set `site: avatar: static/images/me.jpg`.
+picture in link previews, also set `site: avatar: static/images/me.jpg`. Note: `avatar` has no leading `/`, unlike `photo`.
+
+**What you should see:** your photo, round, with your role under it.
 
 ### About, and the "pick one" buttons
 
@@ -144,6 +146,8 @@ Each role is a line that opens to show its `points`. `pages` takes ids of pages 
 they are linked under the points. An id that does not exist stops the build with a hint, so typos never reach the
 site. Education shows the degree and the school only. `courses` is folded away under "Courses and electives".
 
+**What you should see:** each Experience line opens when you click it.
+
 ### Contact
 
 ```yaml
@@ -180,8 +184,8 @@ it is shown), followed by the Series, Ask and CV items from your `nav:`.
 
 ## The CV page
 
-The CV lives in `content/cv.yml`. The page at `/cv/` lays it out; you only fill in the record. If the file does
-not exist, there is no CV page.
+The CV lives in `content/cv.yml`. The page at `/cv/` lays it out; you only fill in the record. Its heading is your
+`site.author`. If the file does not exist, there is no CV page.
 
 ```yaml
 contact:
@@ -239,9 +243,10 @@ Per role:
 - `used` lists the tools and methods the role's lines name.
 - `link` is one more page or address for the role, as `{label, url}`.
 
-The build checks the `tags` and `pages`. An unknown one stops the build with a message such as
-`cv.yml: unknown topic 'vison' under Example Labs` and a hint. Project pages with a `github:` header field that are
-not already listed under `open_source` are added to the open-source section by themselves.
+The build checks the `tags` and `pages`. An unknown one stops `python -m bazinga build` with a message such as
+`cv.yml: unknown topic 'vison' under Example Labs` and a hint (`serve` shows it as a note and leaves the item out).
+Project pages with a `github:` header field that are not already listed under `open_source` are listed by
+themselves, under **More on GitHub** in the open-source section.
 
 The CV's first line reads "role at employer" from `home.role` and `home.employer` in `site.yml`.
 
@@ -278,22 +283,54 @@ stack: "Python · Flask"
 github: "https://github.com/your-handle/weather-app"
 ---
 
-What it does, why you built it and what you learned. Add screenshots with ![alt](/static/uploads/shot.png), or a
-figure readers can move with ::figure name.
+What it does, why you built it and what you learned.
 ```
 
-Other optional header fields: `tagline`, `lead`, `from` (where it was done), `usage` (shown as a code block),
-`limitations` (a list), `credit`, `order` (the position in the list). A project with `github:` also appears in the
-CV's open-source section by itself.
+To add a screenshot, put it in `static/uploads/` and write `![What it shows](/static/uploads/your-file.png)` on its
+own line. A figure readers can move goes on its own line too, as `::figure name`
+([Figures in a post](writing/figures-in-posts.md)). A project page is written like any other page, so the
+[Writing](writing/index.md) steps (equations, citations, links, checking, publishing) all work here.
+
+**What you should see:** the project at <http://127.0.0.1:8000/projects/> and its page, with **Source on GitHub** in
+the rail.
+
+### Project pages {#project-pages}
+
+A project page takes a few more optional header fields. This is what each one shows:
+
+```yaml
+type: Research                 # "Research project" at the foot of the rail, and the Type column of /projects/
+stack: "Python · NumPy"        # under the type, at the foot of the rail
+tagline: "One thing, done well."              # a large line under the title
+lead: "A longer opening line for the page."   # the opening paragraph (without it, the summary is used)
+from: "Example Labs"           # adds a facts box: Type, From, Headline result (the summary) and Tags
+github: "https://github.com/your-handle/demo-tool"   # "Source on GitHub" buttons, and a GitHub link in lists and the CV
+usage: |                       # a Usage section, shown as a code block
+  pip install demo-tool
+limitations:                   # a Limitations section, as a list
+  - Only works on small inputs.
+credit: "Built with help from a friend."      # a small note under Connected work
+order: 1                       # sorts the /projects/ list (smaller first; default 99, then by title)
+```
+
+What you should see: the page opens with the title, the tagline and the lead, then **Usage**, your write-up,
+**Connected work** and **Limitations**. The example `content/projects/bazinga.md` uses `type`, `stack` and `short`.
+(A `launch:` field is read into the site's data too, but the default theme does not show it.)
 
 ![A project page.](assets/portfolio-project.jpg)
 
 ## A portfolio without the blog
 
-If you only want a portfolio, turn the blog parts off. Nothing breaks: their pages and buttons simply go away.
+If you only want a portfolio, turn the blog parts off. Their pages and buttons go away. Two links stay behind for
+now: the "Ask the map" line at the end of each project page, and the link to the map on `/topics/`.
 
 1. **Delete the example posts:** the folders `content/reads/`, `content/papers/` and `content/elsewhere/`, and the
-   example project.
+   example project:
+
+    ```bash
+    rm -r content/reads content/papers content/elsewhere content/projects/bazinga.md
+    ```
+
 2. **Keep only the kinds you use** in `site.yml`:
 
     ```yaml
@@ -323,21 +360,29 @@ If you only want a portfolio, turn the blog parts off. Nothing breaks: their pag
     - rewrite `home: about:` so it no longer points to Reads or Papers;
     - delete the "Elsewhere on this site" line under `home: contact: elsewhere:`;
     - delete `pages:` entries in `site.yml` and `pages:` / `page:` entries in `content/cv.yml` (including
-      `open_source`) that name pages you deleted.
-6. Run `python -m bazinga build`. If a page id still names a deleted page, the build stops and says where, for
-   example `content/cv.yml: error: cv.yml: unknown page 'project:bazinga' in open_source`. Plain `<a href>` links
-   in your text are not checked, so look for `/reads/` and `/papers/` yourself.
+      `open_source`) that name pages you deleted;
+    - in `content/cv.yml`, keep only `tags:` that one of your projects also uses, or delete the `tags:` lines (each
+      tag links to its topic page, and a topic that no page uses has no page);
+    - rewrite `home: tagline:`, `lead:` and `title:`, `site: description:` and `home: contact: links_text:` so they
+      describe your work, not posts.
+6. Run `python -m bazinga build`. If a page id still names a deleted page, the build stops at the first one and
+   says where, for example `site.yml: error: home.experience: unknown page 'project:bazinga'`. Fix it and build
+   again until it passes. Plain `<a href>` links in your text are not checked, so look for `/reads/` and `/papers/`
+   yourself.
 
 **What you should see:** with one project, `Built 1 pages (7 HTML files) into _site/`, and a site with Home,
-Projects and CV only. The pictures on this page come from exactly such a
-site, built from a fresh copy of the template.
+Projects and CV only. The pictures and the clip on this page come from such a site.
 
-::clip portfolio-tour | A portfolio with no blog: the home page, a role in Experience, Contact, the CV and a project.
+Before you deploy it, read [The tests check the example pages](deploying.md#step-2-check-everything): the tests
+that come with Bazinga expect the example pages you just deleted.
 
 Want a blog later? Add the `reads` kind back and write your first post: see [Writing](writing/index.md).
 
 ## What's next
 
+Next, update Bazinga when a new version comes out: [Updating Bazinga](updating.md). Or:
+
 - Change the colours and fonts: [Theme and customising](theme.md).
+- Write about your projects, or start a blog: [Writing](writing/index.md).
 - Put it online at your own address: set `site.origin`, then follow [Deploying](deploying.md).
 - Every key in one table: [Configuration reference](reference/configuration.md).

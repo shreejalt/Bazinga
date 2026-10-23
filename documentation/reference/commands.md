@@ -7,7 +7,12 @@ All commands start with `python -m bazinga`. Here `python` is the one in your vi
 `source .venv/bin/activate` first (see [Getting started](../getting-started.md#2-install)), or type
 `.venv/bin/python` instead.
 
-| Command | What it does | Needs a model |
+To see a command's options in your terminal, add `--help`, for example `python -m bazinga build --help`. `wiki` has
+no `--help`: run `python -m bazinga wiki` on its own to see its list.
+
+A language model is optional; see [Ask and the wiki](../ask-and-wiki.md#connect-a-model).
+
+| Command | What it does | Needs a language model |
 |---|---|---|
 | [`new`](#new) | start a new draft | no |
 | [`build`](#build) | build the site into `_site/` | no |
@@ -49,11 +54,17 @@ options:
   --root ROOT  the site folder (default: the current folder)
 ```
 
+The `wiki` line is short: `wiki` also has `query`, `equation`, `figure` and `log` ([wiki](#wiki)).
+
 `--root` goes **before** the command and points at another site folder:
 
-```console
-$ python -m bazinga --root . check --errors-only
+```bash
+python -m bazinga --root . check --errors-only
+```
 
+**What you should see:**
+
+```text
 Checked 15 page(s): 0 error(s), 0 warning(s).
 ```
 
@@ -77,22 +88,46 @@ options:
 
 Copies the starter post into `content/<kind>/<slug>.md` with `status: draft` and today's date.
 
-```console
-$ python -m bazinga new "My first post"
-Created content/reads/my-first-post.md (a draft). Preview it with: python -m bazinga serve --drafts
+```bash
+python -m bazinga new "My first post"
+```
 
-$ python -m bazinga new "A side project" --kind projects --slug side-project
+**What you should see:**
+
+```text
+Created content/reads/my-first-post.md (a draft). Preview it with: python -m bazinga serve --drafts
+```
+
+```bash
+python -m bazinga new "A side project" --kind projects --slug side-project
+```
+
+**What you should see:**
+
+```text
 Created content/projects/side-project.md (a draft). Preview it with: python -m bazinga serve --drafts
 ```
 
 The first kind in `site.yml` is the default (`reads` on the example site). An unknown kind or an existing file stops
 it:
 
-```console
-$ python -m bazinga new "My first post" --kind nope
-unknown kind 'nope'; site.yml defines: reads, papers, projects, elsewhere
+```bash
+python -m bazinga new "My first post" --kind nope
+```
 
-$ python -m bazinga new "My first post"
+**What you should see:**
+
+```text
+unknown kind 'nope'; site.yml defines: reads, papers, projects, elsewhere
+```
+
+```bash
+python -m bazinga new "My first post"
+```
+
+**What you should see:**
+
+```text
 content/reads/my-first-post.md already exists; pick another title or pass --slug
 ```
 
@@ -110,30 +145,54 @@ options:
                 such as https://you.github.io/repo puts every link under /repo
 ```
 
-```console
-$ python -m bazinga build
-Built 14 pages (36 HTML files) into _site/ in 0.83s
+```bash
+python -m bazinga build
+```
 
-$ python -m bazinga build --drafts
+**What you should see:**
+
+```text
+Built 14 pages (36 HTML files) into _site/ in 0.83s
+```
+
+```bash
+python -m bazinga build --drafts
+```
+
+**What you should see:**
+
+```text
 Built 17 pages (39 HTML files) into _site/ in 0.77s — drafts included, do not deploy this build
 ```
 
 `--origin` builds for another address without editing `site.yml`. With a path, every link starts with it:
 
-```console
-$ python -m bazinga build --origin https://you.github.io/notes
+```bash
+python -m bazinga build --origin https://you.github.io/notes
+```
+
+**What you should see:**
+
+```text
 Built 14 pages (36 HTML files) into _site/ in 1.06s
-$ grep -o '<link rel="canonical"[^>]*>' _site/reads/welcome/index.html
+```
+
+```bash
+grep -o '<link rel="canonical"[^>]*>' _site/reads/welcome/index.html
+```
+
+**What you should see:**
+
+```text
 <link rel="canonical" href="https://you.github.io/notes/reads/welcome/">
 ```
 
 Only `build` reads `--origin`, `BAZINGA_ORIGIN` and `SITE_URL`; `serve` and the Editor always serve at the root of
 `127.0.0.1`. See [A site under a path](configuration.md#a-site-under-a-path).
 
-`--quiet` prints only the last line. If anything is wrong, nothing is written: the build lists each problem with
+The `--drafts` count is from after the two `new` commands above; a fresh copy prints 15 pages (37 HTML files).
+`--quiet` hides the warnings and notes printed while building; the last line still counts the warnings. If anything is wrong, nothing is written: the build lists each problem with
 its file, line and a hint, and the exit code is 1.
-
-::clip build | Building and checking the example site from a terminal.
 
 ## serve
 
@@ -153,10 +212,16 @@ options:
                         port + 1, or a free one)
 ```
 
-```console
-$ python -m bazinga serve --port 8000
+```bash
+python -m bazinga serve --port 8000
+```
+
+**What you should see:**
+
+```text
 Building Your Name …
   built 14 pages in 1.94s
+  The Editor runs at http://127.0.0.1:8001/ (the Write button opens it)
 
   Serving at http://127.0.0.1:8000/  (Ctrl+C to stop; pages reload when you save)
 ```
@@ -182,9 +247,13 @@ options:
 
 Runs the same checks as the build and the Editor. With no files it checks every page.
 
-```console
-$ python -m bazinga check content/reads/welcome.md
+```bash
+python -m bazinga check content/reads/welcome.md
+```
 
+**What you should see:**
+
+```text
 Checked 1 page(s): 0 error(s), 0 warning(s).
 ```
 
@@ -206,12 +275,24 @@ options:
 
 Looks the paper up online (arXiv, or Crossref for a DOI) and appends it to `content/references.yml`.
 
-```console
-$ python -m bazinga cite 2010.11929 --key ViT
+```bash
+python -m bazinga cite 2010.11929 --key ViT
+```
+
+**What you should see:**
+
+```text
 ViT: Alexey Dosovitskiy et al. (2020). An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale
 Cite it with [@ViT] (or [@ViT, p. 4]).
+```
 
-$ python -m bazinga cite 10.1038/nature14539
+```bash
+python -m bazinga cite 10.1038/nature14539
+```
+
+**What you should see:**
+
+```text
 LeCun15: Yann LeCun et al. (2015). Deep learning
 Cite it with [@LeCun15] (or [@LeCun15, p. 4]).
 ```
@@ -235,14 +316,26 @@ options:
 
 Checks one formula. When it is fine, it prints the MathML; when it is not, it shows where and what to write instead.
 
-```console
-$ python -m bazinga math "\frac{a}{b"
+```bash
+python -m bazinga math "\frac{a}{b"
+```
+
+**What you should see:**
+
+```text
 line 1, column 9: this { is never closed.
     \frac{a}{b
             ^
 Instead: add the matching } where the group ends
+```
 
-$ python -m bazinga math --display "e^{i\pi} + 1 = 0" --html preview.html
+```bash
+python -m bazinga math --display "e^{i\pi} + 1 = 0" --html preview.html
+```
+
+**What you should see:**
+
+```text
 Wrote preview.html
 ```
 
@@ -276,24 +369,51 @@ options:
 `--from` defaults to `slider_plot`. The form's kinds are `function`, `shapes`, `bars`, `heatmap`,
 `distribution`, `data` and `scene3d`.
 
-```console
-$ python -m bazinga figure new my_plot --from slider_plot
+```bash
+python -m bazinga figure new my_plot --from slider_plot
+```
+
+**What you should see:**
+
+```text
 Created figures/my_plot.py. Use it in a post with ::figure my_plot
+```
 
-$ python -m bazinga figure test my_plot
+```bash
+python -m bazinga figure test my_plot
+```
+
+**What you should see:**
+
+```text
 ok   my_plot  (83 ms for all states)
+```
 
-$ python -m bazinga figure preview my_plot
-.studio/figure-preview/my_plot.html
+```bash
+python -m bazinga figure preview my_plot
+```
 
-$ python -m bazinga figure new x --from builder:nope
+**What you should see:**
+
+```text
+/path/to/your-site/.studio/figure-preview/my_plot.html
+```
+
+```bash
+python -m bazinga figure new x --from builder:nope
+```
+
+**What you should see:**
+
+```text
 error: no builder type 'nope'. Choose one of: function, shapes, bars, heatmap, distribution, data, scene3d (for example --from builder:function).
 ```
 
-`figure test` exits with 1 when a figure fails, so the tests and the build catch a broken figure. To use a copied
-drawing starter, place it with `::drawing <name>.<function>`; for example the `pipeline` starter's function is
-`steps`, so `::drawing my_pipe.steps`. The full starter list and the form are in
-[Interactive figures](../figures.md) and [Diagrams from code](../diagrams.md).
+`figure preview` prints the full path on your computer. `figure test` exits with 1 when a figure fails, so the tests
+and the build catch a broken figure. To use a copied drawing starter, place it with `::drawing <name>.<function>`;
+for example the `pipeline` starter's function is `steps`, so `::drawing my_pipe.steps`. For a drawing starter the
+command still prints `Use it in a post with ::figure my_pipe`; ignore that line and write `::drawing my_pipe.steps`. The full starter list and the form are in
+[Interactive figures](../figures.md) and [Diagrams](../diagrams.md).
 
 ## editor
 
@@ -311,8 +431,13 @@ options:
   --root ROOT   the site folder (default: the current folder)
 ```
 
-```console
-$ python -m bazinga editor --port 8001 --no-browser
+```bash
+python -m bazinga editor --port 8001 --no-browser
+```
+
+**What you should see:**
+
+```text
 Bazinga Editor for <your site folder>
   http://127.0.0.1:8001/?token=…
   Local only: this address works on this computer and nowhere else. Press Ctrl+C to stop.
@@ -347,12 +472,18 @@ update the wiki files, commit, push, and run `publish.command`.
 - `--schedule 2026-11-01` publishes it on a later date.
 - `--yes` goes on despite warnings (errors always stop it).
 
-```console
-$ python -m bazinga publish content/reads/my-first-post.md --dry-run --yes
+```bash
+python -m bazinga publish content/reads/my-first-post.md --dry-run --yes
+```
+
+**What you should see** (shortened: the lines of the changed header and the build command are left out):
+
+```text
           Dry run: working on a temporary copy of the site; nothing in your folder will change.
 [   done] Check the page - No problems
 [   done] Set status and date - status: published, date: 2026-10-22
 [skipped] Test its figures - This page has no figures
+          …
           Built 15 pages (37 HTML files) into _site/ in 1.32s
 [   done] Build the site
 [   done] Update the wiki files - log: publish | My first post
@@ -370,7 +501,7 @@ https://example.com/reads/my-first-post/
 
 A real publish needs a git repository, and a name and email for the commit (`publish.author` in `site.yml`, or
 `git config user.name` and `user.email`); without them it stops at the Commit step and says so. It pushes to the
-branch yours tracks. See [Publishing](../writing/publishing.md).
+branch your local branch is linked to. See [Publishing](../writing/publishing.md).
 
 ## wiki
 
@@ -390,20 +521,41 @@ usage: python -m bazinga wiki <command>
 <page> is an id (post:attention), a slug or a file path. Proposals go to proposals/; nothing in content/ changes.
 ```
 
+The example id `post:attention` is an old one; on the example site use `read:…`, `paper:…` or `project:…`.
+
 | Sub-command | Needs a model |
 |---|---|
 | `index`, `query`, `lint` (without `--model`), `log` | no |
 | `ingest`, `highlights`, `describe`, `equation`, `figure`, `lint --model` | yes |
 
-```console
-$ python -m bazinga wiki index
+```bash
+python -m bazinga wiki index
+```
+
+**What you should see:**
+
+```text
 wiki/index.md: 14 pages, updated
+```
 
-$ python -m bazinga wiki log note "tried the commands"
-$ tail -1 wiki/log.md
+```bash
+python -m bazinga wiki log note "tried the commands"
+tail -1 wiki/log.md
+```
+
+**What you should see:**
+
+```text
 ## [2026-10-22] note | tried the commands
+```
 
-$ python -m bazinga wiki ingest read:welcome
+```bash
+python -m bazinga wiki ingest read:welcome
+```
+
+**What you should see:**
+
+```text
 No model configured: set llm.model in site.yml and the key in the environment variable named by llm.key_env (or .env.local).
 ```
 
